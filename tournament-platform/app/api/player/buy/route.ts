@@ -107,6 +107,7 @@ export async function POST(req: Request) {
         data: {
           purchasedById: buyer.id,
           purchasedAt: new Date(),
+          alliancePending: true,
         },
         select: {
           id: true,

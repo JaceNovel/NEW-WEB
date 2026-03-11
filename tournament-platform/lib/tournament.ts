@@ -163,7 +163,9 @@ type RankingPlayer = {
   seededTop20At: Date | null;
   finalRank: number | null;
   purchasedById: string | null;
+  alliancePending: boolean;
   recruitedPlayers: Array<{ id: string; pseudo: string; logoUrl: string; freefireId: string }>;
+  recruitedPlayersCount: number;
 };
 
 function withPositions(players: RankingPlayer[]) {
@@ -234,7 +236,14 @@ export async function getTournamentRanking(
       seededTop20At: true,
       finalRank: true,
       purchasedById: true,
+      alliancePending: true,
+      _count: {
+        select: {
+          recruitedPlayers: true,
+        },
+      },
       recruitedPlayers: {
+        where: { alliancePending: false },
         select: {
           id: true,
           pseudo: true,
@@ -245,6 +254,11 @@ export async function getTournamentRanking(
     },
   });
 
-  const ordered = orderTournamentRanking(config, players);
+  const normalizedPlayers: RankingPlayer[] = players.map(({ _count, ...player }) => ({
+    ...player,
+    recruitedPlayersCount: _count.recruitedPlayers,
+  }));
+
+  const ordered = orderTournamentRanking(config, normalizedPlayers);
   return params?.gameMode ? ordered.filter((player) => player.gameMode === params.gameMode) : ordered;
 }

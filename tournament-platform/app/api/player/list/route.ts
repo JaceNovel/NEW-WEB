@@ -27,7 +27,9 @@ export async function GET() {
         finalRank: true,
         createdAt: true,
         purchasedById: true,
+        alliancePending: true,
         recruitedPlayers: {
+          where: { alliancePending: false },
           select: {
             id: true,
             pseudo: true,

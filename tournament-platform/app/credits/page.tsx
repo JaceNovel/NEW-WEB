@@ -47,6 +47,7 @@ export default async function CreditsPage() {
           pseudo: true,
           logoUrl: true,
           freefireId: true,
+          alliancePending: true,
         },
       },
       creditPurchases: {
@@ -65,7 +66,7 @@ export default async function CreditsPage() {
   const marketPlayers = ranking
     .filter((player) => player.id !== currentPlayer.id)
     .filter((player) => !player.purchasedById)
-    .filter((player) => !player.recruitedPlayers.length)
+    .filter((player) => player.recruitedPlayersCount === 0)
     .map((player) => ({
       ...player,
       recruitmentCost: getRecruitmentCost(player.rankingPosition),

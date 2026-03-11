@@ -1032,17 +1032,17 @@ body {
 .tp-matchs-schedule-logo {
   height: 36px;
   width: 36px;
-  border-radius: 12px;
+  border-radius: 0;
   object-fit: contain;
-  background: rgba(17, 8, 28, 0.62);
-  border: 1px solid rgba(198, 117, 255, 0.12);
-  padding: 0.3rem;
+  background: transparent;
+  border: none;
+  padding: 0;
 }
 
 .tp-matchs-schedule-logo-small {
   height: 28px;
   width: 28px;
-  border-radius: 10px;
+  border-radius: 0;
 }
 
 .tp-matchs-schedule-name {
@@ -1791,11 +1791,11 @@ body {
 .tp-matchs-ranking-logo {
   height: 34px;
   width: 34px;
-  border-radius: 12px;
+  border-radius: 0;
   object-fit: contain;
-  background: rgba(17, 8, 28, 0.62);
-  border: 1px solid rgba(198, 117, 255, 0.12);
-  padding: 0.25rem;
+  background: transparent;
+  border: none;
+  padding: 0;
 }
 
 .tp-matchs-ranking-name {
@@ -1911,11 +1911,11 @@ body {
 .tp-matchs-duel-logo {
   height: 54px;
   width: 54px;
-  border-radius: 18px;
+  border-radius: 0;
   object-fit: contain;
-  background: rgba(17, 8, 28, 0.6);
-  border: 1px solid rgba(198, 117, 255, 0.12);
-  padding: 0.35rem;
+  background: transparent;
+  border: none;
+  padding: 0;
 }
 
 .tp-matchs-duel-vs {

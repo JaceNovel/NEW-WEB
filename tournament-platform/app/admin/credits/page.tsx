@@ -8,7 +8,7 @@ export default async function AdminCreditsPage() {
   const alliances = await prisma.player.findMany({
     where: {
       recruitedPlayers: {
-        some: {},
+        some: { alliancePending: false },
       },
     },
     select: {
@@ -17,6 +17,7 @@ export default async function AdminCreditsPage() {
       freefireId: true,
       credits: true,
       recruitedPlayers: {
+        where: { alliancePending: false },
         select: {
           id: true,
           pseudo: true,

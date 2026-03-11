@@ -63,6 +63,7 @@ model Player {
   finalRank     Int?
   purchasedById String?
   purchasedAt   DateTime?
+  alliancePending Boolean   @default(false)
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
 

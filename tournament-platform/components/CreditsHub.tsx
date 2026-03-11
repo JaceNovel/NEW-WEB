@@ -34,7 +34,7 @@ type CurrentPlayer = {
   credits: number;
   points: number;
   gameMode: string;
-  recruitedPlayers: Array<{ id: string; pseudo: string; logoUrl: string; freefireId: string }>;
+  recruitedPlayers: Array<{ id: string; pseudo: string; logoUrl: string; freefireId: string; alliancePending: boolean }>;
   purchasedBy: { pseudo: string } | null;
 };
 
@@ -102,7 +102,9 @@ export default function CreditsHub({
     }
   }
 
-  const hasRecruit = currentPlayer.recruitedPlayers.length > 0;
+  const acceptedRecruit = currentPlayer.recruitedPlayers.find((player) => !player.alliancePending) ?? null;
+  const pendingRecruit = currentPlayer.recruitedPlayers.find((player) => player.alliancePending) ?? null;
+  const hasAnyRecruit = currentPlayer.recruitedPlayers.length > 0;
 
   return (
     <main className="relative mx-auto max-w-[1280px] px-4 py-8 sm:py-10">
@@ -153,11 +155,17 @@ export default function CreditsHub({
                 </div>
               ) : null}
 
-              {hasRecruit ? (
+              {acceptedRecruit ? (
                 <div className="rounded-[22px] border border-amber-300/18 bg-amber-300/10 px-4 py-4">
                   <div className="text-[11px] font-black uppercase tracking-[0.22em] text-amber-100/70">Alliance active</div>
-                  <div className="mt-2 text-2xl font-black text-white">{currentPlayer.pseudo} X {currentPlayer.recruitedPlayers[0]?.pseudo}</div>
+                  <div className="mt-2 text-2xl font-black text-white">{currentPlayer.pseudo} X {acceptedRecruit.pseudo}</div>
                   <div className="mt-2 text-sm text-white/65">Si cette place est défiée, elle est considérée comme une position renforcée.</div>
+                </div>
+              ) : pendingRecruit ? (
+                <div className="rounded-[22px] border border-cyan-300/18 bg-cyan-300/10 px-4 py-4">
+                  <div className="text-[11px] font-black uppercase tracking-[0.22em] text-cyan-100/70">Demande envoyée</div>
+                  <div className="mt-2 text-2xl font-black text-white">{currentPlayer.pseudo} → {pendingRecruit.pseudo}</div>
+                  <div className="mt-2 text-sm text-white/65">En attente de la réponse du joueur.</div>
                 </div>
               ) : (
                 <div className="rounded-[22px] border border-fuchsia-300/18 bg-fuchsia-300/10 px-4 py-4 text-sm text-white/72">
@@ -273,7 +281,7 @@ export default function CreditsHub({
                     </div>
                     <button
                       type="button"
-                      disabled={loadingKey === player.id || hasRecruit || Boolean(currentPlayer.purchasedBy) || currentPlayer.credits < player.recruitmentCost || currentPlayer.credits < 20}
+                      disabled={loadingKey === player.id || hasAnyRecruit || Boolean(currentPlayer.purchasedBy) || currentPlayer.credits < player.recruitmentCost || currentPlayer.credits < 20}
                       onClick={() => buyPlayer(player.id)}
                       className="rounded-[14px] border border-amber-300/20 bg-[linear-gradient(180deg,rgba(255,141,70,0.25),rgba(112,34,16,0.18))] px-4 py-2 text-sm font-black uppercase tracking-[0.14em] text-white disabled:cursor-not-allowed disabled:opacity-45"
                     >

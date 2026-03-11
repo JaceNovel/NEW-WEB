@@ -6,6 +6,7 @@ import { authOptions } from "@/lib/auth";
 import { getAllianceLabel } from "@/lib/economy";
 import { prisma } from "@/lib/prisma";
 import { getTournamentRanking } from "@/lib/tournament";
+import AllianceRequestCard from "@/components/profile/AllianceRequestCard";
 
 export const dynamic = "force-dynamic";
 
@@ -40,8 +41,10 @@ export default async function ProfilePage() {
       losses: true,
       status: true,
       gameMode: true,
+      alliancePending: true,
       purchasedBy: { select: { pseudo: true } },
       recruitedPlayers: {
+        where: { alliancePending: false },
         select: {
           id: true,
           pseudo: true,
@@ -93,9 +96,12 @@ export default async function ProfilePage() {
         <div className="relative grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
           <div className="rounded-[22px] border border-fuchsia-300/20 bg-black/25 p-4 backdrop-blur-md sm:rounded-[26px] sm:p-5">
             <div className="grid items-center gap-5 md:grid-cols-[220px_1fr]">
-              <div className="relative mx-auto flex h-[160px] w-[160px] items-center justify-center rounded-[24px] border border-orange-300/20 bg-[radial-gradient(circle,rgba(255,159,82,0.18),rgba(98,30,119,0.12),transparent_70%)] sm:h-[210px] sm:w-[210px] sm:rounded-[28px]">
-                <div className="absolute inset-0 rounded-[28px] border border-white/8 shadow-[inset_0_0_44px_rgba(255,255,255,0.04),0_0_34px_rgba(196,104,255,0.18)]" />
-                <img src={player.logoUrl} alt={player.pseudo} className="relative z-[1] h-[128px] w-[128px] object-contain drop-shadow-[0_0_30px_rgba(255,150,84,0.28)] sm:h-[170px] sm:w-[170px]" />
+              <div className="relative mx-auto flex h-[160px] w-[160px] items-center justify-center sm:h-[210px] sm:w-[210px]">
+                <img
+                  src={player.logoUrl}
+                  alt={player.pseudo}
+                  className="h-[150px] w-[150px] object-contain drop-shadow-[0_0_34px_rgba(255,150,84,0.32)] animate-[spin_18s_linear_infinite] sm:h-[200px] sm:w-[200px]"
+                />
               </div>
 
               <div>
@@ -115,7 +121,11 @@ export default async function ProfilePage() {
                   {rank ? `Rang #${rank}` : "En attente de classement"}
                 </div>
                 {player.recruitedPlayers[0] ? <div className="mt-3 text-sm font-bold uppercase tracking-[0.18em] text-cyan-200/75">Position renforcée avec {player.recruitedPlayers[0].pseudo}</div> : null}
-                {player.purchasedBy ? <div className="mt-3 text-sm font-bold uppercase tracking-[0.18em] text-fuchsia-200/75">Associé à la position de {player.purchasedBy.pseudo}</div> : null}
+                {player.purchasedBy && !player.alliancePending ? (
+                  <div className="mt-3 text-sm font-bold uppercase tracking-[0.18em] text-fuchsia-200/75">Associé à la position de {player.purchasedBy.pseudo}</div>
+                ) : null}
+
+                {player.purchasedBy && player.alliancePending ? <AllianceRequestCard buyerPseudo={player.purchasedBy.pseudo} /> : null}
               </div>
             </div>
           </div>
@@ -139,9 +149,9 @@ export default async function ProfilePage() {
       </section>
 
       <section className="mt-6 rounded-[24px] border border-fuchsia-300/18 bg-[linear-gradient(180deg,rgba(28,14,49,0.74),rgba(7,8,18,0.72))] p-3 shadow-[0_0_40px_rgba(158,82,255,0.1)] sm:mt-8 sm:rounded-[30px] sm:p-4">
-        <div className="grid gap-3 md:grid-cols-2">
+        <div className="grid grid-cols-2 gap-3">
           <div className="rounded-[18px] border border-white/10 bg-black/20 px-4 py-3 text-sm font-bold uppercase tracking-[0.22em] text-white">Matchs</div>
-          <div className="rounded-[18px] border border-white/8 bg-white/5 px-4 py-3 text-sm font-bold uppercase tracking-[0.22em] text-white/55">Défis</div>
+          <div className="rounded-[18px] border border-white/10 bg-black/20 px-4 py-3 text-sm font-bold uppercase tracking-[0.22em] text-white/55">Défis</div>
         </div>
 
         <div className="mt-4 grid gap-5 lg:grid-cols-[1.2fr_0.8fr]">
