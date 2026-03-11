@@ -96,11 +96,11 @@ export default async function ProfilePage() {
         <div className="relative grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
           <div className="rounded-[22px] border border-fuchsia-300/20 bg-black/25 p-4 backdrop-blur-md sm:rounded-[26px] sm:p-5">
             <div className="grid items-center gap-5 md:grid-cols-[220px_1fr]">
-              <div className="relative mx-auto flex h-[160px] w-[160px] items-center justify-center sm:h-[210px] sm:w-[210px]">
+              <div className="relative mx-auto flex h-[240px] w-[240px] items-center justify-center sm:h-[360px] sm:w-[360px]">
                 <img
                   src={player.logoUrl}
                   alt={player.pseudo}
-                  className="h-[150px] w-[150px] object-contain drop-shadow-[0_0_34px_rgba(255,150,84,0.32)] animate-[spin_18s_linear_infinite] sm:h-[200px] sm:w-[200px]"
+                  className="h-full w-full object-contain drop-shadow-[0_0_46px_rgba(255,150,84,0.34)] animate-[spin_18s_linear_infinite]"
                 />
               </div>
 

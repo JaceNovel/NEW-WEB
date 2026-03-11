@@ -313,7 +313,7 @@ export default function RankingTable({
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.22, delay: idx * 0.03 }}
-              className={`tp-ranking-row ${isRoi ? "tp-ranking-row-roi" : ""} ${isSecond ? "tp-ranking-row-second" : ""} ${isThird ? "tp-ranking-row-third" : ""} grid grid-cols-[86px_120px_1.2fr_1.1fr_110px_140px_130px] items-center px-4 py-3 ${isCurrentUser ? "tp-ranking-row-current" : ""}`}
+              className={`tp-ranking-row ${isRoi ? "tp-ranking-row-roi" : ""} ${isSecond ? "tp-ranking-row-second" : ""} ${isThird ? "tp-ranking-row-third" : ""} grid grid-cols-[86px_190px_1.2fr_1.1fr_110px_140px_130px] items-center px-4 py-3 ${isCurrentUser ? "tp-ranking-row-current" : ""}`}
             >
               {isRoi ? (
                 <div className="tp-ranking-row-roi-rails" aria-hidden="true">
@@ -338,7 +338,7 @@ export default function RankingTable({
                   alt={player.pseudo}
                   width={78}
                   height={52}
-                  className={`h-14 w-auto max-w-[92px] object-contain drop-shadow-[0_0_16px_rgba(255,136,76,0.18)] ${isRoi ? "tp-ranking-logo-roi" : ""} ${isSecond ? "tp-ranking-logo-second" : ""} ${isThird ? "tp-ranking-logo-third" : ""}`}
+                  className={`h-24 w-auto max-w-[170px] object-contain drop-shadow-[0_0_20px_rgba(255,136,76,0.20)] ${isRoi ? "tp-ranking-logo-roi" : ""} ${isSecond ? "tp-ranking-logo-second" : ""} ${isThird ? "tp-ranking-logo-third" : ""}`}
                 />
               </div>
 
@@ -428,7 +428,7 @@ export default function RankingTable({
                     {isDuo ? <div className="mt-1 text-[10px] font-bold uppercase tracking-[0.16em] text-cyan-200/75">Position 1v2</div> : null}
                   </div>
                 </div>
-                <Image src={player.logoUrl} alt={player.pseudo} width={56} height={56} className="h-14 w-14 shrink-0 object-contain" />
+                <Image src={player.logoUrl} alt={player.pseudo} width={90} height={90} className="h-24 w-24 shrink-0 object-contain" />
               </div>
 
               <div className="mt-4 grid grid-cols-2 gap-3">
