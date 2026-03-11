@@ -1,0 +1,118 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  PLAYER
+  ADMIN
+}
+
+enum PlayerStatus {
+  ROI
+  CHALLENGER
+  PLAYER
+  ELIMINATED
+}
+
+enum GameMode {
+  SPAM
+  ONETAP
+}
+
+enum MatchStatus {
+  PENDING
+  LIVE
+  FINISHED
+}
+
+enum ChallengeStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  FINISHED
+}
+
+enum TournamentStage {
+  REGISTRATION
+  LOCKED
+  ACTIVE
+  FINALIZED
+}
+
+model Player {
+  id           String       @id @default(cuid())
+  pseudo       String       @unique
+  freefireId   String       @unique
+  countryCode  String       @default("FR")
+  gameMode     GameMode
+  logoUrl      String
+  credits      Int          @default(5)
+  status       PlayerStatus @default(PLAYER)
+  role         Role         @default(PLAYER)
+  passwordHash String
+  wins         Int          @default(0)
+  losses       Int          @default(0)
+  isSeededTop10 Boolean     @default(false)
+  seededTop20At DateTime?
+  finalRank     Int?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  matchesAsP1  Match[]      @relation("MatchPlayer1")
+  matchesAsP2  Match[]      @relation("MatchPlayer2")
+  matchesWon   Match[]      @relation("MatchWinner")
+
+  challengesSent     Challenge[] @relation("ChallengeChallenger")
+  challengesReceived Challenge[] @relation("ChallengeDefender")
+  roiTournaments     TournamentConfig[] @relation("TournamentRoi")
+}
+
+model TournamentConfig {
+  id                String          @id @default("main")
+  registrationLimit Int             @default(20)
+  stage             TournamentStage @default(REGISTRATION)
+  activeRoiId       String?
+  lockedAt          DateTime?
+  startedAt         DateTime?
+  finalizedAt       DateTime?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  activeRoi Player? @relation("TournamentRoi", fields: [activeRoiId], references: [id])
+}
+
+model Match {
+  id        String      @id @default(cuid())
+  player1Id String
+  player2Id String
+  winnerId  String?
+  status    MatchStatus @default(PENDING)
+  date      DateTime
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  player1 Player  @relation("MatchPlayer1", fields: [player1Id], references: [id])
+  player2 Player  @relation("MatchPlayer2", fields: [player2Id], references: [id])
+  winner  Player? @relation("MatchWinner", fields: [winnerId], references: [id])
+
+  @@index([status, date])
+}
+
+model Challenge {
+  id          String          @id @default(cuid())
+  challengerId String
+  defenderId  String
+  status      ChallengeStatus @default(PENDING)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  challenger Player @relation("ChallengeChallenger", fields: [challengerId], references: [id])
+  defender   Player @relation("ChallengeDefender", fields: [defenderId], references: [id])
+
+  @@index([status, createdAt])
+}
