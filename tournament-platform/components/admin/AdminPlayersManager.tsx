@@ -142,8 +142,8 @@ export default function AdminPlayersManager() {
 
       {error ? <div className="mt-4 rounded-2xl border border-red-400/20 bg-red-500/10 px-4 py-3 text-sm text-red-100">{error}</div> : null}
 
-      <div className="mt-5 overflow-hidden rounded-2xl border border-white/10">
-        <table className="w-full text-left text-sm">
+      <div className="mt-5 overflow-x-auto rounded-2xl border border-white/10">
+        <table className="min-w-[980px] w-full text-left text-sm">
           <thead className="bg-slate-950/60 text-xs uppercase tracking-wider text-white/60">
             <tr>
               <th className="px-4 py-3">Logo</th>

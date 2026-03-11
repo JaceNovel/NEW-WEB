@@ -171,7 +171,7 @@ export default function RankingTable({
       ) : null}
 
       <div className="tp-ranking-shell overflow-hidden rounded-[18px] border border-violet-300/18">
-      <div className="tp-ranking-roi-banner relative flex items-center justify-center gap-5 overflow-hidden px-6 py-4 text-center md:text-left">
+      <div className="tp-ranking-roi-banner relative flex items-center justify-center gap-5 overflow-hidden px-4 py-4 text-center md:px-6 md:text-left">
         <div className="tp-ranking-roi-streak" />
         <div className="tp-ranking-roi-particles" aria-hidden="true">
           <span className="tp-ranking-roi-particle tp-ranking-roi-particle-1" />
@@ -253,7 +253,7 @@ export default function RankingTable({
         </motion.div>
       </div>
 
-      <div className="grid grid-cols-[86px_120px_1.2fr_1.1fr_110px_140px_130px] border-t border-white/10 bg-black/12 px-4 py-3 text-[0.95rem] font-bold uppercase tracking-wide text-white/76">
+      <div className="hidden md:grid grid-cols-[86px_120px_1.2fr_1.1fr_110px_140px_130px] border-t border-white/10 bg-black/12 px-4 py-3 text-[0.95rem] font-bold uppercase tracking-wide text-white/76">
         <div>Rank</div>
         <div>Avatar</div>
         <div>Pseudo</div>
@@ -263,7 +263,7 @@ export default function RankingTable({
         <div>Action</div>
       </div>
 
-      <div>
+      <div className="hidden md:block">
         {players.map((player, idx) => {
           const meta = statusMeta(player.status);
           const isRoi = player.status === "ROI";
@@ -358,6 +358,73 @@ export default function RankingTable({
                   {meta.action}
                 </button>
               </div>
+            </motion.div>
+          );
+        })}
+      </div>
+
+      <div className="space-y-3 p-3 md:hidden">
+        {players.map((player, idx) => {
+          const meta = statusMeta(player.status);
+          const isRoi = player.status === "ROI";
+          const isSecond = idx === 1;
+          const isThird = idx === 2;
+          const canChallenge = Boolean(
+            currentUserId &&
+              roi &&
+              !isRoi &&
+              currentUser &&
+              currentUser.status !== "CHALLENGER" &&
+              currentUser.status !== "ELIMINATED" &&
+              !hasActiveChallenge,
+          );
+          const isCurrentUser = currentUserId === player.id;
+
+          return (
+            <motion.div
+              key={`mobile-${player.id}`}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.22, delay: idx * 0.03 }}
+              className={`rounded-[22px] border px-4 py-4 ${isCurrentUser ? "border-fuchsia-300/30 bg-fuchsia-300/10" : "border-white/10 bg-white/[0.03]"}`}
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex min-w-0 items-center gap-3">
+                  <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-xl font-black ${isRoi ? "bg-amber-300/12 text-amber-200" : "bg-white/5 text-white"}`}>
+                    #{player.rankingPosition ?? idx + 1}
+                  </div>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 text-lg font-black text-white">
+                      {isRoi ? <Crown className="h-4 w-4 shrink-0 text-amber-300" /> : null}
+                      <span className="truncate">{player.pseudo}</span>
+                    </div>
+                    <div className="mt-1 truncate text-sm text-white/55">{player.freefireId}</div>
+                  </div>
+                </div>
+                <Image src={player.logoUrl} alt={player.pseudo} width={56} height={56} className="h-14 w-14 shrink-0 object-contain" />
+              </div>
+
+              <div className="mt-4 grid grid-cols-2 gap-3">
+                <div className="rounded-2xl border border-white/8 bg-black/20 px-3 py-2.5">
+                  <div className="text-[0.68rem] font-black uppercase tracking-[0.18em] text-white/38">Crédits</div>
+                  <div className="mt-1 text-lg font-black text-amber-100">{player.credits}</div>
+                </div>
+                <div className="rounded-2xl border border-white/8 bg-black/20 px-3 py-2.5">
+                  <div className="text-[0.68rem] font-black uppercase tracking-[0.18em] text-white/38">Statut</div>
+                  <div className="mt-1 flex items-center gap-2 text-sm font-bold text-white">
+                    {meta.icon}
+                    <span>{meta.label}</span>
+                  </div>
+                </div>
+              </div>
+
+              <button
+                disabled={!canChallenge || loadingId === roi?.id}
+                onClick={challengeRoi}
+                className={`${meta.actionClass} mt-4 w-full justify-center ${!canChallenge ? "opacity-70" : ""}`}
+              >
+                {meta.action}
+              </button>
             </motion.div>
           );
         })}

@@ -73,9 +73,9 @@ export default async function Home() {
     <main className="relative overflow-hidden pb-10">
       <div className="pointer-events-none absolute inset-0 opacity-80 [background:radial-gradient(1000px_circle_at_50%_26%,rgba(255,139,59,0.12),transparent_35%),radial-gradient(900px_circle_at_50%_18%,rgba(186,85,211,0.20),transparent_36%),linear-gradient(to_bottom,transparent,rgba(11,16,38,0.16))]" />
 
-      <section className="relative mx-auto max-w-[1200px] px-4 pt-8">
-        <div className="mx-auto max-w-[760px] py-8 text-center md:py-10">
-          <div className="-mt-[60px] flex justify-center">
+      <section className="relative mx-auto max-w-[1200px] px-4 pt-5 sm:pt-8">
+        <div className="mx-auto max-w-[760px] py-4 text-center md:py-10">
+          <div className="-mt-[16px] flex justify-center sm:-mt-[40px] md:-mt-[60px]">
             <Image
               src="/lp2-removebg-preview.png"
               alt="Tournoi 1v1 Spam / One Tap"
@@ -97,7 +97,7 @@ export default async function Home() {
         </div>
       </section>
 
-      <section className="relative mx-auto mt-5 max-w-[1200px] px-4">
+      <section className="relative mx-auto mt-4 max-w-[1200px] px-4 sm:mt-5">
         <div className="grid gap-4 md:grid-cols-3">
           {infoCards.map((card) => (
             <article key={card.title} className="tp-home-card group rounded-[18px] border border-violet-300/20 p-5 transition-all duration-300 hover:scale-[1.02] hover:border-amber-300/40">
@@ -130,7 +130,7 @@ export default async function Home() {
               <div className="overflow-hidden rounded-[14px] border border-white/8 bg-[rgba(6,7,18,0.14)]">
                 {players.length ? (
                   players.map((player, index) => (
-                    <div key={player.id} className="tp-reference-row grid grid-cols-[54px_48px_1fr_92px] items-center gap-2 px-3 py-2.5">
+                    <div key={player.id} className="tp-reference-row grid grid-cols-[42px_42px_minmax(0,1fr)] gap-2 px-3 py-3 sm:grid-cols-[54px_48px_1fr_92px] sm:items-center sm:py-2.5">
                       <div className="text-[1.55rem] font-black leading-none text-amber-300 drop-shadow-[0_0_10px_rgba(255,180,80,0.5)]">#{index + 1}</div>
                       <Image
                         src={player.logoUrl}
@@ -146,7 +146,7 @@ export default async function Home() {
                         </div>
                         <div className="mt-0.5 truncate text-[11px] tracking-wide text-white/60">🎮 {player.freefireId}</div>
                       </div>
-                      <div className="text-right">
+                      <div className="col-span-3 text-left sm:col-span-1 sm:text-right">
                         <div className="text-[1.05rem] font-black leading-none text-amber-100 md:text-[1.15rem]">{player.credits} <span className="font-medium text-white/80">crédits</span></div>
                       </div>
                     </div>
@@ -182,7 +182,7 @@ export default async function Home() {
             <div className="mt-2 overflow-hidden rounded-[14px] border border-white/8 bg-[rgba(6,7,18,0.14)]">
               {matches.length ? (
                 matches.map((match) => (
-                  <div key={match.id} className="tp-reference-match-row grid grid-cols-[1fr_auto_1fr_auto] items-center gap-3 px-3 py-3">
+                  <div key={match.id} className="tp-reference-match-row grid gap-3 px-3 py-3 sm:grid-cols-[1fr_auto_1fr_auto] sm:items-center">
                     <div className="flex min-w-0 items-center gap-2.5">
                       <Image src={match.player1.logoUrl} alt={match.player1.pseudo} width={40} height={40} className="h-10 w-10 rounded-full border border-violet-300/35 object-cover shadow-[0_0_14px_rgba(157,101,255,0.18)]" />
                       <div className="min-w-0">
@@ -193,7 +193,7 @@ export default async function Home() {
 
                     <div className="tp-reference-vs">VS</div>
 
-                    <div className="flex min-w-0 items-center justify-self-end gap-2.5 text-right">
+                    <div className="flex min-w-0 items-center gap-2.5 text-left sm:justify-self-end sm:text-right">
                       <div className="min-w-0">
                         <div className="truncate text-[1.05rem] font-semibold text-white">{match.player2.pseudo}</div>
                         <div className="truncate text-[11px] tracking-wide text-white/60">🎮 {match.player2.freefireId}</div>
@@ -201,7 +201,7 @@ export default async function Home() {
                       <Image src={match.player2.logoUrl} alt={match.player2.pseudo} width={40} height={40} className="h-10 w-10 rounded-full border border-violet-300/35 object-cover shadow-[0_0_14px_rgba(157,101,255,0.18)]" />
                     </div>
 
-                    <div className="text-right">
+                    <div className="text-left sm:text-right">
                       <div className="text-[10px] uppercase tracking-[0.16em] text-white/45">Statut</div>
                       <div className="mt-0.5 text-[1.05rem] font-black text-white">{match.status === "LIVE" ? "Live" : "Programmé"}</div>
                     </div>
@@ -229,9 +229,9 @@ export default async function Home() {
       </section>
 
       <footer className="relative mx-auto mt-7 max-w-[1200px] px-4 pb-6">
-        <div className="tp-home-footer tp-footer-bar rounded-[12px] border border-violet-300/20 px-6 py-3">
-          <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-4 text-sm font-bold uppercase tracking-[0.12em] text-white/82">
-            <div className="flex items-center gap-5">
+        <div className="tp-home-footer tp-footer-bar rounded-[12px] border border-violet-300/20 px-4 py-4 sm:px-6 sm:py-3">
+          <div className="grid gap-4 text-center text-sm font-bold uppercase tracking-[0.12em] text-white/82 sm:grid-cols-[1fr_auto_1fr] sm:items-center sm:text-left">
+            <div className="flex flex-wrap items-center justify-center gap-4 sm:justify-start sm:gap-5">
               <div className="flex items-center gap-2">
                 <Gift className="h-4 w-4 text-amber-300" />
                 <span>Loot</span>
@@ -241,8 +241,8 @@ export default async function Home() {
                 <span>Fairplay</span>
               </div>
             </div>
-            <div className="text-center text-[1.65rem] font-black tracking-[0.16em] text-white">FREE FIRE</div>
-            <div className="flex items-center justify-end gap-2">
+            <div className="text-center text-[1.2rem] font-black tracking-[0.16em] text-white sm:text-[1.65rem]">FREE FIRE</div>
+            <div className="flex items-center justify-center gap-2 sm:justify-end">
               <Trophy className="h-4 w-4 text-amber-300" />
               <span>Victory</span>
             </div>

@@ -89,7 +89,7 @@ export default async function AdminClassementPage() {
             </Link>
           </div>
 
-          <div className="mt-5 overflow-hidden rounded-2xl border border-white/10">
+          <div className="mt-5 overflow-x-auto rounded-2xl border border-white/10">
             <table className="w-full text-left text-sm">
               <thead className="bg-slate-950/60 text-xs uppercase tracking-wider text-white/60">
                 <tr>

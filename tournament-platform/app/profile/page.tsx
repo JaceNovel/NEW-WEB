@@ -73,16 +73,16 @@ export default async function ProfilePage() {
   ];
 
   return (
-    <main className="mx-auto max-w-[1160px] px-4 py-8">
-      <section className="relative overflow-hidden rounded-[30px] border border-fuchsia-300/20 bg-[radial-gradient(circle_at_50%_0%,rgba(214,114,255,0.16),transparent_32%),linear-gradient(180deg,rgba(27,14,48,0.8),rgba(6,7,19,0.72))] p-5 shadow-[0_0_40px_rgba(158,82,255,0.12)]">
+    <main className="mx-auto max-w-[1160px] px-4 py-6 sm:py-8">
+      <section className="relative overflow-hidden rounded-[24px] border border-fuchsia-300/20 bg-[radial-gradient(circle_at_50%_0%,rgba(214,114,255,0.16),transparent_32%),linear-gradient(180deg,rgba(27,14,48,0.8),rgba(6,7,19,0.72))] p-4 shadow-[0_0_40px_rgba(158,82,255,0.12)] sm:rounded-[30px] sm:p-5">
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_70%_20%,rgba(255,149,76,0.12),transparent_18%),radial-gradient(circle_at_35%_78%,rgba(196,111,255,0.12),transparent_24%)]" />
 
         <div className="relative grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
-          <div className="rounded-[26px] border border-fuchsia-300/20 bg-black/25 p-5 backdrop-blur-md">
-            <div className="grid items-center gap-6 md:grid-cols-[220px_1fr]">
-              <div className="relative mx-auto flex h-[210px] w-[210px] items-center justify-center rounded-[28px] border border-orange-300/20 bg-[radial-gradient(circle,rgba(255,159,82,0.18),rgba(98,30,119,0.12),transparent_70%)]">
+          <div className="rounded-[22px] border border-fuchsia-300/20 bg-black/25 p-4 backdrop-blur-md sm:rounded-[26px] sm:p-5">
+            <div className="grid items-center gap-5 md:grid-cols-[220px_1fr]">
+              <div className="relative mx-auto flex h-[160px] w-[160px] items-center justify-center rounded-[24px] border border-orange-300/20 bg-[radial-gradient(circle,rgba(255,159,82,0.18),rgba(98,30,119,0.12),transparent_70%)] sm:h-[210px] sm:w-[210px] sm:rounded-[28px]">
                 <div className="absolute inset-0 rounded-[28px] border border-white/8 shadow-[inset_0_0_44px_rgba(255,255,255,0.04),0_0_34px_rgba(196,104,255,0.18)]" />
-                <img src={player.logoUrl} alt={player.pseudo} className="relative z-[1] h-[170px] w-[170px] object-contain drop-shadow-[0_0_30px_rgba(255,150,84,0.28)]" />
+                <img src={player.logoUrl} alt={player.pseudo} className="relative z-[1] h-[128px] w-[128px] object-contain drop-shadow-[0_0_30px_rgba(255,150,84,0.28)] sm:h-[170px] sm:w-[170px]" />
               </div>
 
               <div>
@@ -90,7 +90,7 @@ export default async function ProfilePage() {
                   <FlameKindling className="h-4 w-4" />
                   {player.status}
                 </div>
-                <h1 className="mt-4 text-4xl font-black tracking-tight text-white md:text-6xl">{player.pseudo}</h1>
+                <h1 className="mt-4 text-3xl font-black tracking-tight text-white sm:text-4xl md:text-6xl">{player.pseudo}</h1>
                 <div className="mt-3 flex flex-wrap items-center gap-3 text-sm text-white/72">
                   <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">ID {player.freefireId}</span>
                   <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">Mode {player.gameMode}</span>
@@ -104,7 +104,7 @@ export default async function ProfilePage() {
             </div>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-2">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-2">
             {statCards.map((card) => {
               const Icon = card.icon;
 
@@ -122,14 +122,14 @@ export default async function ProfilePage() {
         </div>
       </section>
 
-      <section className="mt-8 rounded-[30px] border border-fuchsia-300/18 bg-[linear-gradient(180deg,rgba(28,14,49,0.74),rgba(7,8,18,0.72))] p-4 shadow-[0_0_40px_rgba(158,82,255,0.1)]">
+      <section className="mt-6 rounded-[24px] border border-fuchsia-300/18 bg-[linear-gradient(180deg,rgba(28,14,49,0.74),rgba(7,8,18,0.72))] p-3 shadow-[0_0_40px_rgba(158,82,255,0.1)] sm:mt-8 sm:rounded-[30px] sm:p-4">
         <div className="grid gap-3 md:grid-cols-2">
           <div className="rounded-[18px] border border-white/10 bg-black/20 px-4 py-3 text-sm font-bold uppercase tracking-[0.22em] text-white">Matchs</div>
           <div className="rounded-[18px] border border-white/8 bg-white/5 px-4 py-3 text-sm font-bold uppercase tracking-[0.22em] text-white/55">Défis</div>
         </div>
 
         <div className="mt-4 grid gap-5 lg:grid-cols-[1.2fr_0.8fr]">
-          <div className="rounded-[24px] border border-white/10 bg-black/20 p-4">
+          <div className="rounded-[20px] border border-white/10 bg-black/20 p-3 sm:rounded-[24px] sm:p-4">
             <div className="space-y-3">
               {matches.length ? (
                 matches.map((match, index) => {
@@ -138,18 +138,18 @@ export default async function ProfilePage() {
 
                   return (
                     <div key={match.id} className="grid gap-4 rounded-[20px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.01))] px-4 py-4 md:grid-cols-[56px_1.4fr_1fr_0.9fr_150px] md:items-center">
-                      <div className="text-4xl font-black text-amber-200">{index + 1}</div>
+                      <div className="text-3xl font-black text-amber-200 sm:text-4xl">{index + 1}</div>
                       <div className="flex items-center gap-3">
                         <img src={opponent.logoUrl} alt={opponent.pseudo} className="h-14 w-14 rounded-full border border-white/10 bg-black/20 object-contain p-2" />
                         <div>
-                          <div className="text-xl font-black text-white">{player.pseudo} <span className="bg-[linear-gradient(180deg,#ffbe73,#ff76dd)] bg-clip-text text-transparent">VS</span> {opponent.pseudo}</div>
+                          <div className="text-lg font-black text-white sm:text-xl">{player.pseudo} <span className="bg-[linear-gradient(180deg,#ffbe73,#ff76dd)] bg-clip-text text-transparent">VS</span> {opponent.pseudo}</div>
                           <div className="mt-1 text-sm text-white/55">{opponent.freefireId}</div>
                         </div>
                       </div>
                       <div className="text-sm text-white/68">
                         {new Intl.DateTimeFormat("fr-FR", { dateStyle: "long", timeStyle: "short" }).format(match.date)}
                       </div>
-                      <div className="text-xl font-black text-amber-100">{victory === null ? "En attente" : victory ? "+1 Crédit" : "-"}</div>
+                      <div className="text-lg font-black text-amber-100 sm:text-xl">{victory === null ? "En attente" : victory ? "+1 Crédit" : "-"}</div>
                       <div>
                         <span className="inline-flex rounded-[12px] border border-violet-300/20 bg-violet-300/10 px-4 py-2 text-sm font-bold uppercase tracking-[0.18em] text-white">
                           {victory === null ? match.status : victory ? "Victoire" : "Défaite"}

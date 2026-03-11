@@ -66,7 +66,7 @@ export default function AdminTopbar({ displayName, credits, avatarUrl }: AdminTo
         </div>
 
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-          <div className="flex min-w-[220px] items-center gap-2 rounded-[18px] border border-white/10 bg-black/20 px-3 py-2.5 text-sm text-white/55 shadow-[inset_0_0_16px_rgba(255,255,255,0.02)]">
+          <div className="hidden min-w-[220px] items-center gap-2 rounded-[18px] border border-white/10 bg-black/20 px-3 py-2.5 text-sm text-white/55 shadow-[inset_0_0_16px_rgba(255,255,255,0.02)] md:flex">
             <Search className="h-4 w-4 text-fuchsia-200/70" />
             <span>Rechercher un joueur, un match...</span>
           </div>

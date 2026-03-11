@@ -19,7 +19,7 @@ export default function AdminSidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="relative overflow-hidden rounded-[30px] border border-fuchsia-400/15 bg-[linear-gradient(180deg,rgba(33,12,57,0.88),rgba(10,10,24,0.92))] p-4 shadow-[0_0_50px_rgba(171,82,255,0.12)] backdrop-blur-xl">
+    <aside className="relative overflow-hidden rounded-[24px] border border-fuchsia-400/15 bg-[linear-gradient(180deg,rgba(33,12,57,0.88),rgba(10,10,24,0.92))] p-3 shadow-[0_0_50px_rgba(171,82,255,0.12)] backdrop-blur-xl sm:rounded-[30px] sm:p-4">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,163,80,0.18),transparent_20%),radial-gradient(circle_at_top_right,rgba(154,93,255,0.22),transparent_30%),radial-gradient(circle_at_50%_24%,rgba(255,255,255,0.06),transparent_30%),linear-gradient(180deg,rgba(255,255,255,0.04),transparent_24%)]" />
 
       <div className="relative flex items-center gap-3 rounded-[24px] border border-white/10 bg-white/5 px-3 py-3.5 shadow-[inset_0_0_22px_rgba(255,255,255,0.02)]">
@@ -42,7 +42,7 @@ export default function AdminSidebar() {
         </div>
       </div>
 
-      <nav className="relative mt-5 space-y-2 text-sm">
+      <nav className="relative mt-4 flex gap-2 overflow-x-auto pb-1 text-sm xl:mt-5 xl:block xl:space-y-2 xl:overflow-visible xl:pb-0">
         {navItems.map((item) => {
           const active = pathname === item.href;
           const Icon = item.icon;
@@ -52,7 +52,7 @@ export default function AdminSidebar() {
               key={item.href}
               href={item.href}
               className={cn(
-                "group flex items-center justify-between rounded-[22px] border px-3.5 py-3 transition-all duration-200",
+                "group flex min-w-[220px] items-center justify-between rounded-[18px] border px-3 py-3 transition-all duration-200 xl:min-w-0 xl:rounded-[22px] xl:px-3.5",
                 active
                   ? "border-fuchsia-300/34 bg-[linear-gradient(90deg,rgba(123,61,255,0.44),rgba(255,135,77,0.20))] text-white shadow-[0_0_26px_rgba(187,95,255,0.22)]"
                   : "border-white/8 bg-white/[0.03] text-white/70 hover:border-fuchsia-300/20 hover:bg-white/[0.06] hover:text-white"
@@ -82,7 +82,7 @@ export default function AdminSidebar() {
         })}
       </nav>
 
-      <div className="relative mt-6 rounded-[24px] border border-amber-300/15 bg-[linear-gradient(180deg,rgba(255,174,83,0.12),rgba(138,57,255,0.08))] p-4">
+      <div className="relative mt-4 rounded-[24px] border border-amber-300/15 bg-[linear-gradient(180deg,rgba(255,174,83,0.12),rgba(138,57,255,0.08))] p-4 xl:mt-6">
         <div className="flex items-center gap-2 text-[0.68rem] font-black uppercase tracking-[0.26em] text-amber-200/70">
           <Crown className="h-3.5 w-3.5" />
           Accès sécurisé
