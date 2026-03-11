@@ -1,4 +1,4 @@
-import { ChallengeStatus, GameMode, PlayerStatus, TournamentStage, type Prisma } from "@prisma/client";
+import { ChallengeStatus, GameMode, PlayerStatus, Role, TournamentStage, type Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 
 const tournamentConfigSelect = {
@@ -219,6 +219,9 @@ export async function getTournamentRanking(
   const db: DatabaseClient = params?.tx ?? prisma;
   const config = await getTournamentConfig(params?.tx);
   const players = await db.player.findMany({
+    where: {
+      role: Role.PLAYER,
+    },
     orderBy: [{ createdAt: "asc" }],
     select: {
       id: true,

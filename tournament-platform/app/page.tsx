@@ -16,6 +16,7 @@ export default async function Home() {
   const [players, matches] = hasDb
     ? await Promise.all([
         prisma.player.findMany({
+          where: { role: "PLAYER" },
           orderBy: [{ credits: "desc" }, { wins: "desc" }, { createdAt: "asc" }],
           take: 3,
           select: { id: true, pseudo: true, freefireId: true, credits: true, logoUrl: true },

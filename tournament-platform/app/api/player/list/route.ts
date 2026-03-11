@@ -10,6 +10,9 @@ export async function GET() {
     await recalculateTournamentState();
 
     const players = await prisma.player.findMany({
+      where: {
+        role: "PLAYER",
+      },
       orderBy: [{ credits: "desc" }, { createdAt: "asc" }],
       select: {
         id: true,
