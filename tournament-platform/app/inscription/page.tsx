@@ -8,44 +8,18 @@ import { BadgeCheck, Camera, Crown, Flag, Flame, ShieldCheck, Swords, UploadClou
 
 import { COUNTRY_OPTIONS } from "@/lib/countries";
 
-function buildBackgroundRemovedUrl(secureUrl: string) {
-  const marker = "/upload/";
-  const index = secureUrl.indexOf(marker);
-  if (index === -1) return secureUrl;
-  return `${secureUrl.slice(0, index + marker.length)}e_background_removal,f_png/${secureUrl.slice(index + marker.length)}`;
-}
-
 async function uploadLogo(file: File) {
-  const sigRes = await fetch("/api/upload/signature", { method: "POST" });
-  const sigJson = await sigRes.json();
-  if (!sigRes.ok) throw new Error(sigJson?.error ?? "Upload signature error");
-
-  const { cloudName, apiKey, timestamp, signature, folder } = sigJson;
   const form = new FormData();
   form.append("file", file);
-  form.append("api_key", apiKey);
-  form.append("timestamp", String(timestamp));
-  form.append("signature", signature);
-  form.append("folder", folder);
 
-  const upRes = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`, {
+  const upRes = await fetch("/api/upload/logo", {
     method: "POST",
     body: form,
   });
   const upJson = await upRes.json();
-  if (!upRes.ok) throw new Error(upJson?.error?.message ?? "Cloudinary upload failed");
+  if (!upRes.ok) throw new Error(upJson?.error ?? "Upload failed");
 
-  const originalUrl = upJson.secure_url as string;
-  const backgroundRemovedUrl = buildBackgroundRemovedUrl(originalUrl);
-
-  try {
-    const testRes = await fetch(backgroundRemovedUrl, { method: "HEAD" });
-    if (testRes.ok) return backgroundRemovedUrl;
-  } catch {
-    // Fallback to original if background removal is unavailable on this Cloudinary account.
-  }
-
-  return originalUrl;
+  return upJson.url as string;
 }
 
 export default function InscriptionPage() {
