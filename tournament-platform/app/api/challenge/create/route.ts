@@ -19,10 +19,6 @@ export async function POST(req: Request) {
 
     const challengerId = session.user.id;
     if (challengerId === body.defenderId) throw new Error("Cannot challenge yourself");
-    if (config.stage !== TournamentStage.ACTIVE || !config.activeRoiId) {
-      throw new Error("Le tournoi n'a pas encore commencé. L'admin doit d'abord choisir le ROI.");
-    }
-
     const [challenger, defender] = await Promise.all([
       prisma.player.findUnique({ where: { id: challengerId } }),
       prisma.player.findUnique({ where: { id: body.defenderId } }),
@@ -31,7 +27,11 @@ export async function POST(req: Request) {
     if (challenger.status === PlayerStatus.ELIMINATED) throw new Error("Eliminated players cannot challenge");
     if (challenger.credits < 1) throw new Error("Crédits insuffisants pour lancer un défi");
     if (challenger.gameMode !== defender.gameMode) throw new Error("Les défis sont autorisés uniquement entre joueurs du même mode");
-    if (defender.status !== PlayerStatus.ROI) throw new Error("Defender must be current ROI");
+
+    const roiLocked = config.stage === TournamentStage.ACTIVE && Boolean(config.activeRoiId);
+    if (roiLocked && defender.status !== PlayerStatus.ROI) {
+      throw new Error("Pendant la phase ROI, les défis doivent viser la première place.");
+    }
 
     const created = await prisma.$transaction(async (tx) => {
       const busyPlayers = await tx.challenge.findFirst({

@@ -24,6 +24,7 @@ async function revertFinishedResult(
     where: { id: params.winnerId },
     data: {
       credits: { decrement: 1 },
+      points: { decrement: 3 },
       wins: { decrement: 1 },
     },
   });
@@ -46,6 +47,7 @@ async function applyFinishedResult(
     where: { id: params.winnerId },
     data: {
       credits: { increment: 1 },
+      points: { increment: 3 },
       wins: { increment: 1 },
     },
   });

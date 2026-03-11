@@ -13,6 +13,7 @@ type RankingEntry = {
   pseudo: string;
   countryCode?: string;
   credits: number;
+  points: number;
   wins: number;
   winStreak: number;
   logoUrl: string;
@@ -471,7 +472,7 @@ export default function MatchesArena({
                       <div className="tp-matchs-ranking-meta">{entry.wins} victoires • Série x{entry.winStreak}</div>
                     </div>
                   </div>
-                  <div className="tp-matchs-ranking-score">{entry.credits}.000 pts</div>
+                  <div className="tp-matchs-ranking-score">{entry.points} pts</div>
                 </motion.div>
               ))}
             </div>
@@ -533,9 +534,9 @@ export default function MatchesArena({
             </div>
             <div className="tp-matchs-rules-list">
               <div className="tp-matchs-rule-item"><Sparkles className="h-4 w-4" /> Format: 1v1 Spam / One Tap</div>
-              <div className="tp-matchs-rule-item"><Sparkles className="h-4 w-4" /> Le gagnant prend 1 crédit</div>
+              <div className="tp-matchs-rule-item"><Sparkles className="h-4 w-4" /> Le gagnant prend 1 crédit et 3 points</div>
               <div className="tp-matchs-rule-item"><Sparkles className="h-4 w-4" /> Le perdant perd 1 crédit</div>
-              <div className="tp-matchs-rule-item"><Sparkles className="h-4 w-4" /> Sous 5 crédits: élimination</div>
+              <div className="tp-matchs-rule-item"><Sparkles className="h-4 w-4" /> Avant le ROI, les joueurs peuvent défier qui ils veulent</div>
             </div>
           </aside>
         </div>

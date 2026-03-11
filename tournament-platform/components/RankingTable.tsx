@@ -4,8 +4,9 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowUp, Crown, Gamepad2, Shield, Skull, Swords } from "lucide-react";
+import { ArrowUp, Crown, Gamepad2, Search, Shield, Skull, Swords } from "lucide-react";
 
+import { getAllianceLabel } from "@/lib/economy";
 import type { PlayerPublic } from "@/types/player";
 
 function statusMeta(status: PlayerPublic["status"]) {
@@ -52,10 +53,20 @@ export default function RankingTable({
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [showBackToTop, setShowBackToTop] = useState(false);
   const [showClash, setShowClash] = useState(false);
+  const [query, setQuery] = useState("");
   const roi = useMemo(() => players.find((p) => p.status === "ROI") ?? null, [players]);
   const currentUser = useMemo(() => players.find((p) => p.id === currentUserId) ?? null, [currentUserId, players]);
   const hasActiveChallenge = useMemo(() => players.some((p) => p.status === "CHALLENGER"), [players]);
   const rowRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const filteredPlayers = useMemo(() => {
+    const needle = query.trim().toLowerCase();
+    if (!needle) return players;
+
+    return players.filter((player) => {
+      const allianceLabel = getAllianceLabel(player.pseudo, player.recruitedPlayers?.[0]?.pseudo ?? null).toLowerCase();
+      return player.pseudo.toLowerCase().includes(needle) || player.freefireId.toLowerCase().includes(needle) || allianceLabel.includes(needle);
+    });
+  }, [players, query]);
 
   useEffect(() => {
     function onScroll() {
@@ -170,6 +181,16 @@ export default function RankingTable({
         </div>
       ) : null}
 
+      <div className="mb-5 flex items-center gap-3 rounded-[22px] border border-white/10 bg-black/20 px-4 py-3 backdrop-blur-md">
+        <Search className="h-4 w-4 text-fuchsia-200/70" />
+        <input
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          placeholder="Chercher un joueur par pseudo ou ID Free Fire"
+          className="w-full bg-transparent text-sm text-white outline-none placeholder:text-white/35"
+        />
+      </div>
+
       <div className="tp-ranking-shell overflow-hidden rounded-[18px] border border-violet-300/18">
       <div className="tp-ranking-roi-banner relative flex items-center justify-center gap-5 overflow-hidden px-4 py-4 text-center md:px-6 md:text-left">
         <div className="tp-ranking-roi-streak" />
@@ -264,7 +285,7 @@ export default function RankingTable({
       </div>
 
       <div className="hidden md:block">
-        {players.map((player, idx) => {
+        {filteredPlayers.map((player, idx) => {
           const meta = statusMeta(player.status);
           const isRoi = player.status === "ROI";
           const isSecond = idx === 1;
@@ -280,6 +301,8 @@ export default function RankingTable({
               !hasActiveChallenge,
           );
           const isCurrentUser = currentUserId === player.id;
+          const allianceLabel = getAllianceLabel(player.pseudo, player.recruitedPlayers?.[0]?.pseudo ?? null);
+          const isDuo = Boolean(player.recruitedPlayers?.length);
 
           return (
             <motion.div
@@ -324,12 +347,13 @@ export default function RankingTable({
                   {isSecond ? <Image src="/podium-silver.svg" alt="2e place" width={28} height={28} className="tp-ranking-podium-icon tp-ranking-podium-icon-second" /> : null}
                   {isThird ? <Image src="/podium-bronze.svg" alt="3e place" width={28} height={28} className="tp-ranking-podium-icon tp-ranking-podium-icon-third" /> : null}
                   {isRoi ? <Crown className="h-5 w-5 shrink-0 text-amber-300" /> : player.status === "CHALLENGER" ? <Shield className="h-5 w-5 shrink-0 text-violet-200" /> : player.status === "ELIMINATED" ? <Skull className="h-5 w-5 shrink-0 text-rose-300" /> : null}
-                  <span className="truncate">{player.pseudo}</span>
+                  <span className="truncate">{allianceLabel}</span>
                 </div>
                 <div className="mt-1 flex items-center gap-2 truncate text-[0.96rem] text-white/72">
                   <Gamepad2 className="h-[1.05rem] w-[1.05rem] shrink-0 text-violet-200/80" />
                   <span className="truncate">{player.freefireId}</span>
                 </div>
+                {isDuo ? <div className="mt-1 text-xs font-bold uppercase tracking-[0.18em] text-cyan-200/70">Position renforcée 1v2</div> : null}
               </div>
 
               <div className="truncate text-[1.05rem] tracking-wide text-white/82">{player.freefireId}</div>
@@ -364,7 +388,7 @@ export default function RankingTable({
       </div>
 
       <div className="space-y-3 p-3 md:hidden">
-        {players.map((player, idx) => {
+        {filteredPlayers.length ? filteredPlayers.map((player, idx) => {
           const meta = statusMeta(player.status);
           const isRoi = player.status === "ROI";
           const isSecond = idx === 1;
@@ -379,6 +403,8 @@ export default function RankingTable({
               !hasActiveChallenge,
           );
           const isCurrentUser = currentUserId === player.id;
+          const allianceLabel = getAllianceLabel(player.pseudo, player.recruitedPlayers?.[0]?.pseudo ?? null);
+          const isDuo = Boolean(player.recruitedPlayers?.length);
 
           return (
             <motion.div
@@ -396,9 +422,10 @@ export default function RankingTable({
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 text-lg font-black text-white">
                       {isRoi ? <Crown className="h-4 w-4 shrink-0 text-amber-300" /> : null}
-                      <span className="truncate">{player.pseudo}</span>
+                      <span className="truncate">{allianceLabel}</span>
                     </div>
                     <div className="mt-1 truncate text-sm text-white/55">{player.freefireId}</div>
+                    {isDuo ? <div className="mt-1 text-[10px] font-bold uppercase tracking-[0.16em] text-cyan-200/75">Position 1v2</div> : null}
                   </div>
                 </div>
                 <Image src={player.logoUrl} alt={player.pseudo} width={56} height={56} className="h-14 w-14 shrink-0 object-contain" />
@@ -427,7 +454,7 @@ export default function RankingTable({
               </button>
             </motion.div>
           );
-        })}
+        }) : <div className="rounded-[20px] border border-white/10 bg-white/5 px-4 py-8 text-center text-sm text-white/50">Aucun joueur ne correspond à cette recherche.</div>}
       </div>
 
       {showBackToTop ? (

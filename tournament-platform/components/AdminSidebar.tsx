@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ArrowRight, Crown, History, LayoutDashboard, Shield, Swords, Trophy, Users } from "lucide-react";
+import { ArrowRight, Coins, Crown, History, LayoutDashboard, Shield, Swords, Trophy, Users } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
@@ -12,6 +12,7 @@ const navItems = [
   { href: "/admin/joueurs", label: "Joueurs", icon: Users },
   { href: "/admin/matchs", label: "Matchs", icon: Swords },
   { href: "/admin/classement", label: "Classement", icon: Trophy },
+  { href: "/admin/credits", label: "Crédits", icon: Coins },
   { href: "/admin/historique", label: "Historique", icon: History },
 ];
 

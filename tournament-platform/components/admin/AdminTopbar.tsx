@@ -18,6 +18,7 @@ const topLinks = [
   { href: "/admin", label: "Tableau de bord", icon: LayoutDashboard },
   { href: "/admin/matchs", label: "Matchs", icon: Swords },
   { href: "/admin/classement", label: "Classement", icon: Trophy },
+  { href: "/admin/credits", label: "Crédits", icon: Coins },
   { href: "/admin/historique", label: "Historique", icon: History },
   { href: "/admin", label: "Admin", icon: Settings2 },
 ];

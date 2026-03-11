@@ -9,6 +9,7 @@ export type PlayerPublic = {
   gameMode: PlayerGameMode;
   logoUrl: string;
   credits: number;
+  points: number;
   status: "ROI" | "CHALLENGER" | "PLAYER" | "ELIMINATED";
   wins: number;
   losses: number;
@@ -16,4 +17,6 @@ export type PlayerPublic = {
   rankingPosition?: number;
   isSeededTop10?: boolean;
   finalRank?: number | null;
+  purchasedById?: string | null;
+  recruitedPlayers?: Array<{ id: string; pseudo: string; logoUrl: string; freefireId: string }>;
 };

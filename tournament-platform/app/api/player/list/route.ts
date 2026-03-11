@@ -19,12 +19,22 @@ export async function GET() {
         gameMode: true,
         logoUrl: true,
         credits: true,
+        points: true,
         status: true,
         wins: true,
         losses: true,
         isSeededTop10: true,
         finalRank: true,
         createdAt: true,
+        purchasedById: true,
+        recruitedPlayers: {
+          select: {
+            id: true,
+            pseudo: true,
+            logoUrl: true,
+            freefireId: true,
+          },
+        },
       },
     });
 

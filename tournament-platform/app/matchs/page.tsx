@@ -51,9 +51,9 @@ export default async function MatchsPage() {
           },
         }),
         prisma.player.findMany({
-          orderBy: [{ credits: "desc" }, { wins: "desc" }, { createdAt: "asc" }],
+          orderBy: [{ points: "desc" }, { wins: "desc" }, { credits: "desc" }, { createdAt: "asc" }],
           take: 5,
-          select: { id: true, pseudo: true, countryCode: true, credits: true, wins: true, logoUrl: true },
+          select: { id: true, pseudo: true, countryCode: true, credits: true, points: true, wins: true, logoUrl: true },
         }),
       ])
     : [[], []];

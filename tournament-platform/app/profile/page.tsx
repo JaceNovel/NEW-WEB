@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { Crown, FlameKindling, Ghost, Swords, Trophy } from "lucide-react";
 
 import { authOptions } from "@/lib/auth";
+import { getAllianceLabel } from "@/lib/economy";
 import { prisma } from "@/lib/prisma";
 import { getTournamentRanking } from "@/lib/tournament";
 
@@ -34,10 +35,20 @@ export default async function ProfilePage() {
       freefireId: true,
       logoUrl: true,
       credits: true,
+      points: true,
       wins: true,
       losses: true,
       status: true,
       gameMode: true,
+      purchasedBy: { select: { pseudo: true } },
+      recruitedPlayers: {
+        select: {
+          id: true,
+          pseudo: true,
+          logoUrl: true,
+          freefireId: true,
+        },
+      },
     },
   });
   if (!player) redirect("/login");
@@ -68,9 +79,11 @@ export default async function ProfilePage() {
   const statCards = [
     { label: "Matchs", value: matches.length, icon: Swords },
     { label: "Victoires", value: player.wins, icon: Trophy },
-    { label: "Défaites", value: player.losses, icon: Ghost },
+    { label: "Points", value: player.points, icon: Crown },
     { label: "Rang", value: rank ? `#${rank}` : "—", icon: Crown },
   ];
+
+  const allianceLabel = getAllianceLabel(player.pseudo, player.recruitedPlayers[0]?.pseudo ?? null);
 
   return (
     <main className="mx-auto max-w-[1160px] px-4 py-6 sm:py-8">
@@ -90,16 +103,19 @@ export default async function ProfilePage() {
                   <FlameKindling className="h-4 w-4" />
                   {player.status}
                 </div>
-                <h1 className="mt-4 text-3xl font-black tracking-tight text-white sm:text-4xl md:text-6xl">{player.pseudo}</h1>
+                <h1 className="mt-4 text-3xl font-black tracking-tight text-white sm:text-4xl md:text-6xl">{allianceLabel}</h1>
                 <div className="mt-3 flex flex-wrap items-center gap-3 text-sm text-white/72">
                   <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">ID {player.freefireId}</span>
                   <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">Mode {player.gameMode}</span>
-                  <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">{player.credits} crédits</span>
+                  <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">Crédits restants: {player.credits}</span>
+                  <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">{player.points} points</span>
                 </div>
                 <div className="mt-5 inline-flex items-center gap-2 rounded-[12px] border border-violet-300/24 bg-[linear-gradient(180deg,rgba(137,74,255,0.26),rgba(34,23,74,0.32))] px-4 py-3 text-sm font-black uppercase tracking-[0.18em] text-white shadow-[0_0_26px_rgba(142,83,255,0.18)]">
                   <Crown className="h-4 w-4 text-amber-300" />
                   {rank ? `Rang #${rank}` : "En attente de classement"}
                 </div>
+                {player.recruitedPlayers[0] ? <div className="mt-3 text-sm font-bold uppercase tracking-[0.18em] text-cyan-200/75">Position renforcée avec {player.recruitedPlayers[0].pseudo}</div> : null}
+                {player.purchasedBy ? <div className="mt-3 text-sm font-bold uppercase tracking-[0.18em] text-fuchsia-200/75">Associé à la position de {player.purchasedBy.pseudo}</div> : null}
               </div>
             </div>
           </div>

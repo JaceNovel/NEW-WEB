@@ -17,8 +17,24 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Tournoi 1v1 Free Fire — ROI",
-  description: "Plateforme tournoi Free Fire 1v1 Spam / One Tap avec crédits et classement dynamique",
+  title: {
+    default: "PRIME League | Tournoi 1v1 Free Fire",
+    template: "%s | PRIME League",
+  },
+  applicationName: "PRIME League",
+  description: "PRIME League est une plateforme de tournoi Free Fire 1v1 Spam / One Tap avec crédits, ROI, classement dynamique et boutique joueur.",
+  keywords: ["PRIME League", "Prime League Free Fire", "tournoi Free Fire", "1v1 Free Fire", "ROI", "classement Free Fire"],
+  openGraph: {
+    title: "PRIME League",
+    description: "Tournoi 1v1 Free Fire avec credits, ROI et systeme de progression PRIME League.",
+    siteName: "PRIME League",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "PRIME League",
+    description: "Tournoi 1v1 Free Fire avec credits, ROI et systeme de progression PRIME League.",
+  },
 };
 
 export default function RootLayout({

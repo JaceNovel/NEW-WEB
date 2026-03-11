@@ -252,6 +252,20 @@ export default async function AdminDashboardPage() {
         })}
       </section>
 
+      <section className="grid gap-4 lg:grid-cols-3">
+        <Link href="/admin/credits" className="rounded-[26px] border border-cyan-300/16 bg-[linear-gradient(180deg,rgba(20,12,40,0.84),rgba(8,8,22,0.82))] p-5 shadow-[0_0_28px_rgba(72,174,255,0.10)] transition-transform duration-200 hover:-translate-y-1">
+          <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-cyan-300/18 bg-cyan-300/10 text-cyan-200">
+            <Coins className="h-5 w-5" />
+          </div>
+          <div className="mt-4 text-xl font-black text-white">Hub crédits</div>
+          <div className="mt-2 text-sm text-white/58">Voir les associations actives et piloter les produits crédit / prix de la boutique.</div>
+          <div className="mt-4 inline-flex items-center gap-2 text-sm font-black uppercase tracking-[0.14em] text-cyan-200">
+            Ouvrir
+            <ArrowRight className="h-4 w-4" />
+          </div>
+        </Link>
+      </section>
+
       <section className="grid gap-5 2xl:grid-cols-[minmax(0,1.35fr)_420px]">
         <article className="overflow-hidden rounded-[30px] border border-fuchsia-300/12 bg-[linear-gradient(180deg,rgba(27,11,47,0.82),rgba(8,8,20,0.82))] shadow-[0_0_30px_rgba(171,82,255,0.08)]">
           <div className="flex items-center justify-between gap-3 border-b border-white/8 px-5 py-4 sm:px-6">

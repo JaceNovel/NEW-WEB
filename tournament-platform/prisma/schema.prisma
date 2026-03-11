@@ -52,6 +52,7 @@ model Player {
   gameMode     GameMode
   logoUrl      String
   credits      Int          @default(5)
+  points       Int          @default(0)
   status       PlayerStatus @default(PLAYER)
   role         Role         @default(PLAYER)
   passwordHash String
@@ -60,6 +61,8 @@ model Player {
   isSeededTop10 Boolean     @default(false)
   seededTop20At DateTime?
   finalRank     Int?
+  purchasedById String?
+  purchasedAt   DateTime?
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
 
@@ -70,6 +73,9 @@ model Player {
   challengesSent     Challenge[] @relation("ChallengeChallenger")
   challengesReceived Challenge[] @relation("ChallengeDefender")
   roiTournaments     TournamentConfig[] @relation("TournamentRoi")
+  purchasedBy        Player?      @relation("PlayerAlliance", fields: [purchasedById], references: [id])
+  recruitedPlayers   Player[]     @relation("PlayerAlliance")
+  creditPurchases    CreditPurchase[]
 }
 
 model TournamentConfig {
@@ -115,4 +121,32 @@ model Challenge {
   defender   Player @relation("ChallengeDefender", fields: [defenderId], references: [id])
 
   @@index([status, createdAt])
+}
+
+model CreditPurchase {
+  id        String   @id @default(cuid())
+  playerId  String
+  packKey   String
+  credits   Int
+  priceFcfa Int
+  createdAt DateTime @default(now())
+
+  player Player @relation(fields: [playerId], references: [id])
+
+  @@index([playerId, packKey, createdAt])
+}
+
+model CreditProduct {
+  id                 String   @id @default(cuid())
+  key                String   @unique
+  label              String
+  credits            Int
+  priceFcfa          Int
+  maxPurchasesPerPlayer Int?
+  description        String
+  isActive           Boolean  @default(true)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@index([isActive, credits])
 }

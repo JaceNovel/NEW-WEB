@@ -14,9 +14,11 @@ const tournamentConfigSelect = {
 type DatabaseClient = Prisma.TransactionClient | typeof prisma;
 
 function compareCreditsThenDate(
-  a: { credits: number; createdAt: Date },
-  b: { credits: number; createdAt: Date },
+  a: { points: number; wins: number; credits: number; createdAt: Date },
+  b: { points: number; wins: number; credits: number; createdAt: Date },
 ) {
+  if (b.points !== a.points) return b.points - a.points;
+  if (b.wins !== a.wins) return b.wins - a.wins;
   if (b.credits !== a.credits) return b.credits - a.credits;
   return a.createdAt.getTime() - b.createdAt.getTime();
 }
@@ -100,8 +102,9 @@ export async function recalculateTournamentState(tx?: Prisma.TransactionClient) 
 
   for (const gameMode of [GameMode.SPAM, GameMode.ONETAP]) {
     const modePlayers = players.filter((player) => player.gameMode === gameMode);
-    const eliminatedIds = modePlayers.filter((p) => p.credits < 5).map((p) => p.id);
-    const alive = modePlayers.filter((p) => p.credits >= 5);
+    const shouldEliminate = config.stage === TournamentStage.ACTIVE || config.stage === TournamentStage.FINALIZED;
+    const eliminatedIds = shouldEliminate ? modePlayers.filter((p) => p.credits < 5).map((p) => p.id) : [];
+    const alive = shouldEliminate ? modePlayers.filter((p) => p.credits >= 5) : modePlayers;
     const defaultPlayerIds = alive.map((p) => p.id).filter((id) => id !== activeRoiId);
 
     if (eliminatedIds.length) {
@@ -151,6 +154,7 @@ type RankingPlayer = {
   gameMode: GameMode;
   logoUrl: string;
   credits: number;
+  points: number;
   status: PlayerStatus;
   wins: number;
   losses: number;
@@ -158,6 +162,8 @@ type RankingPlayer = {
   isSeededTop10: boolean;
   seededTop20At: Date | null;
   finalRank: number | null;
+  purchasedById: string | null;
+  recruitedPlayers: Array<{ id: string; pseudo: string; logoUrl: string; freefireId: string }>;
 };
 
 function withPositions(players: RankingPlayer[]) {
@@ -219,6 +225,7 @@ export async function getTournamentRanking(
       gameMode: true,
       logoUrl: true,
       credits: true,
+      points: true,
       status: true,
       wins: true,
       losses: true,
@@ -226,6 +233,15 @@ export async function getTournamentRanking(
       isSeededTop10: true,
       seededTop20At: true,
       finalRank: true,
+      purchasedById: true,
+      recruitedPlayers: {
+        select: {
+          id: true,
+          pseudo: true,
+          logoUrl: true,
+          freefireId: true,
+        },
+      },
     },
   });
 
