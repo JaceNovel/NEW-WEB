@@ -44,6 +44,8 @@ export async function POST(req: Request) {
           countryCode: body.countryCode.trim().toUpperCase(),
           gameMode: body.gameMode,
           logoUrl: body.logoUrl,
+          credits: 5,
+          weeklyCreditsGrantedAt: new Date(),
           passwordHash,
         },
         select: {

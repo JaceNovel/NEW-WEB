@@ -52,6 +52,7 @@ model Player {
   gameMode     GameMode
   logoUrl      String
   credits      Int          @default(5)
+  weeklyCreditsGrantedAt DateTime?
   points       Int          @default(0)
   status       PlayerStatus @default(PLAYER)
   role         Role         @default(PLAYER)

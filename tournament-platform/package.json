@@ -6,6 +6,7 @@
     "dev": "next dev",
     "dev:clean": "rm -rf .next && next dev",
     "postinstall": "prisma generate",
+    "seed:admin": "node prisma/seed-admin.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"

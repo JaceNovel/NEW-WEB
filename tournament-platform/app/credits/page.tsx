@@ -5,7 +5,7 @@ import CreditsHub from "@/components/CreditsHub";
 import { authOptions } from "@/lib/auth";
 import { ensureCreditProducts, getRecruitmentCost } from "@/lib/economy";
 import { prisma } from "@/lib/prisma";
-import { getTournamentRanking, recalculateTournamentState } from "@/lib/tournament";
+import { getTournamentRanking } from "@/lib/tournament";
 import { safeJson } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
@@ -29,7 +29,6 @@ export default async function CreditsPage() {
     redirect("/login");
   }
 
-  await recalculateTournamentState();
   const creditProducts = await ensureCreditProducts();
 
   const currentPlayer = await prisma.player.findUnique({
@@ -63,7 +62,56 @@ export default async function CreditsPage() {
   }
 
   const ranking = await getTournamentRanking({ gameMode: currentPlayer.gameMode });
-  const marketPlayers = ranking
+
+  const fallbackRanking = ranking.length
+    ? ranking
+    : (
+        await prisma.player.findMany({
+          where: {
+            role: "PLAYER",
+            gameMode: currentPlayer.gameMode,
+          },
+          orderBy: [{ points: "desc" }, { wins: "desc" }, { credits: "desc" }, { createdAt: "asc" }],
+          select: {
+            id: true,
+            pseudo: true,
+            freefireId: true,
+            gameMode: true,
+            logoUrl: true,
+            credits: true,
+            points: true,
+            status: true,
+            wins: true,
+            losses: true,
+            createdAt: true,
+            isSeededTop10: true,
+            seededTop20At: true,
+            finalRank: true,
+            purchasedById: true,
+            alliancePending: true,
+            _count: {
+              select: {
+                recruitedPlayers: true,
+              },
+            },
+            recruitedPlayers: {
+              where: { alliancePending: false },
+              select: {
+                id: true,
+                pseudo: true,
+                logoUrl: true,
+                freefireId: true,
+              },
+            },
+          },
+        })
+      ).map(({ _count, ...player }, index) => ({
+        ...player,
+        rankingPosition: index + 1,
+        recruitedPlayersCount: _count.recruitedPlayers,
+      }));
+
+  const marketPlayers = fallbackRanking
     .filter((player) => player.id !== currentPlayer.id)
     .filter((player) => !player.purchasedById)
     .filter((player) => player.recruitedPlayersCount === 0)

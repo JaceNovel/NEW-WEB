@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { signIn } from "next-auth/react";
+import { getSession, signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { motion } from "framer-motion";
@@ -28,7 +28,10 @@ export default function LoginPage() {
       setError("Pseudo ou mot de passe invalide");
       return;
     }
-    router.push("/profile");
+
+    const session = await getSession();
+    const isAdmin = (session?.user as any)?.role === "ADMIN";
+    router.push(isAdmin ? "/admin" : "/profile");
   }
 
   return (

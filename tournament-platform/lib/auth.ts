@@ -62,12 +62,50 @@ export const authOptions: NextAuthOptions = {
     },
     async session({ session, token }) {
       if (session.user) {
-        const latestPlayer = token.playerId
+        const playerId = token.playerId ? String(token.playerId) : null;
+
+        let latestPlayer = playerId
           ? await prisma.player.findUnique({
-              where: { id: String(token.playerId) },
-              select: { credits: true, logoUrl: true, freefireId: true, status: true, gameMode: true },
+              where: { id: playerId },
+              select: {
+                credits: true,
+                weeklyCreditsGrantedAt: true,
+                logoUrl: true,
+                freefireId: true,
+                status: true,
+                gameMode: true,
+              },
             })
           : null;
+
+        if (playerId && latestPlayer && latestPlayer.credits < 5) {
+          const config = await prisma.tournamentConfig.findUnique({
+            where: { id: "main" },
+            select: { stage: true },
+          });
+
+          const isTournamentActive = config?.stage === "ACTIVE" || config?.stage === "FINALIZED";
+          if (!isTournamentActive) {
+            const now = Date.now();
+            const last = latestPlayer.weeklyCreditsGrantedAt?.getTime() ?? 0;
+            const hasWaitedSevenDays = now - last >= 7 * 24 * 60 * 60 * 1000;
+
+            if (hasWaitedSevenDays) {
+              latestPlayer = await prisma.player.update({
+                where: { id: playerId },
+                data: { credits: 5, weeklyCreditsGrantedAt: new Date() },
+                select: {
+                  credits: true,
+                  weeklyCreditsGrantedAt: true,
+                  logoUrl: true,
+                  freefireId: true,
+                  status: true,
+                  gameMode: true,
+                },
+              });
+            }
+          }
+        }
 
         (session.user as any).id = token.playerId;
         (session.user as any).role = token.role;

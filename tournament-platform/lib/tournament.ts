@@ -13,6 +13,8 @@ const tournamentConfigSelect = {
 
 type DatabaseClient = Prisma.TransactionClient | typeof prisma;
 
+let lastTournamentRecalcAtMs = 0;
+
 function compareCreditsThenDate(
   a: { points: number; wins: number; credits: number; createdAt: Date },
   b: { points: number; wins: number; credits: number; createdAt: Date },
@@ -77,6 +79,12 @@ export async function syncTournamentRegistration(tx?: Prisma.TransactionClient) 
 }
 
 export async function recalculateTournamentState(tx?: Prisma.TransactionClient) {
+  if (!tx) {
+    const now = Date.now();
+    if (now - lastTournamentRecalcAtMs < 15_000) return;
+    lastTournamentRecalcAtMs = now;
+  }
+
   const db = tx ?? prisma;
   const config = await syncTournamentRegistration(tx);
 
