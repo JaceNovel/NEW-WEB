@@ -66,21 +66,6 @@ export default async function Home() {
     },
   ];
 
-  const seoPillars = [
-    {
-      title: "Une scène pensée pour durer",
-      copy: "KING League met en avant des duels officiels, un historique lisible et un classement qui evolue en temps reel selon les performances reelles.",
-    },
-    {
-      title: "Un ROI qui donne du relief au classement",
-      copy: "La course au trone structure la competition et rend chaque match utile, chaque victoire visible et chaque chute memorisable.",
-    },
-    {
-      title: "Des credits comme moteur strategique",
-      copy: "Les credits influencent la progression, l'elimination et les renforts, pour creer une economie simple, lisible et competitive.",
-    },
-  ];
-
   const faqJsonLd = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
@@ -281,27 +266,6 @@ export default async function Home() {
               </div>
             </div>
           </article>
-        </div>
-      </section>
-
-      <section className="relative mx-auto mt-7 max-w-[1200px] px-4">
-        <div className="rounded-[22px] border border-violet-300/18 bg-[linear-gradient(180deg,rgba(13,11,27,0.82),rgba(8,9,20,0.74))] p-5 sm:p-6">
-          <div className="max-w-[760px]">
-            <div className="text-[11px] font-black uppercase tracking-[0.24em] text-amber-100/70">Pourquoi KING League</div>
-            <h2 className="mt-3 text-2xl font-black text-white sm:text-3xl">Une scène Free Fire conçue pour être lisible, compétitive et mémorable.</h2>
-            <p className="mt-3 text-sm leading-7 text-white/68 sm:text-base">
-              Pour Google comme pour les joueurs, KING League raconte une promesse claire: des duels 1v1 officiels, un ROI qui incarne le sommet, un classement qui bouge vraiment et une economie de credits qui donne du poids a chaque resultat.
-            </p>
-          </div>
-
-          <div className="mt-5 grid gap-4 md:grid-cols-3">
-            {seoPillars.map((pillar) => (
-              <article key={pillar.title} className="rounded-[18px] border border-white/8 bg-white/[0.03] p-4">
-                <h3 className="text-lg font-black text-white">{pillar.title}</h3>
-                <p className="mt-2 text-sm leading-6 text-white/62">{pillar.copy}</p>
-              </article>
-            ))}
-          </div>
         </div>
       </section>
 

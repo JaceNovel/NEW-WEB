@@ -1,15 +1,20 @@
-const sponsorMessages = [
-  "Sponsor PRIME Gaming",
-  "Rechargez votre compte instantanement",
-  "Rien de manuel",
-  "Traitement rapide et automatique",
+const desktopMessages = [
+  "PRIME Gaming",
+  "Recharge instantanee",
+  "Traitement automatique",
   "Activation securisee 24/7",
-  "Paiement et livraison fluides",
-  "Experience premium automatisee",
+  "Livraison rapide",
+];
+
+const mobileMessages = [
+  "Sponsor officiel",
+  "Recharge instantanee",
+  "Traitement rapide",
 ];
 
 export default function SponsorTicker() {
-  const marqueeItems = [...sponsorMessages, ...sponsorMessages];
+  const desktopItems = [...desktopMessages, ...desktopMessages];
+  const mobileItems = [...mobileMessages, ...mobileMessages];
 
   return (
     <section className="tp-sponsor-shell" aria-label="Annonce sponsor PRIME Gaming">
@@ -20,11 +25,19 @@ export default function SponsorTicker() {
         <div className="tp-sponsor-kicker">Sponsor officiel</div>
 
         <div className="tp-sponsor-marquee" aria-hidden="true">
-          <div className="tp-sponsor-track">
-            {marqueeItems.map((message, index) => (
+          <div className="tp-sponsor-track tp-sponsor-track-desktop">
+            {desktopItems.map((message, index) => (
               <span key={`${message}-${index}`} className="tp-sponsor-pill">
                 <span className="tp-sponsor-pill-dot" />
                 <span>{message}</span>
+              </span>
+            ))}
+          </div>
+
+          <div className="tp-sponsor-track tp-sponsor-track-mobile">
+            {mobileItems.map((message, index) => (
+              <span key={`${message}-${index}-mobile`} className="tp-sponsor-mobile-item">
+                {message}
               </span>
             ))}
           </div>
@@ -40,11 +53,11 @@ export default function SponsorTicker() {
           <img
             src="https://img.icons8.com/?size=100&id=wT7CgwVbjiUF&format=png&color=000000"
             alt="Visiter PRIME Gaming"
-            width="20"
-            height="20"
+            width="18"
+            height="18"
             className="tp-sponsor-visit-icon"
           />
-          <span>Visiter PRIME Gaming</span>
+          <span className="tp-sponsor-visit-label">Visiter</span>
         </a>
       </div>
     </section>

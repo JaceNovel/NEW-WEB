@@ -182,7 +182,7 @@ export default function HistoryArena({ matches }: { matches: MatchPublic[] }) {
                         <div className="tp-history-fighter-copy">
                           <div className="tp-history-name-row">
                             <CountryFlag countryCode={match.player1.countryCode} className="tp-history-flag" />
-                            <span className="tp-history-name">{match.player1.pseudo}</span>
+                            <span className="tp-history-name" title={match.player1.pseudo}>{match.player1.pseudo}</span>
                           </div>
                           <div className="tp-history-id">ID. {match.player1.freefireId}</div>
                           {isFinished && winner?.id === match.player1.id ? <span className="tp-history-pill tp-history-pill-winner">Victoire</span> : null}
@@ -201,7 +201,7 @@ export default function HistoryArena({ matches }: { matches: MatchPublic[] }) {
                         <div className="tp-history-fighter-copy">
                           <div className="tp-history-name-row">
                             <CountryFlag countryCode={match.player2.countryCode} className="tp-history-flag" />
-                            <span className="tp-history-name">{match.player2.pseudo}</span>
+                            <span className="tp-history-name" title={match.player2.pseudo}>{match.player2.pseudo}</span>
                           </div>
                           <div className="tp-history-id">ID. {match.player2.freefireId}</div>
                           {isFinished && winner?.id === match.player2.id ? <span className="tp-history-pill tp-history-pill-winner">Victoire</span> : null}
