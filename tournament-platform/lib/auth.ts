@@ -4,6 +4,14 @@ import bcrypt from "bcryptjs";
 
 import { prisma } from "@/lib/prisma";
 
+let supportsWeeklyCreditsGrantedAt: boolean | null = null;
+
+function isMissingWeeklyCreditsGrantedAtColumn(error: unknown): boolean {
+  if (!error) return false;
+  const message = String((error as any)?.message ?? error);
+  return message.includes("Player.weeklyCreditsGrantedAt") && message.includes("does not exist");
+}
+
 const nextAuthSecret = process.env.NEXTAUTH_SECRET ?? process.env.AUTH_SECRET;
 
 export const authOptions: NextAuthOptions = {
@@ -105,20 +113,7 @@ export const authOptions: NextAuthOptions = {
         };
 
         if (playerId) {
-          try {
-            latestPlayer = await prisma.player.findUnique({
-              where: { id: playerId },
-              select: {
-                credits: true,
-                weeklyCreditsGrantedAt: true,
-                logoUrl: true,
-                freefireId: true,
-                status: true,
-                gameMode: true,
-              },
-            });
-          } catch (error) {
-            // Backward compatible: production DB might not have weeklyCreditsGrantedAt yet.
+          if (supportsWeeklyCreditsGrantedAt === false) {
             latestPlayer = await prisma.player.findUnique({
               where: { id: playerId },
               select: {
@@ -129,10 +124,46 @@ export const authOptions: NextAuthOptions = {
                 gameMode: true,
               },
             });
+          } else {
+            try {
+              latestPlayer = await prisma.player.findUnique({
+                where: { id: playerId },
+                select: {
+                  credits: true,
+                  weeklyCreditsGrantedAt: true,
+                  logoUrl: true,
+                  freefireId: true,
+                  status: true,
+                  gameMode: true,
+                },
+              });
+              supportsWeeklyCreditsGrantedAt = true;
+            } catch (error) {
+              if (isMissingWeeklyCreditsGrantedAtColumn(error)) {
+                supportsWeeklyCreditsGrantedAt = false;
+              }
+              // Backward compatible: production DB might not have weeklyCreditsGrantedAt yet.
+              latestPlayer = await prisma.player.findUnique({
+                where: { id: playerId },
+                select: {
+                  credits: true,
+                  logoUrl: true,
+                  freefireId: true,
+                  status: true,
+                  gameMode: true,
+                },
+              });
+            }
           }
         }
 
-        if (playerId && latestPlayer && latestPlayer.credits < 5 && "weeklyCreditsGrantedAt" in latestPlayer) {
+        if (
+          playerId &&
+          latestPlayer &&
+          latestPlayer.credits < 5 &&
+          supportsWeeklyCreditsGrantedAt !== false &&
+          "weeklyCreditsGrantedAt" in latestPlayer
+        ) {
           const config = await prisma.tournamentConfig.findUnique({
             where: { id: "main" },
             select: { stage: true },
@@ -158,8 +189,10 @@ export const authOptions: NextAuthOptions = {
                     gameMode: true,
                   },
                 });
+                supportsWeeklyCreditsGrantedAt = true;
               } catch {
                 // If column doesn't exist, skip weekly top-up.
+                supportsWeeklyCreditsGrantedAt = false;
               }
             }
           }
