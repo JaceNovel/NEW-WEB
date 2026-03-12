@@ -20,9 +20,16 @@ const appDownloadsRoot = path.join(process.cwd(), "public", "app-downloads");
 
 async function findFirstMatchingFile(dirName: string, matcher: (name: string) => boolean) {
   const dirPath = path.join(appDownloadsRoot, dirName);
-  const files = await readdir(dirPath, { withFileTypes: true });
-  const match = files.find((entry) => entry.isFile() && matcher(entry.name));
-  return match?.name ?? null;
+  try {
+    const files = await readdir(dirPath, { withFileTypes: true });
+    const match = files.find((entry) => entry.isFile() && matcher(entry.name));
+    return match?.name ?? null;
+  } catch (error) {
+    if (typeof error === "object" && error && "code" in error && (error as NodeJS.ErrnoException).code === "ENOENT") {
+      return null;
+    }
+    throw error;
+  }
 }
 
 async function hasPublicFile(relativePath: string) {

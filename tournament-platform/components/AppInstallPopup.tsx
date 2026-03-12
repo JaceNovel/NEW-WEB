@@ -31,6 +31,26 @@ function isStandaloneMode() {
   return window.matchMedia("(display-mode: standalone)").matches || Boolean((window.navigator as Navigator & { standalone?: boolean }).standalone);
 }
 
+function readPopupPreference() {
+  if (typeof window === "undefined") return false;
+
+  try {
+    return window.localStorage.getItem(STORAGE_KEY) === "true";
+  } catch {
+    return false;
+  }
+}
+
+function writePopupPreference(value: boolean) {
+  if (typeof window === "undefined") return;
+
+  try {
+    window.localStorage.setItem(STORAGE_KEY, value ? "true" : "false");
+  } catch {
+    // Ignore storage failures in restricted browser contexts.
+  }
+}
+
 function getIosInstallHint() {
   return "Sur iPhone, utilise Safari puis Partager > Sur l'ecran d'accueil pour installer l'app sans fichier externe.";
 }
@@ -50,7 +70,7 @@ export default function AppInstallPopup() {
     setIsInstalled(isStandaloneMode());
     setIsIos(/iphone|ipad|ipod/i.test(window.navigator.userAgent));
 
-    const hidden = window.localStorage.getItem(STORAGE_KEY) === "true";
+    const hidden = readPopupPreference();
     if (hidden || isStandaloneMode()) return;
 
     const timer = window.setTimeout(() => setIsVisible(true), 1800);
@@ -64,14 +84,20 @@ export default function AppInstallPopup() {
     const handleInstalled = () => {
       setIsInstalled(true);
       setIsVisible(false);
-      window.localStorage.setItem(STORAGE_KEY, "true");
+      writePopupPreference(true);
     };
 
     window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
     window.addEventListener("appinstalled", handleInstalled);
 
     void fetch("/api/app/downloads", { cache: "no-store" })
-      .then((response) => response.json())
+      .then(async (response) => {
+        if (!response.ok) {
+          throw new Error(`Downloads endpoint returned ${response.status}`);
+        }
+
+        return response.json();
+      })
       .then((payload: DownloadsPayload) => setDownloads(payload))
       .catch(() => setDownloads(null));
 
@@ -97,8 +123,8 @@ export default function AppInstallPopup() {
   const loaderAsset = downloads?.assets.loader ?? "/icons8-chargement-infini-50.apng.png";
 
   function closePopup() {
-    if (typeof window !== "undefined" && doNotShowAgain) {
-      window.localStorage.setItem(STORAGE_KEY, "true");
+    if (doNotShowAgain) {
+      writePopupPreference(true);
     }
     setIsVisible(false);
   }
@@ -113,9 +139,7 @@ export default function AppInstallPopup() {
     const choice = await deferredPrompt.userChoice;
 
     if (choice.outcome === "accepted") {
-      if (typeof window !== "undefined") {
-        window.localStorage.setItem(STORAGE_KEY, "true");
-      }
+      writePopupPreference(true);
       setIsVisible(false);
       setDeferredPrompt(null);
     }
