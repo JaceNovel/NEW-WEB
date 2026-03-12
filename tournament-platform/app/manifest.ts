@@ -20,7 +20,7 @@ export default function manifest(): MetadataRoute.Manifest {
         src: "/pp1-removebg-preview%20(1).png",
         sizes: "312x259",
         type: "image/png",
-        purpose: "any maskable",
+        purpose: "maskable",
       },
       {
         src: "/Design%20sans%20titre%20(1).png",
@@ -34,8 +34,6 @@ export default function manifest(): MetadataRoute.Manifest {
         src: "/Design%20sans%20titre%20(1).png",
         sizes: "800x800",
         type: "image/png",
-        form_factor: "wide",
-        label: "Splash officiel KING League",
       },
     ],
     shortcuts: [

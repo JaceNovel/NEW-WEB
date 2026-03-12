@@ -6,7 +6,6 @@ const config: CapacitorConfig = {
   appId: "space.kingleague.app",
   appName: "KING League",
   webDir: "out",
-  bundledWebRuntime: false,
   server: {
     url: appUrl,
     cleartext: appUrl.startsWith("http://"),
