@@ -14,7 +14,7 @@ export default function Navbar() {
   const credits = data?.user?.credits ?? 0;
 
   const navItems: Array<{ href: string; label: string; isActive?: boolean; icon: typeof Coins }> = [
-    { href: "/credits", label: "CREDIT", icon: Coins },
+    { href: "/credits", label: "CRÉDITS", icon: Coins },
     { href: "/classement", label: "CLASSEMENT", icon: Trophy },
     { href: "/matchs", label: "MATCHS", icon: Swords },
     { href: "/historique", label: "HISTORIQUE", icon: History },
@@ -33,7 +33,7 @@ export default function Navbar() {
           <Link href="/" className="tp-nav-mobile-brand">
             <Image
               src="/pp1-removebg-preview (1).png"
-              alt="Logo tournoi"
+              alt="Logo KING League"
               width={78}
               height={78}
               priority
@@ -48,7 +48,7 @@ export default function Navbar() {
               </Link>
               <button onClick={() => signIn()} className="tp-nav-mobile-cta tp-nav-mobile-cta-secondary">
                 <LogIn className="h-3.5 w-3.5" />
-                <span>Connexion</span>
+                <span>Se connecter</span>
               </button>
             </div>
           ) : (
@@ -78,7 +78,7 @@ export default function Navbar() {
             <Link href="/" className="flex min-w-0 items-center lg:min-w-[120px]">
               <Image
                 src="/pp1-removebg-preview (1).png"
-                alt="Logo tournoi"
+                alt="Logo KING League"
                 width={92}
                 height={92}
                 priority
@@ -113,7 +113,7 @@ export default function Navbar() {
                     S&apos;inscrire
                   </Link>
                   <button onClick={() => signIn()} className="tp-nav-action tp-nav-action-secondary tp-nav-action-mobile-secondary">
-                    <LogIn className="mr-1 inline h-4 w-4" /> CONNEXION
+                    <LogIn className="mr-1 inline h-4 w-4" /> SE CONNECTER
                   </button>
                 </>
               ) : (

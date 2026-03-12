@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import { getServerSession } from "next-auth";
 
@@ -6,8 +7,15 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getTournamentConfig, getTournamentRanking, recalculateTournamentState } from "@/lib/tournament";
 import { safeJson } from "@/lib/utils";
+import { buildPageMetadata } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
+export const metadata: Metadata = buildPageMetadata({
+  title: "Classement Free Fire",
+  description: "Consulte le classement officiel KING League, la course au ROI et les positions qui evoluent au rythme des victoires et des credits.",
+  path: "/classement",
+  keywords: ["classement KING League", "ROI Free Fire", "classement competitif Free Fire"],
+});
 
 type ClassementPageProps = {
   searchParams?: Promise<{ mode?: string }>;

@@ -282,14 +282,14 @@ export default function AdminMatchManager({
                       onClick={() => void setResult(m.id, m.player1.id, "LIVE")}
                       className="tp-button-ghost disabled:opacity-60"
                     >
-                      LIVE: {m.player1.pseudo}
+                      DIRECT: {m.player1.pseudo}
                     </button>
                     <button
                       disabled={busy}
                       onClick={() => void setResult(m.id, m.player2.id, "LIVE")}
                       className="tp-button-ghost disabled:opacity-60"
                     >
-                      LIVE: {m.player2.pseudo}
+                      DIRECT: {m.player2.pseudo}
                     </button>
                     <button
                       disabled={busy}

@@ -1,8 +1,16 @@
+import type { Metadata } from "next";
 import MatchesArena from "@/components/MatchesArena";
 import { prisma } from "@/lib/prisma";
+import { buildPageMetadata } from "@/lib/seo";
 import { safeJson } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
+export const metadata: Metadata = buildPageMetadata({
+  title: "Matchs 1v1 Free Fire",
+  description: "Suis les matchs KING League en direct, les affiches programmees et les duels qui peuvent faire tomber le ROI.",
+  path: "/matchs",
+  keywords: ["matchs Free Fire", "duels 1v1", "programme KING League"],
+});
 
 function buildWinStreakMap(
   matches: Array<{

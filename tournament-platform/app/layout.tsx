@@ -1,10 +1,16 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
+import Script from "next/script";
 
 import "../styles/globals.css";
 
 import Navbar from "@/components/Navbar";
+import AppInstallPopup from "@/components/AppInstallPopup";
+import PwaRegistrar from "@/components/PwaRegistrar";
+import SponsorFooter from "@/components/SponsorFooter";
 import { Providers } from "@/components/Providers";
+import SponsorTicker from "@/components/SponsorTicker";
+import { defaultKeywords, logoPath, siteDescription, siteName, siteUrl } from "@/lib/seo";
 
 const inter = Inter({
   variable: "--font-sans",
@@ -17,24 +23,65 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
   title: {
-    default: "PRIME League | Tournoi 1v1 Free Fire",
-    template: "%s | PRIME League",
+    default: "KING League | Tournoi 1v1 Free Fire",
+    template: "%s | KING League",
   },
-  applicationName: "PRIME League",
-  description: "PRIME League est une plateforme de tournoi Free Fire 1v1 Spam / One Tap avec crédits, ROI, classement dynamique et boutique joueur.",
-  keywords: ["PRIME League", "Prime League Free Fire", "tournoi Free Fire", "1v1 Free Fire", "ROI", "classement Free Fire"],
+  applicationName: siteName,
+  description: siteDescription,
+  keywords: defaultKeywords,
+  manifest: "/manifest.webmanifest",
+  alternates: {
+    canonical: "/",
+  },
+  creator: siteName,
+  publisher: siteName,
+  referrer: "origin-when-cross-origin",
+  formatDetection: {
+    telephone: false,
+    email: false,
+    address: false,
+  },
+  icons: {
+    icon: [
+      { url: logoPath, type: "image/png" },
+    ],
+    shortcut: [logoPath],
+    apple: [logoPath],
+  },
   openGraph: {
-    title: "PRIME League",
-    description: "Tournoi 1v1 Free Fire avec credits, ROI et systeme de progression PRIME League.",
-    siteName: "PRIME League",
+    title: siteName,
+    description: "L'ascension du ROI commence ici sur KING League. Duels 1v1 Free Fire, classement vivant, credits instantanes et experience competitive premium.",
+    url: siteUrl,
+    siteName,
+    locale: "fr_FR",
     type: "website",
+    images: [
+      {
+        url: "/opengraph-image",
+        width: 1200,
+        height: 630,
+        alt: "KING League - L'ascension du ROI commence ici",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "PRIME League",
-    description: "Tournoi 1v1 Free Fire avec credits, ROI et systeme de progression PRIME League.",
+    title: siteName,
+    description: "KING League propulse vos duels 1v1 Free Fire avec une scene premium, un ROI vivant et des credits instantanes.",
+    images: ["/twitter-image"],
   },
+  appleWebApp: {
+    capable: true,
+    title: siteName,
+    statusBarStyle: "black-translucent",
+  },
+  category: "gaming",
+};
+
+export const viewport: Viewport = {
+  themeColor: "#050816",
 };
 
 export default function RootLayout({
@@ -42,14 +89,47 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const organizationJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: siteName,
+    url: siteUrl,
+    logo: `${siteUrl}${logoPath}`,
+    description: siteDescription,
+    slogan: "L'ascension du ROI commence ici",
+    sameAs: [siteUrl],
+  };
+
+  const websiteJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: siteName,
+    alternateName: "KING League Free Fire",
+    url: siteUrl,
+    description: siteDescription,
+  };
+
   return (
     <html lang="fr">
+      <head>
+        <link rel="apple-touch-startup-image" href="/Design%20sans%20titre%20(1).png" />
+        <script async src="https://www.googletagmanager.com/gtag/js?id=G-GL5VMT7B3C" />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }} />
+      </head>
       <body
         className={`${inter.variable} ${jetbrainsMono.variable} tp-galaxy antialiased text-white relative overflow-x-hidden`}
       >
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', 'G-GL5VMT7B3C');`}
+        </Script>
         <Providers>
+          <PwaRegistrar />
+          <AppInstallPopup />
           <Navbar />
+          <SponsorTicker />
           {children}
+          <SponsorFooter />
         </Providers>
       </body>
     </html>

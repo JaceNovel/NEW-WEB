@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import { Crown, FlameKindling, Ghost, Swords, Trophy } from "lucide-react";
@@ -5,10 +6,17 @@ import { Crown, FlameKindling, Ghost, Swords, Trophy } from "lucide-react";
 import { authOptions } from "@/lib/auth";
 import { getAllianceLabel } from "@/lib/economy";
 import { prisma } from "@/lib/prisma";
+import { buildPageMetadata } from "@/lib/seo";
 import { getTournamentRanking } from "@/lib/tournament";
 import AllianceRequestCard from "@/components/profile/AllianceRequestCard";
 
 export const dynamic = "force-dynamic";
+export const metadata: Metadata = buildPageMetadata({
+  title: "Profil joueur",
+  description: "Retrouve ton profil KING League, tes credits, tes performances et tes alliances en cours.",
+  path: "/profile",
+  noIndex: true,
+});
 
 export default async function ProfilePage() {
   if (!process.env.DATABASE_URL) {

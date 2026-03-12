@@ -161,7 +161,7 @@ export default async function AdminDashboardPage() {
       title: "Total matchs",
       value: formatCompact(matchesCount),
       suffix: "matchs",
-      meta: `${formatCompact(liveMatchesCount)} live • ${formatCompact(finishedMatchesCount)} terminés`,
+      meta: `${formatCompact(liveMatchesCount)} en direct • ${formatCompact(finishedMatchesCount)} terminés`,
       icon: Swords,
       accent: "blue" as const,
     },
@@ -374,7 +374,7 @@ export default async function AdminDashboardPage() {
             {recentMatches.length ? (
               recentMatches.map((match) => {
                 const winnerName = match.winner?.pseudo ?? "En attente";
-                const statusLabel = match.status === MatchStatus.LIVE ? "Live" : match.status === MatchStatus.FINISHED ? "Terminé" : "Planifié";
+                const statusLabel = match.status === MatchStatus.LIVE ? "En direct" : match.status === MatchStatus.FINISHED ? "Terminé" : "Planifié";
 
                 return (
                   <div key={match.id} className="rounded-[24px] border border-white/8 bg-white/[0.04] p-4 transition hover:border-fuchsia-300/16 hover:bg-white/[0.06]">

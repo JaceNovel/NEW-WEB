@@ -88,7 +88,7 @@ export default function InscriptionPage() {
             transition={{ duration: 0.65, ease: "easeOut" }}
             className="tp-auth-showcase"
           >
-            <div className="tp-auth-kicker">King League Access</div>
+            <div className="tp-auth-kicker">Acces officiel KING League</div>
             <h1 className="tp-auth-title">Entre dans l&apos;arène et verrouille ta place dans le top 20.</h1>
             <p className="tp-auth-copy">
               Ton profil devient ton identité de combat. Choisis ton mode, ton drapeau, ton emblème et prépare ton entrée dans un tournoi pensé comme une scène e-sport.
@@ -118,13 +118,13 @@ export default function InscriptionPage() {
               </div>
               <div className="tp-auth-feature-item">
                 <Crown className="h-5 w-5" />
-                <span>Chaque victoire validée te rapproche du ROI et du sommet du ladder.</span>
+                <span>Chaque victoire validee te rapproche du ROI et du sommet du classement.</span>
               </div>
             </div>
 
             <div className="tp-auth-preview-card">
               <div className="tp-auth-preview-head">
-                <span className="tp-auth-preview-badge">Preview joueur</span>
+                <span className="tp-auth-preview-badge">Apercu joueur</span>
                 <span className={`tp-auth-mode-chip ${gameMode === "SPAM" ? "tp-auth-mode-chip-spam" : "tp-auth-mode-chip-onetap"}`}>{gameMode}</span>
               </div>
               <div className="tp-auth-preview-body">

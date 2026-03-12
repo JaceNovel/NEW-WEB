@@ -9,9 +9,15 @@
     "seed:admin": "node prisma/seed-admin.mjs",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "app:desktop": "electron electron/main.cjs",
+    "app:desktop:dev": "KING_LEAGUE_APP_URL=http://localhost:3000 electron electron/main.cjs",
+    "app:mobile:sync": "cap sync",
+    "app:mobile:android": "cap open android",
+    "app:mobile:ios": "cap open ios"
   },
   "dependencies": {
+    "@capacitor/core": "^7.0.0",
     "@prisma/client": "6.19.2",
     "@radix-ui/react-avatar": "^1.1.11",
     "@radix-ui/react-dialog": "^1.1.15",
@@ -38,9 +44,13 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@capacitor/android": "^7.0.0",
+    "@capacitor/cli": "^7.0.0",
+    "@capacitor/ios": "^7.0.0",
     "@types/node": "^20",
     "@types/react": "18.3.12",
     "@types/react-dom": "18.3.1",
+    "electron": "^35.0.0",
     "eslint": "^8.57.1",
     "eslint-config-next": "14.2.35",
     "tailwindcss": "^4",

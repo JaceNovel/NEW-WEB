@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { Bolt, Crown, Flame, Shield, Sparkles, Swords, Trophy } from "lucide-react";
+import { useSession } from "next-auth/react";
 
 import { getCountryOption } from "@/lib/countries";
 import type { MatchPublic } from "@/types/match";
@@ -22,9 +23,9 @@ type RankingEntry = {
 type MatchTab = "PENDING" | "LIVE" | "FINISHED";
 
 const tabMeta: Array<{ key: MatchTab; label: string; subLabel: string }> = [
-  { key: "PENDING", label: "Programme", subLabel: "Upcoming" },
-  { key: "LIVE", label: "En cours", subLabel: "Live" },
-  { key: "FINISHED", label: "Historiques", subLabel: "Archives" },
+  { key: "PENDING", label: "Programmes", subLabel: "Affiches a venir" },
+  { key: "LIVE", label: "En cours", subLabel: "Affrontements actifs" },
+  { key: "FINISHED", label: "Archives", subLabel: "Duels valides" },
 ];
 
 function formatCountdown(ms: number) {
@@ -67,6 +68,7 @@ export default function MatchesArena({
   matches: MatchPublic[];
   ranking: RankingEntry[];
 }) {
+  const { status: sessionStatus } = useSession();
   const initialTab = matches.some((match) => match.status === "LIVE") ? "LIVE" : matches.some((match) => match.status === "PENDING") ? "PENDING" : "FINISHED";
   const [activeTab, setActiveTab] = useState<MatchTab>(initialTab);
   const [selectedMatchId, setSelectedMatchId] = useState<string | null>(null);
@@ -228,7 +230,7 @@ export default function MatchesArena({
           className="tp-matchs-brand-wrap"
         >
           <div className="tp-matchs-brand-mark">1VS1 KING LEAGUE</div>
-          <div className="tp-matchs-brand-subtitle">Combattez. Dominez. Gagnez.</div>
+          <div className="tp-matchs-brand-subtitle">L'affiche du moment, la pression du direct et la chute possible du ROI.</div>
         </motion.div>
 
         <div className="tp-matchs-top-tabs">
@@ -298,7 +300,7 @@ export default function MatchesArena({
                           <div className="tp-matchs-schedule-meta">{match.player1.freefireId}</div>
                         </div>
                       </div>
-                      <span className={`tp-matchs-chip ${statusClass}`}>{match.status === "PENDING" ? "+14" : match.status === "LIVE" ? "LIVE" : "VALIDÉ"}</span>
+                      <span className={`tp-matchs-chip ${statusClass}`}>{match.status === "PENDING" ? "A VENIR" : match.status === "LIVE" ? "EN DIRECT" : "VALIDE"}</span>
                     </div>
                     <div className="tp-matchs-schedule-row tp-matchs-schedule-row-bottom">
                       <div className="tp-matchs-schedule-team tp-matchs-schedule-team-small">
@@ -352,7 +354,7 @@ export default function MatchesArena({
                   </div>
                 ) : null}
 
-                <div className="tp-matchs-battle-label">{featuredMatch.status === "LIVE" ? "Battle en cours" : featuredMatch.status === "FINISHED" ? "Victoire validée" : "Upcoming Battle"}</div>
+                <div className="tp-matchs-battle-label">{featuredMatch.status === "LIVE" ? "Affrontement en cours" : featuredMatch.status === "FINISHED" ? "Victoire validee" : "Duel programme"}</div>
 
                 <div className="tp-matchs-battle-stage">
                   {enableBattleEffects ? <div className="tp-matchs-battle-aura tp-matchs-battle-aura-left" /> : null}
@@ -429,7 +431,7 @@ export default function MatchesArena({
                       transition={enableBattleEffects ? { duration: isHistoryView ? 2.8 : 1.55, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" } : undefined}
                       className={`tp-matchs-versus ${isHistoryView ? "tp-matchs-versus-history" : ""}`}
                     >
-                      {isHistoryView ? "WIN" : "VS"}
+                      {isHistoryView ? "ROI" : "VS"}
                     </motion.div>
                   </div>
 
@@ -471,8 +473,8 @@ export default function MatchesArena({
                   {featuredMatch.status === "PENDING"
                     ? `Debut dans ${formatCountdown(new Date(featuredMatch.date).getTime() - now)}`
                     : featuredMatch.status === "LIVE"
-                      ? "Match en direct maintenant"
-                      : `Valide par l'admin • Gagnant: ${featuredMatch.winnerId === featuredMatch.player1.id ? featuredMatch.player1.pseudo : featuredMatch.winnerId === featuredMatch.player2.id ? featuredMatch.player2.pseudo : "—"}`}
+                      ? "Le duel est en direct maintenant"
+                      : `Resultat valide • Vainqueur: ${featuredMatch.winnerId === featuredMatch.player1.id ? featuredMatch.player1.pseudo : featuredMatch.winnerId === featuredMatch.player2.id ? featuredMatch.player2.pseudo : "—"}`}
                 </div>
 
                 <motion.button
@@ -481,7 +483,7 @@ export default function MatchesArena({
                   className="tp-matchs-battle-cta"
                 >
                   <Swords className="h-4 w-4" />
-                  {featuredMatch.status === "LIVE" ? "Rejoindre le combat" : featuredMatch.status === "FINISHED" ? "Voir le resume" : "Pret au combat"}
+                  {featuredMatch.status === "LIVE" ? "Suivre l'arene" : featuredMatch.status === "FINISHED" ? "Relire le duel" : "Se tenir pret"}
                 </motion.button>
               </>
             ) : (
@@ -498,7 +500,7 @@ export default function MatchesArena({
             <div className="tp-matchs-panel-head">
               <div className="tp-matchs-panel-title">
                 <Trophy className="h-4 w-4" />
-                Classement 1VS1 KING LEAGUE
+                Classement roi 1v1 KING League
               </div>
             </div>
 
@@ -527,9 +529,9 @@ export default function MatchesArena({
               ))}
             </div>
 
-            <button type="button" className="tp-matchs-ranking-button">
-              Voir toutes les regles
-            </button>
+            <a href={sessionStatus === "authenticated" ? "/api/rules/download" : "/login"} className="tp-matchs-ranking-button">
+              {sessionStatus === "authenticated" ? "Télécharger le règlement complet" : "Connecte-toi pour le règlement"}
+            </a>
           </motion.aside>
         </div>
 
@@ -563,7 +565,7 @@ export default function MatchesArena({
                   ) : null}
                   <div className="tp-matchs-duel-top">
                     <span className="tp-matchs-duel-level">Lvl {index + 3}</span>
-                    <span className="tp-matchs-duel-badge">{match.status === "LIVE" ? "Live" : match.status === "FINISHED" ? "Valide" : "A suivre"}</span>
+                    <span className="tp-matchs-duel-badge">{match.status === "LIVE" ? "En direct" : match.status === "FINISHED" ? "Valide" : "A suivre"}</span>
                   </div>
                   <div className="tp-matchs-duel-logos">
                     <Image src={match.player1.logoUrl} alt={match.player1.pseudo} width={54} height={54} className="tp-matchs-duel-logo" />

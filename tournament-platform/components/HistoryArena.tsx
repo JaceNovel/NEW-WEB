@@ -11,9 +11,9 @@ import type { MatchPublic } from "@/types/match";
 type HistoryTab = "PENDING" | "LIVE" | "FINISHED";
 
 const tabMeta: Array<{ key: HistoryTab; label: string }> = [
-  { key: "PENDING", label: "A venir" },
+  { key: "PENDING", label: "Programmes" },
   { key: "LIVE", label: "En cours" },
-  { key: "FINISHED", label: "Terminés" },
+  { key: "FINISHED", label: "Archives" },
 ];
 
 const ITEMS_PER_PAGE = 4;
@@ -134,7 +134,7 @@ export default function HistoryArena({ matches }: { matches: MatchPublic[] }) {
         >
           <div className="tp-history-title-wrap">
             <h1 className="tp-history-title">Historique</h1>
-            <p className="tp-history-subtitle">Archives officielles des affrontements 1v1 King League</p>
+            <p className="tp-history-subtitle">Archives officielles des duels 1v1 KING League et memoire du trone</p>
           </div>
 
           <div className="tp-history-tabs" role="tablist" aria-label="Filtrer les matchs par statut">
@@ -212,18 +212,20 @@ export default function HistoryArena({ matches }: { matches: MatchPublic[] }) {
                     </div>
 
                     <div className="tp-history-card-side">
-                      <div className="tp-history-date">{formatHistoryDate(match.date)}</div>
-                      <div className="tp-history-time">{formatHistoryTime(match.date)}</div>
+                      <div className="tp-history-card-side-meta">
+                        <div className="tp-history-date">{formatHistoryDate(match.date)}</div>
+                        <div className="tp-history-time">{formatHistoryTime(match.date)}</div>
+                      </div>
                       <button type="button" className="tp-history-detail-button" onClick={() => setSelectedMatchId(match.id)}>
                         <Eye className="h-4 w-4" />
-                        Détails
+                        Fiche
                       </button>
                     </div>
                   </motion.article>
                 );
               })
             ) : (
-              <div className="tp-history-empty">Aucun match dans cette section pour le moment.</div>
+              <div className="tp-history-empty">Aucun duel n'est encore visible dans cette section.</div>
             )}
           </div>
 
@@ -232,13 +234,13 @@ export default function HistoryArena({ matches }: { matches: MatchPublic[] }) {
               <>
                 <div className="tp-history-detail-head">
                   <div>
-                    <div className="tp-history-detail-kicker">Résumé du match</div>
+                    <div className="tp-history-detail-kicker">Lecture officielle du duel</div>
                     <div className="tp-history-detail-status">
                       {selectedMatch.status === "FINISHED" ? "Résultat validé" : selectedMatch.status === "LIVE" ? "Affrontement en direct" : "Match programmé"}
                     </div>
                   </div>
                   <span className={`tp-history-state-chip tp-history-state-chip-${selectedMatch.status.toLowerCase()}`}>
-                    {selectedMatch.status === "FINISHED" ? "Terminé" : selectedMatch.status === "LIVE" ? "En cours" : "A venir"}
+                    {selectedMatch.status === "FINISHED" ? "Archive validee" : selectedMatch.status === "LIVE" ? "En cours" : "Programme"}
                   </span>
                 </div>
 
@@ -269,9 +271,9 @@ export default function HistoryArena({ matches }: { matches: MatchPublic[] }) {
                     <div className="tp-history-detail-label">Verdict</div>
                     <div className="tp-history-detail-value">
                       {selectedMatch.status === "FINISHED"
-                        ? `${getWinner(selectedMatch)?.pseudo ?? "Aucun"} a remporté le duel`
+                        ? `${getWinner(selectedMatch)?.pseudo ?? "Aucun"} a impose sa loi dans le duel`
                         : selectedMatch.status === "LIVE"
-                          ? "Le duel est actuellement en diffusion"
+                          ? "Le duel est en cours de validation en direct"
                           : `Début dans ${formatCountdown(new Date(selectedMatch.date).getTime() - now)}`}
                     </div>
                   </div>
@@ -281,16 +283,16 @@ export default function HistoryArena({ matches }: { matches: MatchPublic[] }) {
                     <div className="tp-history-detail-value">
                       {selectedMatch.status === "FINISHED"
                         ? "Le classement et les crédits ont été mis à jour automatiquement."
-                        : "La validation du résultat mettra automatiquement à jour le classement."}
+                        : "Dès validation, le classement et les credits seront recalcules automatiquement."}
                     </div>
                   </div>
                 </div>
 
                 <div className="tp-history-detail-actions">
-                  <span className="tp-history-detail-hint"><CircleDot className="h-4 w-4" /> Archive officielle 1v1 King League</span>
+                  <span className="tp-history-detail-hint"><CircleDot className="h-4 w-4" /> Archive officielle 1v1 KING League</span>
                   <button type="button" className="tp-history-detail-cta">
                     <Swords className="h-4 w-4" />
-                    {selectedMatch.status === "FINISHED" ? "Voir le résumé" : selectedMatch.status === "LIVE" ? "Suivre le direct" : "Préparer le duel"}
+                    {selectedMatch.status === "FINISHED" ? "Relire le duel" : selectedMatch.status === "LIVE" ? "Suivre l'affrontement" : "Entrer en veille"}
                   </button>
                 </div>
               </>

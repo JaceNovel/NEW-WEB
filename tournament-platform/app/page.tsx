@@ -1,14 +1,17 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { Gift, ShieldCheck, Trophy } from "lucide-react";
 
 import { prisma } from "@/lib/prisma";
+import { buildPageMetadata } from "@/lib/seo";
 
-export async function generateMetadata() {
-  return {
-    title: "Accueil — Tournoi 1v1",
-  };
-}
+export const metadata: Metadata = buildPageMetadata({
+  title: "Tournoi 1v1 Free Fire et ascension du ROI",
+  description: "Entre dans KING League, la scene 1v1 Free Fire premium avec ROI, classement dynamique, credits instantanes, matchs officiels et progression competitive.",
+  path: "/",
+  keywords: ["tournoi 1v1 Free Fire", "classement Free Fire", "duel Free Fire", "KING League ROI", "plateforme Free Fire premium", "competition Free Fire"],
+});
 
 export default async function Home() {
   const hasDb = Boolean(process.env.DATABASE_URL);
@@ -38,40 +41,80 @@ export default async function Home() {
       title: "INSCRIPTIONS",
       icon: "📄",
       lines: [
-        "Les 20 premiers inscrits forment le top 20 initial du tournoi.",
-        "Pour participer, chaque joueur doit fournir :",
-        "Son pseudo Free Fire",
-        "Son logo officiel",
-        "Son ID du jeu",
-        "Après la clôture du top 20, les nouveaux inscrits continuent et seront classés à partir du rang 21.",
+        "Les 20 premiers inscrits composent le noyau initial de l'arene KING League.",
+        "Chaque entree officielle exige un pseudo Free Fire, un logo et un ID de jeu verifiable.",
+        "Apres verrouillage du top 20, les nouveaux comptes poursuivent leur ascension a partir du rang 21.",
       ],
     },
     {
       title: "RÈGLES DU TOURNOI",
       icon: "⚔️",
       lines: [
-        "Les joueurs s&apos;affrontent en 1v1 — Spam / One Tap.",
-        "Règle du combat :",
-        "Le gagnant récupère 1 crédit",
-        "Le perdant perd 1 crédit",
-        "Si un joueur descend en dessous de 5 crédits, il est éliminé du tournoi.",
+        "Les duels se jouent en 1v1, en mode Spam ou One Tap, sur une lecture competitive stricte.",
+        "Chaque victoire rapporte 1 credit et chaque defaite retire 1 credit.",
+        "Tout joueur qui passe sous le seuil des 5 credits quitte le circuit principal.",
       ],
     },
     {
       title: "LE ROI",
       icon: "👑",
       lines: [
-        "Chaque joueur qui atteint la première place",
-        "Le ROI reste en tête tant qu&apos;il gagne.",
-        "Les autres joueurs peuvent le défier",
-        "Les combats continuent à partir des matchs programmés",
-        "Si le ROI perd, le vainqueur devient le nouveau ROI.",
+        "Le sommet du classement appartient au ROI, la figure centrale de la saison.",
+        "Le ROI conserve son trone tant qu'il defend sa place et continue de gagner.",
+        "Chaque challenger peut faire basculer la hierarchie et prendre la couronne.",
       ],
     },
   ];
 
+  const seoPillars = [
+    {
+      title: "Une scène pensée pour durer",
+      copy: "KING League met en avant des duels officiels, un historique lisible et un classement qui evolue en temps reel selon les performances reelles.",
+    },
+    {
+      title: "Un ROI qui donne du relief au classement",
+      copy: "La course au trone structure la competition et rend chaque match utile, chaque victoire visible et chaque chute memorisable.",
+    },
+    {
+      title: "Des credits comme moteur strategique",
+      copy: "Les credits influencent la progression, l'elimination et les renforts, pour creer une economie simple, lisible et competitive.",
+    },
+  ];
+
+  const faqJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: [
+      {
+        "@type": "Question",
+        name: "Qu'est-ce que KING League ?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "KING League est une plateforme de tournoi 1v1 Free Fire avec classement dynamique, systeme de credits et course permanente au titre de ROI.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "Comment fonctionne le ROI sur KING League ?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Le ROI correspond au joueur qui occupe la premiere place. Il conserve sa couronne tant qu'il gagne et peut etre renverse par un challenger.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "Comment evoluent les credits ?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Le gagnant d'un duel gagne un credit, le perdant en perd un. Sous 5 credits, un joueur est elimine du circuit principal.",
+        },
+      },
+    ],
+  };
+
   return (
     <main className="relative overflow-hidden pb-10">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
       <div className="pointer-events-none absolute inset-0 opacity-80 [background:radial-gradient(1000px_circle_at_50%_26%,rgba(255,139,59,0.12),transparent_35%),radial-gradient(900px_circle_at_50%_18%,rgba(186,85,211,0.20),transparent_36%),linear-gradient(to_bottom,transparent,rgba(11,16,38,0.16))]" />
 
       <section className="relative mx-auto max-w-[1200px] px-4 pt-5 sm:pt-8">
@@ -85,6 +128,18 @@ export default async function Home() {
               priority
               className="h-auto w-full max-w-[485px] object-contain drop-shadow-[0_0_30px_rgba(255,176,104,0.18)]"
             />
+          </div>
+
+          <div className="mx-auto mt-5 max-w-[780px] space-y-4 text-center">
+            <div className="inline-flex items-center rounded-full border border-amber-300/20 bg-amber-300/10 px-4 py-1 text-[11px] font-black uppercase tracking-[0.24em] text-amber-100/90">
+              Arène officielle 1v1 Free Fire
+            </div>
+            <h1 className="text-4xl font-black uppercase tracking-tight text-white sm:text-5xl md:text-6xl">
+              La ligue premium ou chaque duel peut faire tomber le ROI.
+            </h1>
+            <p className="mx-auto max-w-[720px] text-sm leading-7 text-white/72 sm:text-base">
+              KING League structure vos affrontements Free Fire autour d'un classement vivant, d'une economie de credits lisible et d'une montée en pression permanente jusqu'au trone.
+            </p>
           </div>
 
           <div className="mt-7 flex flex-col items-center justify-center gap-4 sm:flex-row">
@@ -124,7 +179,7 @@ export default async function Home() {
           <article className="tp-home-panel tp-reference-panel rounded-[16px] border border-violet-300/22 p-3">
             <div className="tp-reference-header">
               <span className="tp-reference-title-icon">🏠</span>
-              <span>ÉTAPES DU TOURNOI</span>
+              <span>LE CIRCUIT KING LEAGUE</span>
             </div>
 
             <div className="mt-2 grid gap-3 md:grid-cols-[1fr_168px]">
@@ -154,7 +209,7 @@ export default async function Home() {
                   ))
                 ) : (
                   <div className="px-4 py-8 text-center text-sm text-white/60">
-                    Le top joueurs apparaîtra ici dès que des comptes et des points réels seront disponibles.
+                    Le haut du classement apparaîtra ici des que les premiers comptes valides commenceront a imposer leur rythme.
                   </div>
                 )}
               </div>
@@ -204,7 +259,7 @@ export default async function Home() {
 
                     <div className="text-left sm:text-right">
                       <div className="text-[10px] uppercase tracking-[0.16em] text-white/45">Statut</div>
-                      <div className="mt-0.5 text-[1.05rem] font-black text-white">{match.status === "LIVE" ? "Live" : "Programmé"}</div>
+                      <div className="mt-0.5 text-[1.05rem] font-black text-white">{match.status === "LIVE" ? "En direct" : "Programmé"}</div>
                     </div>
                   </div>
                 ))
@@ -218,14 +273,35 @@ export default async function Home() {
             <div className="mt-3 flex items-center justify-between gap-3 border-t border-white/10 px-1 pt-3 text-sm text-white/72">
               <div className="flex items-center gap-2">
                 <span className="text-white/70">›</span>
-                <span>Pour voir les matchs à venir</span>
+                <span>Surveille les prochaines affiches et les duels qui peuvent faire basculer le trone.</span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="rounded-[6px] border border-white/10 bg-black/18 px-2 py-1 text-[10px] uppercase tracking-[0.14em] text-white/72">1v1</span>
-                <span className="rounded-[6px] border border-white/10 bg-black/18 px-2 py-1 text-[10px] uppercase tracking-[0.14em] text-white/72">Menu</span>
+                <span className="rounded-[6px] border border-white/10 bg-black/18 px-2 py-1 text-[10px] uppercase tracking-[0.14em] text-white/72">ROI</span>
               </div>
             </div>
           </article>
+        </div>
+      </section>
+
+      <section className="relative mx-auto mt-7 max-w-[1200px] px-4">
+        <div className="rounded-[22px] border border-violet-300/18 bg-[linear-gradient(180deg,rgba(13,11,27,0.82),rgba(8,9,20,0.74))] p-5 sm:p-6">
+          <div className="max-w-[760px]">
+            <div className="text-[11px] font-black uppercase tracking-[0.24em] text-amber-100/70">Pourquoi KING League</div>
+            <h2 className="mt-3 text-2xl font-black text-white sm:text-3xl">Une scène Free Fire conçue pour être lisible, compétitive et mémorable.</h2>
+            <p className="mt-3 text-sm leading-7 text-white/68 sm:text-base">
+              Pour Google comme pour les joueurs, KING League raconte une promesse claire: des duels 1v1 officiels, un ROI qui incarne le sommet, un classement qui bouge vraiment et une economie de credits qui donne du poids a chaque resultat.
+            </p>
+          </div>
+
+          <div className="mt-5 grid gap-4 md:grid-cols-3">
+            {seoPillars.map((pillar) => (
+              <article key={pillar.title} className="rounded-[18px] border border-white/8 bg-white/[0.03] p-4">
+                <h3 className="text-lg font-black text-white">{pillar.title}</h3>
+                <p className="mt-2 text-sm leading-6 text-white/62">{pillar.copy}</p>
+              </article>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -235,17 +311,17 @@ export default async function Home() {
             <div className="flex flex-wrap items-center justify-center gap-4 sm:justify-start sm:gap-5">
               <div className="flex items-center gap-2">
                 <Gift className="h-4 w-4 text-amber-300" />
-                <span>Loot</span>
+                <span>Récompenses</span>
               </div>
               <div className="flex items-center gap-2">
                 <ShieldCheck className="h-4 w-4 text-amber-300" />
-                <span>Fairplay</span>
+                <span>Fair-play</span>
               </div>
             </div>
             <div className="text-center text-[1.2rem] font-black tracking-[0.16em] text-white sm:text-[1.65rem]">FREE FIRE</div>
             <div className="flex items-center justify-center gap-2 sm:justify-end">
               <Trophy className="h-4 w-4 text-amber-300" />
-              <span>Victory</span>
+              <span>Couronne</span>
             </div>
           </div>
         </div>

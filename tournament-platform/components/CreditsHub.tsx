@@ -116,11 +116,11 @@ export default function CreditsHub({
           <div>
             <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] font-black uppercase tracking-[0.24em] text-white/75">
               <Sparkles className="h-4 w-4 text-cyan-300" />
-              PRIME League Credit Market
+              Marché stratégique KING League
             </div>
             <h1 className="mt-4 text-4xl font-black uppercase tracking-tight text-white sm:text-5xl">Crédits et Renforts</h1>
             <p className="mt-4 max-w-2xl text-sm text-white/70 sm:text-base">
-              Renforce ta position, recrute un joueur avec ton capital et alimente ta progression avec une boutique pensée pour la PRIME League.
+              Renforce ta position, securise tes credits et active des renforts avec une economie pensee pour la montee en puissance sur KING League.
             </p>
 
             <div className="mt-6 grid gap-4 sm:grid-cols-3">

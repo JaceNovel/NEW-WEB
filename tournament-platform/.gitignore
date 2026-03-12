@@ -19,6 +19,10 @@
 
 # production
 /build
+/public/app-downloads/desktop/*.AppImage
+/public/app-downloads/desktop/builder-debug.yml
+/public/app-downloads/desktop/builder-effective-config.yaml
+/public/app-downloads/desktop/linux-unpacked/
 
 # misc
 .DS_Store

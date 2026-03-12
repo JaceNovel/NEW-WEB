@@ -21,10 +21,10 @@ export default function TournamentRules({
           </div>
           <ul className="space-y-2 text-sm text-white/70">
             <li className="flex items-start gap-2">
-              <CheckCircle2 className="mt-0.5 h-4 w-4 text-blue-300" /> Le tournoi est limité à 20 joueurs
+              <CheckCircle2 className="mt-0.5 h-4 w-4 text-blue-300" /> Les 20 premiers comptes forment le noyau initial de la saison
             </li>
             <li className="flex items-start gap-2">
-              <CheckCircle2 className="mt-0.5 h-4 w-4 text-blue-300" /> Pseudo, ID Free Fire, logo
+              <CheckCircle2 className="mt-0.5 h-4 w-4 text-blue-300" /> Pseudo, ID Free Fire et logo officiel sont requis
             </li>
           </ul>
         </motion.div>
@@ -42,10 +42,10 @@ export default function TournamentRules({
               <CheckCircle2 className="mt-0.5 h-4 w-4 text-blue-300" /> Mode : 1v1 — Spam / One Tap
             </li>
             <li className="flex items-start gap-2">
-              <CheckCircle2 className="mt-0.5 h-4 w-4 text-blue-300" /> Gagnant : +1 crédit — Perdant : -1 crédit
+              <CheckCircle2 className="mt-0.5 h-4 w-4 text-blue-300" /> Gagnant : +1 credit — Perdant : -1 credit
             </li>
             <li className="flex items-start gap-2">
-              <CheckCircle2 className="mt-0.5 h-4 w-4 text-blue-300" /> Crédits &lt; 5 : joueur éliminé
+              <CheckCircle2 className="mt-0.5 h-4 w-4 text-blue-300" /> Sous 5 credits, un joueur sort du circuit principal
             </li>
           </ul>
         </motion.div>
@@ -60,10 +60,10 @@ export default function TournamentRules({
           </div>
           <ul className="space-y-2 text-sm text-white/70">
             <li className="flex items-start gap-2">
-              <CheckCircle2 className="mt-0.5 h-4 w-4 text-blue-300" /> Le #1 du classement devient ROI
+              <CheckCircle2 className="mt-0.5 h-4 w-4 text-blue-300" /> Le #1 du classement devient ROI et tient le sommet
             </li>
             <li className="flex items-start gap-2">
-              <CheckCircle2 className="mt-0.5 h-4 w-4 text-blue-300" /> Les joueurs peuvent le défier
+              <CheckCircle2 className="mt-0.5 h-4 w-4 text-blue-300" /> Chaque challenger peut tenter de lui prendre la couronne
             </li>
             <li className="flex items-start gap-2">
               <Crown className="mt-0.5 h-4 w-4 text-yellow-200" />

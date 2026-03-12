@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 
@@ -5,10 +6,17 @@ import CreditsHub from "@/components/CreditsHub";
 import { authOptions } from "@/lib/auth";
 import { ensureCreditProducts, getRecruitmentCost } from "@/lib/economy";
 import { prisma } from "@/lib/prisma";
+import { buildPageMetadata } from "@/lib/seo";
 import { getTournamentRanking } from "@/lib/tournament";
 import { safeJson } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
+export const metadata: Metadata = buildPageMetadata({
+  title: "Credits et renforts",
+  description: "Recharge tes credits KING League, recrute un joueur et consolide ta position dans l'arene Free Fire.",
+  path: "/credits",
+  noIndex: true,
+});
 
 export default async function CreditsPage() {
   if (!process.env.DATABASE_URL) {

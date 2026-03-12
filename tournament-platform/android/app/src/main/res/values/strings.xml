@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">KING League</string>
+    <string name="title_activity_main">KING League</string>
+    <string name="package_name">space.kingleague.app</string>
+    <string name="custom_url_scheme">space.kingleague.app</string>
+</resources>

@@ -15,7 +15,7 @@ const DEFAULT_CREDIT_PRODUCTS = [
     credits: 10,
     priceFcfa: 3000,
     maxPurchasesPerPlayer: null,
-    description: "Pack standard pour renforcer ta progression dans PRIME League.",
+    description: "Pack standard pour renforcer ta progression dans KING League.",
   },
   {
     key: "BOOST_25",

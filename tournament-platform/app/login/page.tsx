@@ -50,31 +50,31 @@ export default function LoginPage() {
             transition={{ duration: 0.6, ease: "easeOut" }}
             className="tp-auth-showcase"
           >
-            <div className="tp-auth-kicker">Player Authentication</div>
-            <h1 className="tp-auth-title">Reconnecte-toi et retourne dans la zone de duel.</h1>
+            <div className="tp-auth-kicker">Acces officiel KING League</div>
+            <h1 className="tp-auth-title">Reconnecte-toi et reprends ta marche vers le trone.</h1>
             <p className="tp-auth-copy">
-              Retrouve ton profil, tes crédits, ton historique de défis et l&apos;accès aux matchs qui comptent dans la progression du tournoi.
+              Retrouve ton profil, tes credits, ton historique de defis et les duels qui comptent vraiment dans la course au ROI.
             </p>
 
             <div className="tp-auth-feature-list">
               <div className="tp-auth-feature-item">
                 <UserCircle2 className="h-5 w-5" />
-                <span>Accès instantané au profil, au ladder et à l&apos;espace personnel.</span>
+                <span>Acces immediat a ton profil, au classement et a ton espace joueur.</span>
               </div>
               <div className="tp-auth-feature-item">
                 <ShieldCheck className="h-5 w-5" />
-                <span>Connexion sécurisée par identifiant joueur et mot de passe.</span>
+                <span>Connexion securisee par identifiant joueur et mot de passe.</span>
               </div>
               <div className="tp-auth-feature-item">
                 <Crown className="h-5 w-5" />
-                <span>Depuis ton profil, tu peux viser le ROI et défier les têtes du classement.</span>
+                <span>Depuis ton profil, tu peux viser le ROI et lire chaque duel qui faconne la saison.</span>
               </div>
             </div>
 
             <div className="tp-auth-preview-card">
               <div className="tp-auth-preview-head">
-                <span className="tp-auth-preview-badge">Session briefing</span>
-                <span className="tp-auth-mode-chip tp-auth-mode-chip-spam">Live Access</span>
+                <span className="tp-auth-preview-badge">Brief de session</span>
+                <span className="tp-auth-mode-chip tp-auth-mode-chip-spam">Acces immediat</span>
               </div>
               <div className="space-y-3 text-sm text-white/72">
                 <div className="flex items-center gap-3"><Sparkles className="h-4 w-4 text-fuchsia-200" /> Reprends tes défis en attente.</div>

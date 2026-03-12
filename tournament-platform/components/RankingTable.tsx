@@ -27,14 +27,14 @@ function statusMeta(status: PlayerPublic["status"]) {
       };
     case "ELIMINATED":
       return {
-        label: "Joueur",
+        label: "Elimine",
         icon: <Skull className="h-5 w-5 text-rose-300" />,
         action: "DÉFIER",
         actionClass: "tp-ranking-action tp-ranking-action-danger",
       };
     default:
       return {
-        label: "Joueur",
+        label: "Competiteur",
         icon: <Skull className="h-5 w-5 text-rose-300" />,
         action: "DÉFIER",
         actionClass: "tp-ranking-action tp-ranking-action-neutral",
@@ -186,7 +186,7 @@ export default function RankingTable({
         <input
           value={query}
           onChange={(event) => setQuery(event.target.value)}
-          placeholder="Chercher un joueur par pseudo ou ID Free Fire"
+          placeholder="Rechercher un pseudo, une alliance ou un ID Free Fire"
           className="w-full bg-transparent text-sm text-white outline-none placeholder:text-white/35"
         />
       </div>
@@ -253,7 +253,7 @@ export default function RankingTable({
             transition={{ duration: 1.5, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" }}
             className="tp-ranking-roi-title text-[1.05rem] font-black uppercase tracking-wide text-amber-100"
           >
-            Joueur premier en crédits
+            Sommet officiel du classement
           </motion.div>
           <motion.div
             animate={{
@@ -269,14 +269,14 @@ export default function RankingTable({
             transition={{ duration: 1.35, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" }}
             className="tp-ranking-roi-subtitle mt-1 text-[1.1rem] font-medium text-white/88"
           >
-            Il est le ROI tant qu&apos;il gagne
+            Le ROI conserve la couronne tant qu&apos;il repousse les challengers
           </motion.div>
         </motion.div>
       </div>
 
       <div className="hidden md:grid grid-cols-[86px_120px_1.2fr_1.1fr_110px_140px_130px] border-t border-white/10 bg-black/12 px-4 py-3 text-[0.95rem] font-bold uppercase tracking-wide text-white/76">
-        <div>Rank</div>
-        <div>Avatar</div>
+        <div>Rang</div>
+        <div>Emblème</div>
         <div>Pseudo</div>
         <div>ID Free Fire</div>
         <div>Crédits</div>
@@ -425,7 +425,7 @@ export default function RankingTable({
                       <span className="truncate">{allianceLabel}</span>
                     </div>
                     <div className="mt-1 truncate text-sm text-white/55">{player.freefireId}</div>
-                    {isDuo ? <div className="mt-1 text-[10px] font-bold uppercase tracking-[0.16em] text-cyan-200/75">Position 1v2</div> : null}
+                    {isDuo ? <div className="mt-1 text-[10px] font-bold uppercase tracking-[0.16em] text-cyan-200/75">Alliance active 1v2</div> : null}
                   </div>
                 </div>
                 <Image src={player.logoUrl} alt={player.pseudo} width={90} height={90} className="h-24 w-24 shrink-0 object-contain" />
