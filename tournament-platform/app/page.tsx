@@ -115,18 +115,6 @@ export default async function Home() {
             />
           </div>
 
-          <div className="mx-auto mt-5 max-w-[780px] space-y-4 text-center">
-            <div className="inline-flex items-center rounded-full border border-amber-300/20 bg-amber-300/10 px-4 py-1 text-[11px] font-black uppercase tracking-[0.24em] text-amber-100/90">
-              Arène officielle 1v1 Free Fire
-            </div>
-            <h1 className="text-4xl font-black uppercase tracking-tight text-white sm:text-5xl md:text-6xl">
-              La ligue premium ou chaque duel peut faire tomber le ROI.
-            </h1>
-            <p className="mx-auto max-w-[720px] text-sm leading-7 text-white/72 sm:text-base">
-              KING League structure vos affrontements Free Fire autour d'un classement vivant, d'une economie de credits lisible et d'une montée en pression permanente jusqu'au trone.
-            </p>
-          </div>
-
           <div className="mt-7 flex flex-col items-center justify-center gap-4 sm:flex-row">
             <Link href="/inscription" className="tp-home-cta tp-home-cta-primary">
               S&apos;inscrire

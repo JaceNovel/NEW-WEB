@@ -55,6 +55,19 @@ function drawRule(font: "F1" | "F2", y: number, text: string) {
   return `${drawText("F2", 11, 64, y, "-", [0.96, 0.77, 0.46])}${drawText(font, 11, 80, y, text, [0.93, 0.93, 0.98])}`;
 }
 
+function drawWrappedText(font: "F1" | "F2" | "F3", size: number, x: number, y: number, text: string, maxChars: number, color: [number, number, number], lineHeight = 14) {
+  const lines = wrapText(text, maxChars);
+  let content = "";
+  let cursorY = y;
+
+  for (const line of lines) {
+    content += drawText(font, size, x, cursorY, line, color);
+    cursorY -= lineHeight;
+  }
+
+  return { content, nextY: cursorY };
+}
+
 function wrapText(text: string, maxChars: number) {
   const words = text.split(/\s+/).filter(Boolean);
   const lines: string[] = [];
@@ -269,8 +282,8 @@ export async function createRulesPdf(payload: RulesPdfPayload) {
   const recipientSeed = `${payload.recipientId ?? payload.pseudo}|${payload.freefireId}|${issuedAt.toISOString()}`;
   const reference = `KING-${createHash("sha256").update(recipientSeed).digest("hex").slice(0, 12).toUpperCase()}`;
   const recipientLine = `Document emis pour ${payload.pseudo} - compte Free Fire ${payload.freefireId}`;
-  const watermark = `KING LEAGUE CONFIDENTIEL ${payload.pseudo.toUpperCase()}`;
-  const premiumStamp = `${payload.pseudo.toUpperCase()}  ${reference}  KING LEAGUE`;
+  const watermark = `ATTESTATION SOLO KING LEAGUE`;
+  const premiumStamp = `${payload.pseudo.toUpperCase()} - ${reference}`;
 
   const summaryLines = [
     `Titulaire : ${payload.pseudo}`,
@@ -293,7 +306,7 @@ export async function createRulesPdf(payload: RulesPdfPayload) {
   const controlLines = [
     "Filigrane nominatif integre dans la mise en page et l'empreinte numerique.",
     "Reference unique KING necessaire pour toute verification officielle.",
-    "Document reserve au titulaire du compte et a la moderation KING.",
+    "Document reserve au titulaire du compte et a la moderation KING League.",
   ];
 
   const footerNotice = wrapText(
@@ -304,50 +317,47 @@ export async function createRulesPdf(payload: RulesPdfPayload) {
   let content = "";
   content += drawRect(0, 0, 595, 842, [0.050, 0.024, 0.100]);
   content += drawRect(22, 22, 551, 798, [0.084, 0.040, 0.150]);
-  content += drawRect(22, 728, 551, 92, [0.136, 0.060, 0.230]);
+  content += drawRect(22, 718, 551, 102, [0.136, 0.060, 0.230]);
   content += drawRect(38, 96, 519, 612, [0.112, 0.056, 0.196]);
   content += drawStrokeRect(22, 22, 551, 798, [0.980, 0.760, 0.430], 1.5);
   content += drawStrokeRect(38, 96, 519, 612, [0.565, 0.392, 0.765], 0.8);
-  content += drawLine(50, 660, 545, 660, [0.980, 0.760, 0.430], 1);
-  content += drawLine(50, 714, 545, 714, [0.430, 0.320, 0.610], 0.8);
+  content += drawLine(50, 654, 545, 654, [0.980, 0.760, 0.430], 1);
+  content += drawLine(50, 706, 545, 706, [0.430, 0.320, 0.610], 0.8);
 
-  content += drawImage("ImLeft", assets.left, 46, 738, 132, 70);
-  content += drawImage("ImMark", assets.mark, 244, 742, 92, 62);
-  content += drawImage("ImRight", assets.right, 404, 734, 132, 74);
+  content += drawImage("ImLeft", assets.left, 38, 734, 124, 64);
+  content += drawImage("ImMark", assets.mark, 248, 734, 48, 48);
+  content += drawImage("ImRight", assets.right, 430, 730, 92, 58);
 
   content += "q\n0.285 0.285 -0.959 0.959 190 230 cm\n";
-  content += drawText("F2", 30, 0, 0, watermark, [0.34, 0.24, 0.44]);
+  content += drawText("F2", 24, 0, 0, watermark, [0.26, 0.18, 0.36]);
   content += "Q\n";
-  content += "q\n0.285 0.285 -0.959 0.959 265 130 cm\n";
-  content += drawText("F2", 24, 0, 0, reference, [0.26, 0.18, 0.36]);
-  content += "Q\n";
-  content += "q\n0.999 0.032 -0.032 0.999 66 118 cm\n";
-  content += drawText("F1", 8, 0, 0, premiumStamp, [0.37, 0.30, 0.48]);
+  content += "q\n0.285 0.285 -0.959 0.959 290 146 cm\n";
+  content += drawText("F2", 17, 0, 0, premiumStamp, [0.24, 0.16, 0.34]);
   content += "Q\n";
 
-  content += drawText("F2", 24, 206, 780, "KING LEAGUE", [0.99, 0.90, 0.76]);
-  content += drawText("F1", 11, 194, 760, "Reglement officiel personnalise et signe numeriquement", [0.88, 0.87, 0.96]);
-  content += drawText("F2", 17, 56, 690, "Attestation individuelle des regles du tournoi", [0.98, 0.78, 0.45]);
-  content += drawText("F1", 11, 56, 670, recipientLine, [0.93, 0.93, 0.98]);
-  content += drawText("F1", 10, 56, 648, `Date d'emission : ${issuedAtLabel}`, [0.73, 0.76, 0.86]);
-  content += drawText("F1", 10, 330, 648, `Reference : ${reference}`, [0.73, 0.76, 0.86]);
+  content += drawText("F2", 24, 182, 780, "KING LEAGUE", [0.99, 0.90, 0.76]);
+  content += drawText("F1", 11, 176, 762, "Reglement officiel personnalise et signe numeriquement", [0.88, 0.87, 0.96]);
+  content += drawText("F2", 18, 56, 684, "Attestation Solo des regles du tournoi", [0.98, 0.78, 0.45]);
+  content += drawText("F1", 11, 56, 664, recipientLine, [0.93, 0.93, 0.98]);
+  content += drawText("F1", 10, 56, 644, `Date d'emission : ${issuedAtLabel}`, [0.73, 0.76, 0.86]);
+  content += drawText("F1", 10, 334, 644, `Reference : ${reference}`, [0.73, 0.76, 0.86]);
 
-  content += drawRect(56, 540, 214, 96, [0.145, 0.078, 0.240]);
-  content += drawStrokeRect(56, 540, 214, 96, [0.980, 0.760, 0.430], 0.8);
-  content += drawText("F2", 12, 72, 612, "Titulaire KING", [0.98, 0.78, 0.45]);
+  content += drawRect(56, 534, 214, 96, [0.145, 0.078, 0.240]);
+  content += drawStrokeRect(56, 534, 214, 96, [0.980, 0.760, 0.430], 0.8);
+  content += drawText("F2", 12, 72, 606, "Titulaire KING", [0.98, 0.78, 0.45]);
 
-  let summaryY = 590;
+  let summaryY = 584;
   for (const line of summaryLines) {
     content += drawText("F1", 10, 72, summaryY, line, [0.95, 0.95, 0.98]);
     summaryY -= 14;
   }
 
-  content += drawRect(286, 540, 253, 96, [0.132, 0.072, 0.226]);
-  content += drawStrokeRect(286, 540, 253, 96, [0.565, 0.392, 0.765], 0.8);
-  content += drawText("F2", 12, 302, 612, "Alliance certifiee", [0.98, 0.78, 0.45]);
-  content += drawText("F3", 16, 386, 598, "KING x Association", [0.93, 0.93, 0.98]);
+  content += drawRect(286, 534, 253, 96, [0.132, 0.072, 0.226]);
+  content += drawStrokeRect(286, 534, 253, 96, [0.565, 0.392, 0.765], 0.8);
+  content += drawText("F2", 12, 302, 606, "Alliance certifiee", [0.98, 0.78, 0.45]);
+  content += drawText("F3", 14, 302, 586, "Document de conformite KING League", [0.93, 0.93, 0.98]);
 
-  let controlY = 576;
+  let controlY = 564;
   for (const line of controlLines) {
     for (const wrappedLine of wrapText(line, 33)) {
       content += drawText("F1", 10, 302, controlY, wrappedLine, [0.93, 0.93, 0.98]);
@@ -356,9 +366,9 @@ export async function createRulesPdf(payload: RulesPdfPayload) {
     controlY -= 4;
   }
 
-  content += drawText("F2", 14, 56, 500, "Clauses principales", [0.98, 0.78, 0.45]);
+  content += drawText("F2", 14, 56, 492, "Clauses principales", [0.98, 0.78, 0.45]);
 
-  let ruleY = 476;
+  let ruleY = 468;
   for (const line of ruleLines) {
     for (const wrappedLine of wrapText(line, 82)) {
       content += drawRule("F1", ruleY, wrappedLine);
@@ -367,16 +377,18 @@ export async function createRulesPdf(payload: RulesPdfPayload) {
     ruleY -= 6;
   }
 
-  content += drawRect(56, 176, 483, 90, [0.122, 0.065, 0.214]);
-  content += drawStrokeRect(56, 176, 483, 90, [0.970, 0.720, 0.370], 0.8);
-  content += drawText("F2", 13, 72, 238, "Signature KING", [0.98, 0.78, 0.45]);
-  content += drawText("F3", 17, 72, 216, "Signe electroniquement par la direction KING League", [0.95, 0.95, 0.98]);
-  content += drawText("F1", 10, 72, 196, "Cachet numerique actif - reproduction interdite", [0.80, 0.82, 0.90]);
-  content += drawText("F1", 10, 72, 178, `Empreinte : ${reference}`, [0.80, 0.82, 0.90]);
-  content += drawText("F2", 14, 396, 214, "KING", [0.99, 0.90, 0.76]);
-  content += drawText("F1", 10, 392, 196, "Official Compliance Seal", [0.80, 0.82, 0.90]);
+  content += drawRect(56, 168, 483, 90, [0.122, 0.065, 0.214]);
+  content += drawStrokeRect(56, 168, 483, 90, [0.970, 0.720, 0.370], 0.8);
+  content += drawText("F2", 13, 72, 230, "Signature KING", [0.98, 0.78, 0.45]);
+  const signatureBlock = drawWrappedText("F3", 14, 72, 208, "Signe electroniquement par la direction KING League", 38, [0.95, 0.95, 0.98], 16);
+  content += signatureBlock.content;
+  content += drawText("F1", 10, 72, 180, "Cachet numerique actif - reproduction interdite", [0.80, 0.82, 0.90]);
+  content += drawText("F1", 10, 72, 162, `Empreinte : ${reference}`, [0.80, 0.82, 0.90]);
+  content += drawText("F2", 12, 372, 206, "Verification officielle", [0.99, 0.90, 0.76]);
+  content += drawText("F1", 10, 372, 188, "Document conforme au circuit KING League", [0.80, 0.82, 0.90]);
+  content += drawText("F1", 10, 372, 170, "Controle numerique via la reference unique", [0.80, 0.82, 0.90]);
 
-  let noticeY = 134;
+  let noticeY = 122;
   for (const line of footerNotice) {
     content += drawText("F1", 9, 56, noticeY, line, [0.88, 0.88, 0.94]);
     noticeY -= 14;

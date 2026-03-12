@@ -71,7 +71,7 @@ export async function GET() {
       recipientId: player?.id ?? sessionUser?.id ?? pseudo,
     });
 
-    const filename = `king-regles-${slugify(pseudo) || "joueur"}.pdf`;
+    const filename = `attestation-solo-regles-tournoi-${slugify(pseudo) || "joueur"}.pdf`;
 
     return new Response(pdf, {
       status: 200,
