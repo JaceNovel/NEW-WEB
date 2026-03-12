@@ -1,6 +1,43 @@
 import bcrypt from "bcryptjs";
-import { PrismaClient, GameMode, PlayerStatus, Role } from "@prisma/client";
 
+import fs from "node:fs";
+import path from "node:path";
+
+function applyEnvFile(filePath) {
+  if (!fs.existsSync(filePath)) return;
+  const content = fs.readFileSync(filePath, "utf8");
+  for (const rawLine of content.split(/\r?\n/)) {
+    const line = rawLine.trim();
+    if (!line || line.startsWith("#")) continue;
+    const eqIndex = line.indexOf("=");
+    if (eqIndex <= 0) continue;
+    const key = line.slice(0, eqIndex).trim();
+    let value = line.slice(eqIndex + 1).trim();
+    if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+      value = value.slice(1, -1);
+    }
+    if (!process.env[key]) process.env[key] = value;
+  }
+}
+
+// Ensure DATABASE_URL exists for Prisma when running via `node ...`
+const rootDir = process.cwd();
+applyEnvFile(path.join(rootDir, ".env.local"));
+applyEnvFile(path.join(rootDir, ".env"));
+
+// Vercel Postgres fallbacks (local `vercel env pull` sometimes uses these names)
+if (!process.env.DATABASE_URL) {
+  const fallbackUrl = process.env.POSTGRES_PRISMA_URL ?? process.env.POSTGRES_URL_NON_POOLING ?? process.env.POSTGRES_URL;
+  if (fallbackUrl) process.env.DATABASE_URL = fallbackUrl;
+}
+
+if (!process.env.DATABASE_URL) {
+  throw new Error(
+    "DATABASE_URL is missing. Add it to .env.local (see .env.example) or export DATABASE_URL before running npm run seed:admin.",
+  );
+}
+
+const { PrismaClient, GameMode, PlayerStatus, Role } = await import("@prisma/client");
 const prisma = new PrismaClient();
 
 async function main() {

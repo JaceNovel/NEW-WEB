@@ -22,6 +22,25 @@ export const authOptions: NextAuthOptions = {
 
         if (!pseudo || !password) return null;
 
+        const envAdminEmail = (process.env.ADMIN_EMAIL ?? "").trim();
+        const envAdminPasswordHash = (process.env.ADMIN_PASSWORD_HASH ?? "").trim();
+
+        if (envAdminEmail && envAdminPasswordHash && pseudo.toLowerCase() === envAdminEmail.toLowerCase()) {
+          const ok = await bcrypt.compare(password, envAdminPasswordHash);
+          if (!ok) return null;
+
+          return {
+            id: "admin-env",
+            name: "Administrateur",
+            role: "ADMIN",
+            status: "PLAYER",
+            gameMode: "ONETAP",
+            credits: 0,
+            logoUrl: "/pp1-removebg-preview (1).png",
+            freefireId: "admin",
+          } as any;
+        }
+
         const player = await prisma.player.findUnique({
           where: { pseudo },
           select: { id: true, pseudo: true, passwordHash: true, role: true, status: true, gameMode: true, credits: true, logoUrl: true, freefireId: true },
@@ -64,8 +83,30 @@ export const authOptions: NextAuthOptions = {
       if (session.user) {
         const playerId = token.playerId ? String(token.playerId) : null;
 
-        let latestPlayer = playerId
-          ? await prisma.player.findUnique({
+        // ENV-admin is not stored in DB.
+        if (playerId === "admin-env" && token.role === "ADMIN") {
+          (session.user as any).id = token.playerId;
+          (session.user as any).role = token.role;
+          (session.user as any).status = token.status;
+          (session.user as any).gameMode = token.gameMode;
+          (session.user as any).credits = token.credits;
+          (session.user as any).logoUrl = token.logoUrl;
+          (session.user as any).freefireId = token.freefireId;
+          return session;
+        }
+
+        let latestPlayer = null as null | {
+          credits: number;
+          weeklyCreditsGrantedAt?: Date | null;
+          logoUrl: string;
+          freefireId: string;
+          status: any;
+          gameMode: any;
+        };
+
+        if (playerId) {
+          try {
+            latestPlayer = await prisma.player.findUnique({
               where: { id: playerId },
               select: {
                 credits: true,
@@ -75,10 +116,23 @@ export const authOptions: NextAuthOptions = {
                 status: true,
                 gameMode: true,
               },
-            })
-          : null;
+            });
+          } catch (error) {
+            // Backward compatible: production DB might not have weeklyCreditsGrantedAt yet.
+            latestPlayer = await prisma.player.findUnique({
+              where: { id: playerId },
+              select: {
+                credits: true,
+                logoUrl: true,
+                freefireId: true,
+                status: true,
+                gameMode: true,
+              },
+            });
+          }
+        }
 
-        if (playerId && latestPlayer && latestPlayer.credits < 5) {
+        if (playerId && latestPlayer && latestPlayer.credits < 5 && "weeklyCreditsGrantedAt" in latestPlayer) {
           const config = await prisma.tournamentConfig.findUnique({
             where: { id: "main" },
             select: { stage: true },
@@ -91,18 +145,22 @@ export const authOptions: NextAuthOptions = {
             const hasWaitedSevenDays = now - last >= 7 * 24 * 60 * 60 * 1000;
 
             if (hasWaitedSevenDays) {
-              latestPlayer = await prisma.player.update({
-                where: { id: playerId },
-                data: { credits: 5, weeklyCreditsGrantedAt: new Date() },
-                select: {
-                  credits: true,
-                  weeklyCreditsGrantedAt: true,
-                  logoUrl: true,
-                  freefireId: true,
-                  status: true,
-                  gameMode: true,
-                },
-              });
+              try {
+                latestPlayer = await prisma.player.update({
+                  where: { id: playerId },
+                  data: { credits: 5, weeklyCreditsGrantedAt: new Date() },
+                  select: {
+                    credits: true,
+                    weeklyCreditsGrantedAt: true,
+                    logoUrl: true,
+                    freefireId: true,
+                    status: true,
+                    gameMode: true,
+                  },
+                });
+              } catch {
+                // If column doesn't exist, skip weekly top-up.
+              }
             }
           }
         }

@@ -45,7 +45,6 @@ export async function POST(req: Request) {
           gameMode: body.gameMode,
           logoUrl: body.logoUrl,
           credits: 5,
-          weeklyCreditsGrantedAt: new Date(),
           passwordHash,
         },
         select: {
@@ -62,6 +61,17 @@ export async function POST(req: Request) {
           createdAt: true,
         },
       });
+
+      try {
+        await tx.player.update({
+          where: { id: player.id },
+          data: { weeklyCreditsGrantedAt: new Date() },
+          select: { id: true },
+        });
+      } catch {
+        // Production DB may not have weeklyCreditsGrantedAt yet.
+      }
+
       await recalculateTournamentState(tx);
       return player;
     });
