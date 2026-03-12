@@ -1,6 +1,25 @@
 import type { CapacitorConfig } from "@capacitor/cli";
 
-const appUrl = process.env.KING_LEAGUE_APP_URL || process.env.NEXT_PUBLIC_SITE_URL || "https://kingleague.space";
+function normalizeAppUrl(value?: string) {
+  const fallback = "https://kingleague.space";
+
+  if (!value) return fallback;
+
+  const trimmed = value.trim();
+
+  try {
+    const url = new URL(trimmed);
+    if (url.hostname === "kingleaguespace" || url.hostname === "kingleaguespace.com") {
+      return fallback;
+    }
+
+    return url.toString().replace(/\/$/, "");
+  } catch {
+    return fallback;
+  }
+}
+
+const appUrl = normalizeAppUrl(process.env.KING_LEAGUE_APP_URL || process.env.NEXT_PUBLIC_SITE_URL);
 
 const config: CapacitorConfig = {
   appId: "space.kingleague.app",

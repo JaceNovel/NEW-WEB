@@ -128,7 +128,7 @@ export default function AppInstallPopup() {
       return {
         key: "web",
         label: "Web app",
-        note: "Installe la version navigateur officielle.",
+        note: "App officielle KING League, simple et rapide a installer.",
         buttonLabel: "Installer",
         mode: "install",
         url: null,
@@ -176,7 +176,7 @@ export default function AppInstallPopup() {
       return {
         key: "web",
         label: isAndroid ? "Android" : "Navigateur",
-        note: "Installation directe depuis le navigateur officiel KING League.",
+        note: "App officielle KING League avec installation directe depuis le navigateur.",
         buttonLabel: "Installer",
         mode: "install",
         url: null,
@@ -186,7 +186,7 @@ export default function AppInstallPopup() {
     return {
       key: "web",
       label: isAndroid ? "Android" : "Navigateur",
-      note: "Ouvre le menu du navigateur puis choisis Installer l'application ou Ajouter a l'ecran d'accueil.",
+      note: "App officielle KING League. Utilise le menu du navigateur pour l'ajouter a l'ecran d'accueil.",
       buttonLabel: "Installer",
       mode: "guide",
       url: null,

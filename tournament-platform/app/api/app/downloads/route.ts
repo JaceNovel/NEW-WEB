@@ -60,33 +60,33 @@ export async function GET() {
         available: Boolean(androidFilename),
         filename: androidFilename,
         url: androidFilename ? "/api/app/download?platform=android" : null,
-        label: "Android APK",
+        label: "App Android",
         note: androidFilename
-          ? "APK debug du wrapper KING League, telechargeable directement depuis le site."
-          : "APK Android pas encore genere dans le dossier public.",
+          ? "App KING League pour Android. Installation rapide sur ton telephone."
+          : "L'app Android n'est pas encore disponible.",
       },
       desktopLinux: {
         available: Boolean(desktopFilename),
         filename: desktopFilename,
         url: desktopFilename ? "/api/app/download?platform=desktop-linux" : null,
-        label: "Desktop Linux",
+        label: "App PC Linux",
         note: desktopFilename
-          ? "AppImage Linux du wrapper desktop KING League."
-          : "Binaire desktop Linux pas encore present dans le dossier public.",
+          ? "App KING League pour PC Linux. Lance la plateforme en version bureau."
+          : "L'app PC Linux n'est pas encore disponible.",
       },
       web: {
         available: true,
         filename: null,
         url: null,
         label: "Web App",
-        note: "Installation instantanee depuis le navigateur via le prompt PWA quand disponible.",
+        note: "App web KING League avec installation directe depuis le navigateur.",
       },
       ios: {
         available: false,
         filename: null,
         url: null,
         label: "iPhone / iPad",
-        note: "iOS ne permet pas ce type d'installation APK directe. Utilise Safari puis Sur l'ecran d'accueil.",
+        note: "App KING League sur iPhone via Safari puis Sur l'ecran d'accueil.",
       },
       assets: {
         loader: loaderAvailable ? "/icons8-chargement-infini-50.apng.png" : null,

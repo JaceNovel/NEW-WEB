@@ -3238,7 +3238,7 @@ select.tp-input option {
 
 @media (max-width: 640px) {
   .tp-sponsor-shell {
-    padding: 0.38rem 0.7rem 0;
+    display: none;
   }
 
   .tp-sponsor-shine {
