@@ -2561,8 +2561,9 @@ select.tp-input option {
 
 @media (max-width: 900px) {
   .tp-matchs-cards-grid {
-    padding-bottom: calc(124px + env(safe-area-inset-bottom));
-    padding-top: calc(74px + env(safe-area-inset-top));
+    grid-template-columns: 1fr;
+    padding-top: 1rem;
+    padding-bottom: calc(108px + env(safe-area-inset-bottom));
   }
 
   .tp-matchs-battle-stage {
@@ -2572,6 +2573,74 @@ select.tp-input option {
 
   .tp-matchs-battle {
     min-height: 0;
+    padding: 1rem 0.9rem 1.15rem;
+  }
+
+  .tp-matchs-battle::after {
+    bottom: 56px;
+    width: 88%;
+    opacity: 0.5;
+  }
+
+  .tp-matchs-battle-atmosphere,
+  .tp-matchs-battle-aura,
+  .tp-matchs-battle-clash-flame,
+  .tp-matchs-battle-clash-shard,
+  .tp-matchs-battle-clash-spark,
+  .tp-matchs-versus::before,
+  .tp-matchs-versus::after {
+    display: none;
+  }
+
+  .tp-matchs-chip-live,
+  .tp-matchs-battle-clash-core,
+  .tp-matchs-battle-clash::before,
+  .tp-matchs-battle-clash-ring,
+  .tp-matchs-battle-clash-ring-outer,
+  .tp-matchs-battle-clash-burst,
+  .tp-matchs-emblem-left::before,
+  .tp-matchs-emblem-right::before,
+  .tp-matchs-winner-crown {
+    animation: none;
+  }
+
+  .tp-matchs-battle-clash {
+    width: 92px;
+    height: 92px;
+    opacity: 0.8;
+  }
+
+  .tp-matchs-battle-clash-ring-outer,
+  .tp-matchs-battle-clash-burst {
+    opacity: 0.35;
+  }
+
+  .tp-matchs-emblem::before {
+    opacity: 0.42;
+    filter: blur(12px);
+  }
+
+  .tp-matchs-emblem-logo-left,
+  .tp-matchs-emblem-logo-right {
+    filter:
+      drop-shadow(0 0 18px rgba(255, 178, 105, 0.2))
+      drop-shadow(0 0 28px rgba(136, 143, 255, 0.16));
+  }
+
+  .tp-matchs-top-tabs {
+    overflow-x: auto;
+    justify-content: flex-start;
+    padding-bottom: 0.15rem;
+    scrollbar-width: none;
+  }
+
+  .tp-matchs-top-tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .tp-matchs-top-tab {
+    flex: 0 0 auto;
+    min-width: 110px;
   }
 }
 
@@ -2652,6 +2721,35 @@ select.tp-input option {
 
   .tp-matchs-shell {
     padding-inline: 12px;
+  }
+
+  .tp-matchs-schedule-row {
+    align-items: flex-start;
+  }
+
+  .tp-matchs-schedule-score {
+    display: none;
+  }
+
+  .tp-matchs-battle-stage {
+    gap: 0.8rem;
+  }
+
+  .tp-matchs-emblem-logo {
+    height: 108px;
+    width: 108px;
+  }
+
+  .tp-matchs-battle-teams {
+    gap: 0.45rem;
+  }
+
+  .tp-matchs-battle-team-separator {
+    display: none;
+  }
+
+  .tp-matchs-cards-grid {
+    gap: 0.7rem;
   }
 }
 

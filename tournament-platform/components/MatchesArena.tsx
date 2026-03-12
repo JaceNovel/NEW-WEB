@@ -69,6 +69,8 @@ export default function MatchesArena({
 }) {
   const initialTab = matches.some((match) => match.status === "LIVE") ? "LIVE" : matches.some((match) => match.status === "PENDING") ? "PENDING" : "FINISHED";
   const [activeTab, setActiveTab] = useState<MatchTab>(initialTab);
+  const [selectedMatchId, setSelectedMatchId] = useState<string | null>(null);
+  const [isCompactViewport, setIsCompactViewport] = useState(false);
   const [now, setNow] = useState(() => Date.now());
   const [soundArmed, setSoundArmed] = useState(false);
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -76,6 +78,22 @@ export default function MatchesArena({
   useEffect(() => {
     const timer = window.setInterval(() => setNow(Date.now()), 1000);
     return () => window.clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const mediaQuery = window.matchMedia("(max-width: 900px)");
+    const syncViewport = () => {
+      setIsCompactViewport(mediaQuery.matches);
+    };
+
+    syncViewport();
+    mediaQuery.addEventListener("change", syncViewport);
+
+    return () => {
+      mediaQuery.removeEventListener("change", syncViewport);
+    };
   }, []);
 
   const finishedMatches = useMemo(
@@ -92,11 +110,26 @@ export default function MatchesArena({
     return list.length ? list : matches;
   }, [activeTab, finishedMatches, matches]);
 
+  useEffect(() => {
+    setSelectedMatchId((current) => {
+      if (current && filteredMatches.some((match) => match.id === current)) {
+        return current;
+      }
+
+      return filteredMatches[0]?.id ?? null;
+    });
+  }, [filteredMatches]);
+
   const featuredMatch = useMemo(() => {
+    if (selectedMatchId) {
+      const selectedMatch = filteredMatches.find((match) => match.id === selectedMatchId);
+      if (selectedMatch) return selectedMatch;
+    }
+
     if (filteredMatches.length) return filteredMatches[0];
     if (activeTab === "FINISHED") return finishedMatches[0] ?? null;
     return matches.find((match) => match.status === "LIVE") ?? matches.find((match) => match.status === "PENDING") ?? finishedMatches[0] ?? matches[0] ?? null;
-  }, [activeTab, filteredMatches, finishedMatches, matches]);
+  }, [activeTab, filteredMatches, finishedMatches, matches, selectedMatchId]);
 
   const lowerMatches = useMemo(() => {
     if (!filteredMatches.length) return [] as MatchPublic[];
@@ -108,8 +141,14 @@ export default function MatchesArena({
   const isHistoryView = featuredMatch?.status === "FINISHED" && winnerSide !== null;
   const leftWinner = winnerSide === "left";
   const rightWinner = winnerSide === "right";
+  const enableBattleEffects = !isCompactViewport;
 
   useEffect(() => {
+    if (isCompactViewport) {
+      setSoundArmed(false);
+      return;
+    }
+
     function armSound() {
       setSoundArmed(true);
     }
@@ -121,10 +160,10 @@ export default function MatchesArena({
       window.removeEventListener("pointerdown", armSound);
       window.removeEventListener("keydown", armSound);
     };
-  }, []);
+  }, [isCompactViewport]);
 
   useEffect(() => {
-    if (!soundArmed || !featuredMatch || typeof window === "undefined") return;
+    if (isCompactViewport || !soundArmed || !featuredMatch || typeof window === "undefined") return;
 
     const AudioContextClass = window.AudioContext || (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
     if (!AudioContextClass) return;
@@ -177,7 +216,7 @@ export default function MatchesArena({
       window.clearTimeout(initialDelay);
       window.clearInterval(intervalId);
     };
-  }, [featuredMatch, soundArmed]);
+  }, [featuredMatch, isCompactViewport, soundArmed]);
 
   return (
     <div className="tp-matchs-shell w-full pb-12 pt-6">
@@ -239,7 +278,10 @@ export default function MatchesArena({
                   <motion.button
                     key={match.id}
                     type="button"
-                    onClick={() => setActiveTab(match.status)}
+                    onClick={() => {
+                      setActiveTab(match.status);
+                      setSelectedMatchId(match.id);
+                    }}
                     initial={{ opacity: 0, x: -10 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ duration: 0.35, delay: index * 0.05 }}
@@ -281,64 +323,68 @@ export default function MatchesArena({
             initial={{ opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.65, delay: 0.18 }}
-            className={`tp-matchs-panel tp-matchs-battle ${isHistoryView ? "tp-matchs-battle-history" : "tp-matchs-battle-shake"}`}
+            className={`tp-matchs-panel tp-matchs-battle ${isHistoryView ? "tp-matchs-battle-history" : ""} ${enableBattleEffects && !isHistoryView ? "tp-matchs-battle-shake" : ""}`}
           >
             {featuredMatch ? (
               <>
-                <div className="tp-matchs-battle-atmosphere" aria-hidden="true">
-                  <span className="tp-matchs-battle-smoke tp-matchs-battle-smoke-left" />
-                  <span className="tp-matchs-battle-smoke tp-matchs-battle-smoke-center" />
-                  <span className="tp-matchs-battle-smoke tp-matchs-battle-smoke-right" />
-                  <span className="tp-matchs-battle-haze tp-matchs-battle-haze-left" />
-                  <span className="tp-matchs-battle-haze tp-matchs-battle-haze-center" />
-                  <span className="tp-matchs-battle-haze tp-matchs-battle-haze-right" />
-                  <span className="tp-matchs-battle-beam tp-matchs-battle-beam-left" />
-                  <span className="tp-matchs-battle-beam tp-matchs-battle-beam-right" />
-                  <span className="tp-matchs-battle-sweep" />
-                  <span className="tp-matchs-battle-orb tp-matchs-battle-orb-1" />
-                  <span className="tp-matchs-battle-orb tp-matchs-battle-orb-2" />
-                  <span className="tp-matchs-battle-orb tp-matchs-battle-orb-3" />
-                  <span className="tp-matchs-battle-particle tp-matchs-battle-particle-1" />
-                  <span className="tp-matchs-battle-particle tp-matchs-battle-particle-2" />
-                  <span className="tp-matchs-battle-particle tp-matchs-battle-particle-3" />
-                  <span className="tp-matchs-battle-particle tp-matchs-battle-particle-4" />
-                  <span className="tp-matchs-battle-particle tp-matchs-battle-particle-5" />
-                  <span className="tp-matchs-battle-particle tp-matchs-battle-particle-6" />
-                  <span className="tp-matchs-battle-particle tp-matchs-battle-particle-7" />
-                  <span className="tp-matchs-battle-grid" />
-                </div>
+                {enableBattleEffects ? (
+                  <div className="tp-matchs-battle-atmosphere" aria-hidden="true">
+                    <span className="tp-matchs-battle-smoke tp-matchs-battle-smoke-left" />
+                    <span className="tp-matchs-battle-smoke tp-matchs-battle-smoke-center" />
+                    <span className="tp-matchs-battle-smoke tp-matchs-battle-smoke-right" />
+                    <span className="tp-matchs-battle-haze tp-matchs-battle-haze-left" />
+                    <span className="tp-matchs-battle-haze tp-matchs-battle-haze-center" />
+                    <span className="tp-matchs-battle-haze tp-matchs-battle-haze-right" />
+                    <span className="tp-matchs-battle-beam tp-matchs-battle-beam-left" />
+                    <span className="tp-matchs-battle-beam tp-matchs-battle-beam-right" />
+                    <span className="tp-matchs-battle-sweep" />
+                    <span className="tp-matchs-battle-orb tp-matchs-battle-orb-1" />
+                    <span className="tp-matchs-battle-orb tp-matchs-battle-orb-2" />
+                    <span className="tp-matchs-battle-orb tp-matchs-battle-orb-3" />
+                    <span className="tp-matchs-battle-particle tp-matchs-battle-particle-1" />
+                    <span className="tp-matchs-battle-particle tp-matchs-battle-particle-2" />
+                    <span className="tp-matchs-battle-particle tp-matchs-battle-particle-3" />
+                    <span className="tp-matchs-battle-particle tp-matchs-battle-particle-4" />
+                    <span className="tp-matchs-battle-particle tp-matchs-battle-particle-5" />
+                    <span className="tp-matchs-battle-particle tp-matchs-battle-particle-6" />
+                    <span className="tp-matchs-battle-particle tp-matchs-battle-particle-7" />
+                    <span className="tp-matchs-battle-grid" />
+                  </div>
+                ) : null}
 
                 <div className="tp-matchs-battle-label">{featuredMatch.status === "LIVE" ? "Battle en cours" : featuredMatch.status === "FINISHED" ? "Victoire validée" : "Upcoming Battle"}</div>
 
                 <div className="tp-matchs-battle-stage">
-                  <div className="tp-matchs-battle-aura tp-matchs-battle-aura-left" />
-                  <div className="tp-matchs-battle-aura tp-matchs-battle-aura-right" />
+                  {enableBattleEffects ? <div className="tp-matchs-battle-aura tp-matchs-battle-aura-left" /> : null}
+                  {enableBattleEffects ? <div className="tp-matchs-battle-aura tp-matchs-battle-aura-right" /> : null}
                   <div className={`tp-matchs-battle-clash ${isHistoryView ? "tp-matchs-battle-clash-history" : ""}`} aria-hidden="true">
                     <span className="tp-matchs-battle-clash-core" />
                     <span className="tp-matchs-battle-clash-ring" />
-                    <span className="tp-matchs-battle-clash-ring tp-matchs-battle-clash-ring-outer" />
-                    <span className="tp-matchs-battle-clash-burst" />
-                    <span className="tp-matchs-battle-clash-flame tp-matchs-battle-clash-flame-left" />
-                    <span className="tp-matchs-battle-clash-flame tp-matchs-battle-clash-flame-right" />
-                    <span className="tp-matchs-battle-clash-spark tp-matchs-battle-clash-spark-left" />
-                    <span className="tp-matchs-battle-clash-spark tp-matchs-battle-clash-spark-right" />
-                    <span className="tp-matchs-battle-clash-shard tp-matchs-battle-clash-shard-1" />
-                    <span className="tp-matchs-battle-clash-shard tp-matchs-battle-clash-shard-2" />
-                    <span className="tp-matchs-battle-clash-shard tp-matchs-battle-clash-shard-3" />
-                    <span className="tp-matchs-battle-clash-shard tp-matchs-battle-clash-shard-4" />
-                    <span className="tp-matchs-battle-clash-shard tp-matchs-battle-clash-shard-5" />
-                    <span className="tp-matchs-battle-clash-shard tp-matchs-battle-clash-shard-6" />
+                    {enableBattleEffects ? <span className="tp-matchs-battle-clash-ring tp-matchs-battle-clash-ring-outer" /> : null}
+                    {enableBattleEffects ? <span className="tp-matchs-battle-clash-burst" /> : null}
+                    {enableBattleEffects ? <span className="tp-matchs-battle-clash-flame tp-matchs-battle-clash-flame-left" /> : null}
+                    {enableBattleEffects ? <span className="tp-matchs-battle-clash-flame tp-matchs-battle-clash-flame-right" /> : null}
+                    {enableBattleEffects ? <span className="tp-matchs-battle-clash-spark tp-matchs-battle-clash-spark-left" /> : null}
+                    {enableBattleEffects ? <span className="tp-matchs-battle-clash-spark tp-matchs-battle-clash-spark-right" /> : null}
+                    {enableBattleEffects ? <span className="tp-matchs-battle-clash-shard tp-matchs-battle-clash-shard-1" /> : null}
+                    {enableBattleEffects ? <span className="tp-matchs-battle-clash-shard tp-matchs-battle-clash-shard-2" /> : null}
+                    {enableBattleEffects ? <span className="tp-matchs-battle-clash-shard tp-matchs-battle-clash-shard-3" /> : null}
+                    {enableBattleEffects ? <span className="tp-matchs-battle-clash-shard tp-matchs-battle-clash-shard-4" /> : null}
+                    {enableBattleEffects ? <span className="tp-matchs-battle-clash-shard tp-matchs-battle-clash-shard-5" /> : null}
+                    {enableBattleEffects ? <span className="tp-matchs-battle-clash-shard tp-matchs-battle-clash-shard-6" /> : null}
                   </div>
 
                   <motion.div
                     animate={
-                      isHistoryView
-                        ? leftWinner
-                          ? { y: [0, -8, 0], rotate: [0, -3, 0], scale: [1, 1.06, 1] }
-                          : { y: [0, 3, 0], rotate: [0, 3, 0], scale: [0.97, 0.94, 0.97], opacity: [0.86, 0.72, 0.86] }
-                        : { x: [0, 28, 8, 0], y: [0, -8, -2, 0], rotate: [0, -16, -6, 0], scale: [1, 1.08, 1.03, 1] }
+                      enableBattleEffects
+                        ? isHistoryView
+                          ? leftWinner
+                            ? { y: [0, -8, 0], rotate: [0, -3, 0], scale: [1, 1.06, 1] }
+                            : { y: [0, 3, 0], rotate: [0, 3, 0], scale: [0.97, 0.94, 0.97], opacity: [0.86, 0.72, 0.86] }
+                          : { x: [0, 28, 8, 0], y: [0, -8, -2, 0], rotate: [0, -16, -6, 0], scale: [1, 1.08, 1.03, 1] }
+                        : undefined
                     }
-                    transition={{ duration: isHistoryView ? 2.8 : 1.55, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" }}
+                    transition={enableBattleEffects ? { duration: isHistoryView ? 2.8 : 1.55, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" } : undefined}
                     className={`tp-matchs-emblem tp-matchs-emblem-left ${leftWinner ? "tp-matchs-emblem-winner" : ""} ${isHistoryView && !leftWinner ? "tp-matchs-emblem-loser" : ""}`}
                   >
                     {leftWinner ? (
@@ -352,33 +398,35 @@ export default function MatchesArena({
                   <div className="tp-matchs-versus-wrap">
                     <motion.div
                       animate={
-                        isHistoryView
-                          ? {
-                              scale: [1, 1.08, 1],
-                              rotate: [0, -2, 0],
-                              letterSpacing: ["-0.08em", "-0.01em", "-0.08em"],
-                              textShadow: [
-                                "0 0 22px rgba(255,207,126,0.24)",
-                                "0 0 40px rgba(255,223,181,0.42), 0 0 90px rgba(255,150,76,0.22), 0 0 120px rgba(193,108,255,0.18)",
-                                "0 0 22px rgba(255,207,126,0.24)",
-                              ],
-                              opacity: [0.94, 1, 0.94],
-                            }
-                          : {
-                              scale: [1, 1.05, 1.24, 0.9, 1],
-                              rotate: [0, 0, -5, 4, 0],
-                              letterSpacing: ["-0.08em", "-0.08em", "0.01em", "-0.1em", "-0.08em"],
-                              textShadow: [
-                                "0 0 18px rgba(255,176,102,0.2)",
-                                "0 0 22px rgba(255,176,102,0.26)",
-                                "0 0 36px rgba(255,224,180,0.72), 0 0 90px rgba(255,141,76,0.46), 0 0 120px rgba(193,108,255,0.24)",
-                                "0 0 22px rgba(255,176,102,0.34)",
-                                "0 0 18px rgba(255,176,102,0.2)",
-                              ],
-                              opacity: [1, 1, 1, 0.88, 1],
-                            }
+                        enableBattleEffects
+                          ? isHistoryView
+                            ? {
+                                scale: [1, 1.08, 1],
+                                rotate: [0, -2, 0],
+                                letterSpacing: ["-0.08em", "-0.01em", "-0.08em"],
+                                textShadow: [
+                                  "0 0 22px rgba(255,207,126,0.24)",
+                                  "0 0 40px rgba(255,223,181,0.42), 0 0 90px rgba(255,150,76,0.22), 0 0 120px rgba(193,108,255,0.18)",
+                                  "0 0 22px rgba(255,207,126,0.24)",
+                                ],
+                                opacity: [0.94, 1, 0.94],
+                              }
+                            : {
+                                scale: [1, 1.05, 1.24, 0.9, 1],
+                                rotate: [0, 0, -5, 4, 0],
+                                letterSpacing: ["-0.08em", "-0.08em", "0.01em", "-0.1em", "-0.08em"],
+                                textShadow: [
+                                  "0 0 18px rgba(255,176,102,0.2)",
+                                  "0 0 22px rgba(255,176,102,0.26)",
+                                  "0 0 36px rgba(255,224,180,0.72), 0 0 90px rgba(255,141,76,0.46), 0 0 120px rgba(193,108,255,0.24)",
+                                  "0 0 22px rgba(255,176,102,0.34)",
+                                  "0 0 18px rgba(255,176,102,0.2)",
+                                ],
+                                opacity: [1, 1, 1, 0.88, 1],
+                              }
+                          : undefined
                       }
-                      transition={{ duration: isHistoryView ? 2.8 : 1.55, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" }}
+                      transition={enableBattleEffects ? { duration: isHistoryView ? 2.8 : 1.55, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" } : undefined}
                       className={`tp-matchs-versus ${isHistoryView ? "tp-matchs-versus-history" : ""}`}
                     >
                       {isHistoryView ? "WIN" : "VS"}
@@ -387,13 +435,15 @@ export default function MatchesArena({
 
                   <motion.div
                     animate={
-                      isHistoryView
-                        ? rightWinner
-                          ? { y: [0, -8, 0], rotate: [0, 3, 0], scale: [1, 1.06, 1] }
-                          : { y: [0, 3, 0], rotate: [0, -3, 0], scale: [0.97, 0.94, 0.97], opacity: [0.86, 0.72, 0.86] }
-                        : { x: [0, -28, -8, 0], y: [0, 8, 2, 0], rotate: [0, 16, 6, 0], scale: [1, 1.08, 1.03, 1] }
+                      enableBattleEffects
+                        ? isHistoryView
+                          ? rightWinner
+                            ? { y: [0, -8, 0], rotate: [0, 3, 0], scale: [1, 1.06, 1] }
+                            : { y: [0, 3, 0], rotate: [0, -3, 0], scale: [0.97, 0.94, 0.97], opacity: [0.86, 0.72, 0.86] }
+                          : { x: [0, -28, -8, 0], y: [0, 8, 2, 0], rotate: [0, 16, 6, 0], scale: [1, 1.08, 1.03, 1] }
+                        : undefined
                     }
-                    transition={{ duration: isHistoryView ? 2.8 : 1.55, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut", delay: isHistoryView ? 0 : 0.06 }}
+                    transition={enableBattleEffects ? { duration: isHistoryView ? 2.8 : 1.55, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut", delay: isHistoryView ? 0 : 0.06 } : undefined}
                     className={`tp-matchs-emblem tp-matchs-emblem-right ${rightWinner ? "tp-matchs-emblem-winner" : ""} ${isHistoryView && !rightWinner ? "tp-matchs-emblem-loser" : ""}`}
                   >
                     {rightWinner ? (
