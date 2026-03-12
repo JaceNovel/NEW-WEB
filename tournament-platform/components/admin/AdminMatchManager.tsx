@@ -129,6 +129,26 @@ export default function AdminMatchManager({
     }
   }
 
+  async function cancelMatch(matchId: string) {
+    if (!confirm("Annuler ce match programmé ?")) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/match/cancel", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ matchId }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json?.error ?? "Erreur");
+      router.refresh();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Erreur");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div className="tp-glass rounded-3xl p-6">
@@ -248,6 +268,15 @@ export default function AdminMatchManager({
                     </div>
                   </div>
                   <div className="flex flex-wrap gap-2">
+                    {m.status === "PENDING" ? (
+                      <button
+                        disabled={busy}
+                        onClick={() => void cancelMatch(m.id)}
+                        className="tp-button-ghost disabled:opacity-60"
+                      >
+                        Annuler
+                      </button>
+                    ) : null}
                     <button
                       disabled={busy}
                       onClick={() => void setResult(m.id, m.player1.id, "LIVE")}

@@ -1,7 +1,6 @@
 "use client";
 
-import Image from "next/image";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { Bolt, Crown, Flame, Shield, Sparkles, Swords, Trophy } from "lucide-react";
 
@@ -22,19 +21,23 @@ type RankingEntry = {
 type MatchTab = "PENDING" | "LIVE" | "FINISHED";
 
 const tabMeta: Array<{ key: MatchTab; label: string; subLabel: string }> = [
-  { key: "PENDING", label: "Programmé", subLabel: "Upcoming" },
+  { key: "PENDING", label: "Programmes", subLabel: "A venir" },
   { key: "LIVE", label: "En cours", subLabel: "Live" },
-  { key: "FINISHED", label: "Historiques", subLabel: "Archives" },
+  { key: "FINISHED", label: "Termines", subLabel: "Archives" },
 ];
 
 function formatCountdown(ms: number) {
-  if (ms <= 0) return "00j 00h 00m 00s";
-  const totalSeconds = Math.floor(ms / 1000);
-  const days = Math.floor(totalSeconds / 86400);
-  const hours = Math.floor((totalSeconds % 86400) / 3600);
-  const minutes = Math.floor((totalSeconds % 3600) / 60);
-  const seconds = totalSeconds % 60;
-  return `${String(days).padStart(2, "0")}j ${String(hours).padStart(2, "0")}h ${String(minutes).padStart(2, "0")}m ${String(seconds).padStart(2, "0")}s`;
+  if (ms <= 0) return "Disponible";
+  const totalMinutes = Math.floor(ms / 60000);
+  const days = Math.floor(totalMinutes / 1440);
+  const hours = Math.floor((totalMinutes % 1440) / 60);
+  const minutes = totalMinutes % 60;
+
+  if (days > 0) {
+    return `${days}j ${String(hours).padStart(2, "0")}h ${String(minutes).padStart(2, "0")}m`;
+  }
+
+  return `${String(hours).padStart(2, "0")}h ${String(minutes).padStart(2, "0")}m`;
 }
 
 function formatDateLabel(dateValue: string) {
@@ -53,11 +56,33 @@ function CountryFlag({ countryCode, className = "" }: { countryCode?: string; cl
   return <img src={country.flagUrl} alt={country.label} className={className} />;
 }
 
-function getWinnerSide(match: MatchPublic | null) {
+function getWinner(match: MatchPublic | null) {
   if (!match?.winnerId) return null;
-  if (match.winnerId === match.player1.id) return "left";
-  if (match.winnerId === match.player2.id) return "right";
+  if (match.winnerId === match.player1.id) return match.player1;
+  if (match.winnerId === match.player2.id) return match.player2;
   return null;
+}
+
+function getStatusCopy(match: MatchPublic, now: number) {
+  if (match.status === "PENDING") {
+    return {
+      chip: "Programme",
+      subcopy: `Dans ${formatCountdown(new Date(match.date).getTime() - now)}`,
+    };
+  }
+
+  if (match.status === "LIVE") {
+    return {
+      chip: "Live",
+      subcopy: "Affrontement en cours",
+    };
+  }
+
+  const winner = getWinner(match);
+  return {
+    chip: winner ? `Victoire ${winner.pseudo}` : "Termine",
+    subcopy: winner ? `${winner.pseudo} a remporte le duel` : "Resultat en attente",
+  };
 }
 
 export default function MatchesArena({
@@ -69,476 +94,303 @@ export default function MatchesArena({
 }) {
   const initialTab = matches.some((match) => match.status === "LIVE") ? "LIVE" : matches.some((match) => match.status === "PENDING") ? "PENDING" : "FINISHED";
   const [activeTab, setActiveTab] = useState<MatchTab>(initialTab);
+  const [selectedMatchId, setSelectedMatchId] = useState<string | null>(null);
   const [now, setNow] = useState(() => Date.now());
-  const [soundArmed, setSoundArmed] = useState(false);
-  const audioContextRef = useRef<AudioContext | null>(null);
 
   useEffect(() => {
-    const timer = window.setInterval(() => setNow(Date.now()), 1000);
+    const timer = window.setInterval(() => setNow(Date.now()), 30000);
     return () => window.clearInterval(timer);
   }, []);
 
-  const finishedMatches = useMemo(
-    () => matches.filter((match) => match.status === "FINISHED" && Boolean(match.winnerId)),
-    [matches],
+  const filteredMatches = useMemo(() => {
+    const current = matches.filter((match) => match.status === activeTab);
+    return current.length ? current : matches;
+  }, [activeTab, matches]);
+
+  useEffect(() => {
+    if (!filteredMatches.length) {
+      setSelectedMatchId(null);
+      return;
+    }
+
+    if (!selectedMatchId || !filteredMatches.some((match) => match.id === selectedMatchId)) {
+      setSelectedMatchId(filteredMatches[0].id);
+    }
+  }, [filteredMatches, selectedMatchId]);
+
+  const featuredMatch = useMemo(
+    () => filteredMatches.find((match) => match.id === selectedMatchId) ?? filteredMatches[0] ?? null,
+    [filteredMatches, selectedMatchId],
   );
 
-  const filteredMatches = useMemo(() => {
-    if (activeTab === "FINISHED") {
-      return finishedMatches;
-    }
-
-    const list = matches.filter((match) => match.status === activeTab);
-    return list.length ? list : matches;
-  }, [activeTab, finishedMatches, matches]);
-
-  const featuredMatch = useMemo(() => {
-    if (filteredMatches.length) return filteredMatches[0];
-    if (activeTab === "FINISHED") return finishedMatches[0] ?? null;
-    return matches.find((match) => match.status === "LIVE") ?? matches.find((match) => match.status === "PENDING") ?? finishedMatches[0] ?? matches[0] ?? null;
-  }, [activeTab, filteredMatches, finishedMatches, matches]);
-
-  const lowerMatches = useMemo(() => {
-    if (!filteredMatches.length) return [] as MatchPublic[];
-    if (!featuredMatch) return filteredMatches.slice(0, 3);
-    return filteredMatches.filter((match) => match.id !== featuredMatch.id).slice(0, 3);
-  }, [featuredMatch, filteredMatches]);
-
-  const winnerSide = getWinnerSide(featuredMatch);
-  const isHistoryView = featuredMatch?.status === "FINISHED" && winnerSide !== null;
-  const leftWinner = winnerSide === "left";
-  const rightWinner = winnerSide === "right";
-
-  useEffect(() => {
-    function armSound() {
-      setSoundArmed(true);
-    }
-
-    window.addEventListener("pointerdown", armSound, { once: true });
-    window.addEventListener("keydown", armSound, { once: true });
-
-    return () => {
-      window.removeEventListener("pointerdown", armSound);
-      window.removeEventListener("keydown", armSound);
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!soundArmed || !featuredMatch || typeof window === "undefined") return;
-
-    const AudioContextClass = window.AudioContext || (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-    if (!AudioContextClass) return;
-
-    const impact = () => {
-      const context = audioContextRef.current ?? new AudioContextClass();
-      audioContextRef.current = context;
-
-      if (context.state === "suspended") {
-        void context.resume();
-      }
-
-      const nowTime = context.currentTime;
-      const master = context.createGain();
-      master.gain.setValueAtTime(0.0001, nowTime);
-      master.gain.exponentialRampToValueAtTime(0.22, nowTime + 0.01);
-      master.gain.exponentialRampToValueAtTime(0.0001, nowTime + 0.34);
-      master.connect(context.destination);
-
-      const metal = context.createOscillator();
-      metal.type = "triangle";
-      metal.frequency.setValueAtTime(1140, nowTime);
-      metal.frequency.exponentialRampToValueAtTime(240, nowTime + 0.24);
-
-      const metalGain = context.createGain();
-      metalGain.gain.setValueAtTime(0.2, nowTime);
-      metalGain.gain.exponentialRampToValueAtTime(0.0001, nowTime + 0.25);
-      metal.connect(metalGain).connect(master);
-
-      const spark = context.createOscillator();
-      spark.type = "square";
-      spark.frequency.setValueAtTime(1820, nowTime);
-      spark.frequency.exponentialRampToValueAtTime(620, nowTime + 0.12);
-
-      const sparkGain = context.createGain();
-      sparkGain.gain.setValueAtTime(0.09, nowTime);
-      sparkGain.gain.exponentialRampToValueAtTime(0.0001, nowTime + 0.12);
-      spark.connect(sparkGain).connect(master);
-
-      metal.start(nowTime);
-      spark.start(nowTime);
-      metal.stop(nowTime + 0.26);
-      spark.stop(nowTime + 0.14);
-    };
-
-    const initialDelay = window.setTimeout(impact, 450);
-    const intervalId = window.setInterval(impact, 1080);
-
-    return () => {
-      window.clearTimeout(initialDelay);
-      window.clearInterval(intervalId);
-    };
-  }, [featuredMatch, soundArmed]);
+  const lowerMatches = useMemo(() => filteredMatches.filter((match) => match.id !== featuredMatch?.id).slice(0, 3), [featuredMatch?.id, filteredMatches]);
+  const featuredWinner = getWinner(featuredMatch);
 
   return (
-    <div className="tp-matchs-shell w-full pb-12 pt-6">
-      <section className="tp-matchs-hero">
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, ease: "easeOut" }}
-          className="tp-matchs-brand-wrap"
-        >
-          <div className="tp-matchs-brand-mark">1VS1 KING LEAGUE</div>
-          <div className="tp-matchs-brand-subtitle">Combattez. Dominez. Gagnez.</div>
-        </motion.div>
+    <div className="mx-auto w-full max-w-[1280px] px-4 pb-12 pt-6 sm:px-5 lg:px-6">
+      <section className="relative overflow-hidden rounded-[28px] border border-fuchsia-300/14 bg-[linear-gradient(160deg,rgba(35,19,66,0.92),rgba(10,10,25,0.88)_55%,rgba(8,28,61,0.82))] p-4 shadow-[0_0_40px_rgba(140,66,255,0.12)] sm:p-6">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,164,95,0.12),transparent_25%),radial-gradient(circle_at_top_right,rgba(92,225,255,0.1),transparent_22%),linear-gradient(180deg,rgba(255,255,255,0.03),transparent_24%)]" />
 
-        <div className="tp-matchs-top-tabs">
-          {tabMeta.map((tab) => {
-            const active = activeTab === tab.key;
-
-            return (
-              <button
-                key={tab.key}
-                type="button"
-                onClick={() => setActiveTab(tab.key)}
-                className={`tp-matchs-top-tab ${active ? "tp-matchs-top-tab-active" : ""}`}
-              >
-                <span>{tab.label}</span>
-              </button>
-            );
-          })}
-        </div>
-
-        <div className="tp-matchs-main-grid">
-          <motion.aside
-            initial={{ opacity: 0, x: -14 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.55, delay: 0.1 }}
-            className="tp-matchs-panel tp-matchs-schedule"
-          >
-            <div className="tp-matchs-panel-head">
-              <div className="tp-matchs-panel-title">
-                <Bolt className="h-4 w-4" />
-                {tabMeta.find((tab) => tab.key === activeTab)?.label}
+        <div className="relative">
+          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45 }} className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] font-black uppercase tracking-[0.24em] text-white/72">
+                <Bolt className="h-4 w-4 text-amber-300" />
+                1VS1 King League
               </div>
+              <h1 className="mt-4 text-3xl font-black uppercase tracking-tight text-white sm:text-4xl lg:text-5xl">Matchs</h1>
+              <p className="mt-3 max-w-2xl text-sm text-white/62 sm:text-base">Vue rapide des matchs programmes, live et valides, avec un affichage plus fluide sur mobile comme sur desktop.</p>
             </div>
 
-            <div className="tp-matchs-schedule-list">
-              {filteredMatches.map((match, index) => {
-                const isFeatured = featuredMatch?.id === match.id;
-                const statusClass =
-                  match.status === "LIVE"
-                    ? "tp-matchs-chip-live"
-                    : match.status === "FINISHED"
-                      ? "tp-matchs-chip-finished"
-                      : "tp-matchs-chip-pending";
-                const matchWinnerSide = getWinnerSide(match);
-                const matchWinnerName = matchWinnerSide === "left" ? match.player1.pseudo : matchWinnerSide === "right" ? match.player2.pseudo : null;
-
+            <div className="flex flex-wrap gap-2">
+              {tabMeta.map((tab) => {
+                const active = activeTab === tab.key;
                 return (
-                  <motion.button
-                    key={match.id}
+                  <button
+                    key={tab.key}
                     type="button"
-                    onClick={() => setActiveTab(match.status)}
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.35, delay: index * 0.05 }}
-                    className={`tp-matchs-schedule-item ${isFeatured ? "tp-matchs-schedule-item-active" : ""}`}
+                    onClick={() => setActiveTab(tab.key)}
+                    className={`rounded-[16px] border px-4 py-3 text-left transition ${active ? "border-cyan-300/28 bg-cyan-300/10 text-white shadow-[0_0_20px_rgba(92,225,255,0.14)]" : "border-white/10 bg-black/20 text-white/62 hover:bg-white/5"}`}
                   >
-                    <div className="tp-matchs-schedule-row">
-                      <div className="tp-matchs-schedule-team">
-                        <Image src={match.player1.logoUrl} alt={match.player1.pseudo} width={36} height={36} className="tp-matchs-schedule-logo" />
-                        <div>
-                          <div className="tp-matchs-schedule-name">
-                            <CountryFlag countryCode={match.player1.countryCode} className="tp-matchs-inline-flag" />
-                            <span>{match.player1.pseudo}</span>
-                          </div>
-                          <div className="tp-matchs-schedule-meta">{match.player1.freefireId}</div>
-                        </div>
-                      </div>
-                      <span className={`tp-matchs-chip ${statusClass}`}>{match.status === "PENDING" ? "+14" : match.status === "LIVE" ? "LIVE" : "VALIDÉ"}</span>
-                    </div>
-                    <div className="tp-matchs-schedule-row tp-matchs-schedule-row-bottom">
-                      <div className="tp-matchs-schedule-team tp-matchs-schedule-team-small">
-                        <Image src={match.player2.logoUrl} alt={match.player2.pseudo} width={28} height={28} className="tp-matchs-schedule-logo tp-matchs-schedule-logo-small" />
-                        <div>
-                          <div className="tp-matchs-schedule-name tp-matchs-schedule-name-small">
-                            <CountryFlag countryCode={match.player2.countryCode} className="tp-matchs-inline-flag tp-matchs-inline-flag-small" />
-                            <span>{match.player2.pseudo}</span>
-                          </div>
-                          <div className="tp-matchs-schedule-meta">{match.status === "FINISHED" && matchWinnerName ? `Vainqueur: ${matchWinnerName}` : formatDateLabel(match.date)}</div>
-                        </div>
-                      </div>
-                      <div className="tp-matchs-schedule-score">{match.player1.pseudo.length + match.player2.pseudo.length}</div>
-                    </div>
-                  </motion.button>
+                    <div className="text-[11px] font-black uppercase tracking-[0.22em]">{tab.subLabel}</div>
+                    <div className="mt-1 text-sm font-bold">{tab.label}</div>
+                  </button>
                 );
               })}
             </div>
-          </motion.aside>
+          </motion.div>
 
-          <motion.section
-            initial={{ opacity: 0, y: 18 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.65, delay: 0.18 }}
-            className={`tp-matchs-panel tp-matchs-battle ${isHistoryView ? "tp-matchs-battle-history" : "tp-matchs-battle-shake"}`}
-          >
-            {featuredMatch ? (
-              <>
-                <div className="tp-matchs-battle-atmosphere" aria-hidden="true">
-                  <span className="tp-matchs-battle-smoke tp-matchs-battle-smoke-left" />
-                  <span className="tp-matchs-battle-smoke tp-matchs-battle-smoke-center" />
-                  <span className="tp-matchs-battle-smoke tp-matchs-battle-smoke-right" />
-                  <span className="tp-matchs-battle-haze tp-matchs-battle-haze-left" />
-                  <span className="tp-matchs-battle-haze tp-matchs-battle-haze-center" />
-                  <span className="tp-matchs-battle-haze tp-matchs-battle-haze-right" />
-                  <span className="tp-matchs-battle-beam tp-matchs-battle-beam-left" />
-                  <span className="tp-matchs-battle-beam tp-matchs-battle-beam-right" />
-                  <span className="tp-matchs-battle-sweep" />
-                  <span className="tp-matchs-battle-orb tp-matchs-battle-orb-1" />
-                  <span className="tp-matchs-battle-orb tp-matchs-battle-orb-2" />
-                  <span className="tp-matchs-battle-orb tp-matchs-battle-orb-3" />
-                  <span className="tp-matchs-battle-particle tp-matchs-battle-particle-1" />
-                  <span className="tp-matchs-battle-particle tp-matchs-battle-particle-2" />
-                  <span className="tp-matchs-battle-particle tp-matchs-battle-particle-3" />
-                  <span className="tp-matchs-battle-particle tp-matchs-battle-particle-4" />
-                  <span className="tp-matchs-battle-particle tp-matchs-battle-particle-5" />
-                  <span className="tp-matchs-battle-particle tp-matchs-battle-particle-6" />
-                  <span className="tp-matchs-battle-particle tp-matchs-battle-particle-7" />
-                  <span className="tp-matchs-battle-grid" />
-                </div>
-
-                <div className="tp-matchs-battle-label">{featuredMatch.status === "LIVE" ? "Battle en cours" : featuredMatch.status === "FINISHED" ? "Victoire validée" : "Upcoming Battle"}</div>
-
-                <div className="tp-matchs-battle-stage">
-                  <div className="tp-matchs-battle-aura tp-matchs-battle-aura-left" />
-                  <div className="tp-matchs-battle-aura tp-matchs-battle-aura-right" />
-                  <div className={`tp-matchs-battle-clash ${isHistoryView ? "tp-matchs-battle-clash-history" : ""}`} aria-hidden="true">
-                    <span className="tp-matchs-battle-clash-core" />
-                    <span className="tp-matchs-battle-clash-ring" />
-                    <span className="tp-matchs-battle-clash-ring tp-matchs-battle-clash-ring-outer" />
-                    <span className="tp-matchs-battle-clash-burst" />
-                    <span className="tp-matchs-battle-clash-flame tp-matchs-battle-clash-flame-left" />
-                    <span className="tp-matchs-battle-clash-flame tp-matchs-battle-clash-flame-right" />
-                    <span className="tp-matchs-battle-clash-spark tp-matchs-battle-clash-spark-left" />
-                    <span className="tp-matchs-battle-clash-spark tp-matchs-battle-clash-spark-right" />
-                    <span className="tp-matchs-battle-clash-shard tp-matchs-battle-clash-shard-1" />
-                    <span className="tp-matchs-battle-clash-shard tp-matchs-battle-clash-shard-2" />
-                    <span className="tp-matchs-battle-clash-shard tp-matchs-battle-clash-shard-3" />
-                    <span className="tp-matchs-battle-clash-shard tp-matchs-battle-clash-shard-4" />
-                    <span className="tp-matchs-battle-clash-shard tp-matchs-battle-clash-shard-5" />
-                    <span className="tp-matchs-battle-clash-shard tp-matchs-battle-clash-shard-6" />
-                  </div>
-
-                  <motion.div
-                    animate={
-                      isHistoryView
-                        ? leftWinner
-                          ? { y: [0, -12, 0], rotate: [0, -4, 0], scale: [1, 1.1, 1] }
-                          : { y: [0, 5, 0], rotate: [0, 4, 0], scale: [0.94, 0.9, 0.94], opacity: [0.82, 0.62, 0.82] }
-                        : { x: [0, 48, 10, 0], y: [0, -14, -3, 0], rotate: [0, -26, -9, 0], scale: [1, 1.14, 1.05, 1] }
-                    }
-                    transition={{ duration: isHistoryView ? 2.3 : 1.08, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" }}
-                    className={`tp-matchs-emblem tp-matchs-emblem-left ${leftWinner ? "tp-matchs-emblem-winner" : ""} ${isHistoryView && !leftWinner ? "tp-matchs-emblem-loser" : ""}`}
-                  >
-                    {leftWinner ? (
-                      <span className="tp-matchs-winner-crown tp-matchs-winner-crown-left">
-                        <Crown className="h-5 w-5" />
-                      </span>
-                    ) : null}
-                    <Image src={featuredMatch.player1.logoUrl} alt={featuredMatch.player1.pseudo} width={184} height={184} className="tp-matchs-emblem-logo tp-matchs-emblem-logo-left" />
-                  </motion.div>
-
-                  <div className="tp-matchs-versus-wrap">
-                    <motion.div
-                      animate={
-                        isHistoryView
-                          ? {
-                              scale: [1, 1.12, 1],
-                              rotate: [0, -3, 0],
-                              letterSpacing: ["-0.08em", "0.01em", "-0.08em"],
-                              textShadow: [
-                                "0 0 22px rgba(255,207,126,0.24)",
-                                "0 0 54px rgba(255,223,181,0.58), 0 0 120px rgba(255,150,76,0.34), 0 0 150px rgba(193,108,255,0.24)",
-                                "0 0 22px rgba(255,207,126,0.24)",
-                              ],
-                              opacity: [0.94, 1, 0.94],
-                            }
-                          : {
-                              scale: [1, 1.08, 1.62, 0.72, 1],
-                              rotate: [0, 0, -10, 7, 0],
-                              letterSpacing: ["-0.08em", "-0.08em", "0.02em", "-0.12em", "-0.08em"],
-                              textShadow: [
-                                "0 0 18px rgba(255,176,102,0.2)",
-                                "0 0 24px rgba(255,176,102,0.32)",
-                                "0 0 50px rgba(255,224,180,0.95), 0 0 120px rgba(255,141,76,0.72), 0 0 160px rgba(193,108,255,0.42)",
-                                "0 0 28px rgba(255,176,102,0.46)",
-                                "0 0 18px rgba(255,176,102,0.2)"
-                              ],
-                              opacity: [1, 1, 1, 0.78, 1],
-                            }
-                      }
-                      transition={{ duration: isHistoryView ? 2.3 : 1.08, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" }}
-                      className={`tp-matchs-versus ${isHistoryView ? "tp-matchs-versus-history" : ""}`}
-                    >
-                      {isHistoryView ? "WIN" : "VS"}
-                    </motion.div>
-                  </div>
-
-                  <motion.div
-                    animate={
-                      isHistoryView
-                        ? rightWinner
-                          ? { y: [0, -12, 0], rotate: [0, 4, 0], scale: [1, 1.1, 1] }
-                          : { y: [0, 5, 0], rotate: [0, -4, 0], scale: [0.94, 0.9, 0.94], opacity: [0.82, 0.62, 0.82] }
-                        : { x: [0, -48, -10, 0], y: [0, 14, 3, 0], rotate: [0, 26, 9, 0], scale: [1, 1.14, 1.05, 1] }
-                    }
-                    transition={{ duration: isHistoryView ? 2.3 : 1.08, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut", delay: isHistoryView ? 0 : 0.04 }}
-                    className={`tp-matchs-emblem tp-matchs-emblem-right ${rightWinner ? "tp-matchs-emblem-winner" : ""} ${isHistoryView && !rightWinner ? "tp-matchs-emblem-loser" : ""}`}
-                  >
-                    {rightWinner ? (
-                      <span className="tp-matchs-winner-crown tp-matchs-winner-crown-right">
-                        <Crown className="h-5 w-5" />
-                      </span>
-                    ) : null}
-                    <Image src={featuredMatch.player2.logoUrl} alt={featuredMatch.player2.pseudo} width={184} height={184} className="tp-matchs-emblem-logo tp-matchs-emblem-logo-right" />
-                  </motion.div>
-                </div>
-
-                <div className="tp-matchs-battle-teams">
-                  <div className="tp-matchs-emblem-name">
-                    <CountryFlag countryCode={featuredMatch.player1.countryCode} className="tp-matchs-emblem-flag" />
-                    <span>{featuredMatch.player1.pseudo}</span>
-                  </div>
-                  <div className="tp-matchs-battle-team-separator">vs</div>
-                  <div className="tp-matchs-emblem-name">
-                    <CountryFlag countryCode={featuredMatch.player2.countryCode} className="tp-matchs-emblem-flag" />
-                    <span>{featuredMatch.player2.pseudo}</span>
-                  </div>
-                </div>
-
-                <div className="tp-matchs-battle-countdown">
-                  {featuredMatch.status === "PENDING"
-                    ? `Début dans ${formatCountdown(new Date(featuredMatch.date).getTime() - now)}`
-                    : featuredMatch.status === "LIVE"
-                      ? "Match en direct maintenant"
-                      : `Validé par l'admin • Gagnant: ${featuredMatch.winnerId === featuredMatch.player1.id ? featuredMatch.player1.pseudo : featuredMatch.winnerId === featuredMatch.player2.id ? featuredMatch.player2.pseudo : "—"}`}
-                </div>
-
-                <motion.button
-                  whileHover={{ y: -2, scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="tp-matchs-battle-cta"
-                >
-                  <Swords className="h-4 w-4" />
-                  {featuredMatch.status === "LIVE" ? "Rejoindre le combat" : featuredMatch.status === "FINISHED" ? "Voir le résumé" : "Prêt au combat"}
-                </motion.button>
-              </>
-            ) : (
-              <div className="tp-matchs-empty">Aucun affrontement disponible pour le moment.</div>
-            )}
-          </motion.section>
-
-          <motion.aside
-            initial={{ opacity: 0, x: 14 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.55, delay: 0.14 }}
-            className="tp-matchs-panel tp-matchs-ranking"
-          >
-            <div className="tp-matchs-panel-head">
-              <div className="tp-matchs-panel-title">
-                <Trophy className="h-4 w-4" />
-                Classement 1VS1 KING LEAGUE
+          <div className="mt-6 grid gap-5 xl:grid-cols-[360px_minmax(0,1fr)_280px]">
+            <aside className="rounded-[24px] border border-white/10 bg-black/20 p-4 backdrop-blur-md">
+              <div className="flex items-center gap-2 text-sm font-black uppercase tracking-[0.18em] text-white">
+                <Flame className="h-4 w-4 text-amber-300" />
+                Programme
               </div>
-            </div>
 
-            <div className="tp-matchs-ranking-list">
-              {ranking.slice(0, 5).map((entry, index) => (
-                <motion.div
-                  key={entry.id}
-                  initial={{ opacity: 0, x: 10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.35, delay: index * 0.06 }}
-                  className="tp-matchs-ranking-item"
-                >
-                  <div className="tp-matchs-ranking-left">
-                    <span className="tp-matchs-ranking-rank">#{index + 1}</span>
-                    <Image src={entry.logoUrl} alt={entry.pseudo} width={34} height={34} className="tp-matchs-ranking-logo" />
+              <div className="mt-4 space-y-3">
+                {filteredMatches.length ? (
+                  filteredMatches.map((match, index) => {
+                    const status = getStatusCopy(match, now);
+                    const active = featuredMatch?.id === match.id;
+
+                    return (
+                      <motion.button
+                        key={match.id}
+                        type="button"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.28, delay: index * 0.04 }}
+                        onClick={() => setSelectedMatchId(match.id)}
+                        className={`w-full rounded-[20px] border p-4 text-left transition ${active ? "border-fuchsia-300/28 bg-fuchsia-300/10 shadow-[0_0_24px_rgba(195,93,255,0.12)]" : "border-white/10 bg-white/[0.03] hover:bg-white/[0.05]"}`}
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.18em] text-white/44">
+                              <span>Match #{index + 1}</span>
+                              <span>•</span>
+                              <span>{formatDateLabel(match.date)}</span>
+                            </div>
+                            <div className="mt-3 flex items-center gap-3 overflow-hidden">
+                              <div className="flex min-w-0 flex-1 items-center gap-2">
+                                <img src={match.player1.logoUrl} alt={match.player1.pseudo} className="h-12 w-12 rounded-[16px] border border-white/10 bg-black/20 object-contain p-1.5" />
+                                <div className="min-w-0">
+                                  <div className="flex items-center gap-2">
+                                    <CountryFlag countryCode={match.player1.countryCode} className="h-4 w-4 rounded-full" />
+                                    <span className="truncate text-sm font-black text-white">{match.player1.pseudo}</span>
+                                  </div>
+                                  <div className="truncate text-xs text-white/45">{match.player1.freefireId}</div>
+                                </div>
+                              </div>
+
+                              <div className="shrink-0 text-sm font-black uppercase tracking-[0.18em] text-amber-200">VS</div>
+
+                              <div className="flex min-w-0 flex-1 items-center justify-end gap-2 text-right">
+                                <div className="min-w-0">
+                                  <div className="flex items-center justify-end gap-2">
+                                    <span className="truncate text-sm font-black text-white">{match.player2.pseudo}</span>
+                                    <CountryFlag countryCode={match.player2.countryCode} className="h-4 w-4 rounded-full" />
+                                  </div>
+                                  <div className="truncate text-xs text-white/45">{match.player2.freefireId}</div>
+                                </div>
+                                <img src={match.player2.logoUrl} alt={match.player2.pseudo} className="h-12 w-12 rounded-[16px] border border-white/10 bg-black/20 object-contain p-1.5" />
+                              </div>
+                            </div>
+                          </div>
+
+                          <span className={`shrink-0 rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] ${match.status === "LIVE" ? "border-rose-300/24 bg-rose-300/10 text-rose-100" : match.status === "FINISHED" ? "border-emerald-300/24 bg-emerald-300/10 text-emerald-100" : "border-cyan-300/24 bg-cyan-300/10 text-cyan-100"}`}>
+                            {status.chip}
+                          </span>
+                        </div>
+
+                        <div className="mt-3 text-xs text-white/52">{status.subcopy}</div>
+                      </motion.button>
+                    );
+                  })
+                ) : (
+                  <div className="rounded-[20px] border border-white/10 bg-white/5 px-4 py-8 text-center text-sm text-white/48">Aucun affrontement disponible.</div>
+                )}
+              </div>
+            </aside>
+
+            <section className="rounded-[26px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.02))] p-4 shadow-[inset_0_0_30px_rgba(255,255,255,0.02)] sm:p-5">
+              {featuredMatch ? (
+                <>
+                  <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
-                      <div className="tp-matchs-ranking-name">
-                        <CountryFlag countryCode={entry.countryCode} className="tp-matchs-inline-flag" />
-                        <span>{entry.pseudo}</span>
+                      <div className="text-[11px] font-black uppercase tracking-[0.22em] text-white/42">Resume du match</div>
+                      <div className="mt-2 text-2xl font-black text-white sm:text-3xl">
+                        {featuredMatch.status === "PENDING" ? "Duel programme" : featuredMatch.status === "LIVE" ? "Duel en cours" : "Resultat confirme"}
                       </div>
-                      <div className="tp-matchs-ranking-meta">{entry.wins} victoires • Série x{entry.winStreak}</div>
+                    </div>
+                    <div className="rounded-[16px] border border-white/10 bg-black/20 px-4 py-3 text-right">
+                      <div className="text-[10px] font-black uppercase tracking-[0.18em] text-white/42">Date</div>
+                      <div className="mt-1 text-sm font-bold text-white">{formatDateLabel(featuredMatch.date)}</div>
                     </div>
                   </div>
-                  <div className="tp-matchs-ranking-score">{entry.points} pts</div>
-                </motion.div>
-              ))}
-            </div>
 
-            <button type="button" className="tp-matchs-ranking-button">
-              Voir toutes les règles
-            </button>
-          </motion.aside>
-        </div>
+                  <div className="mt-6 grid gap-5 lg:grid-cols-[1fr_auto_1fr] lg:items-center">
+                    <div className={`rounded-[24px] border p-4 ${featuredWinner?.id === featuredMatch.player1.id ? "border-amber-300/24 bg-amber-300/10" : "border-white/10 bg-black/20"}`}>
+                      <div className="flex items-center gap-4">
+                        <img src={featuredMatch.player1.logoUrl} alt={featuredMatch.player1.pseudo} className="h-24 w-24 rounded-[22px] border border-white/10 bg-black/20 object-contain p-2 sm:h-28 sm:w-28" />
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.18em] text-white/45">
+                            <CountryFlag countryCode={featuredMatch.player1.countryCode} className="h-4 w-4 rounded-full" />
+                            Combattant 1
+                          </div>
+                          <div className="mt-2 truncate text-2xl font-black text-white">{featuredMatch.player1.pseudo}</div>
+                          <div className="mt-1 text-sm text-white/55">ID {featuredMatch.player1.freefireId}</div>
+                          {featuredWinner?.id === featuredMatch.player1.id ? (
+                            <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-amber-300/24 bg-amber-300/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-amber-100">
+                              <Crown className="h-4 w-4" />
+                              Victoire
+                            </div>
+                          ) : null}
+                        </div>
+                      </div>
+                    </div>
 
-        <div className="tp-matchs-bottom-grid">
-          <section className="tp-matchs-panel tp-matchs-lower-battles">
-            <div className="tp-matchs-panel-head">
-              <div className="tp-matchs-panel-title">
-                <Flame className="h-4 w-4" />
-                Batailles à surveiller
+                    <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full border border-fuchsia-300/20 bg-fuchsia-300/10 text-xl font-black uppercase tracking-[0.16em] text-white shadow-[0_0_20px_rgba(193,108,255,0.18)]">
+                      VS
+                    </div>
+
+                    <div className={`rounded-[24px] border p-4 ${featuredWinner?.id === featuredMatch.player2.id ? "border-amber-300/24 bg-amber-300/10" : "border-white/10 bg-black/20"}`}>
+                      <div className="flex items-center gap-4">
+                        <img src={featuredMatch.player2.logoUrl} alt={featuredMatch.player2.pseudo} className="h-24 w-24 rounded-[22px] border border-white/10 bg-black/20 object-contain p-2 sm:h-28 sm:w-28" />
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.18em] text-white/45">
+                            <CountryFlag countryCode={featuredMatch.player2.countryCode} className="h-4 w-4 rounded-full" />
+                            Combattant 2
+                          </div>
+                          <div className="mt-2 truncate text-2xl font-black text-white">{featuredMatch.player2.pseudo}</div>
+                          <div className="mt-1 text-sm text-white/55">ID {featuredMatch.player2.freefireId}</div>
+                          {featuredWinner?.id === featuredMatch.player2.id ? (
+                            <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-amber-300/24 bg-amber-300/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-amber-100">
+                              <Crown className="h-4 w-4" />
+                              Victoire
+                            </div>
+                          ) : null}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                    <div className="rounded-[20px] border border-white/10 bg-black/20 px-4 py-4">
+                      <div className="text-[11px] font-black uppercase tracking-[0.18em] text-white/42">Statut</div>
+                      <div className="mt-2 text-lg font-black text-white">{featuredMatch.status === "PENDING" ? "Programme" : featuredMatch.status === "LIVE" ? "En direct" : "Termine"}</div>
+                    </div>
+                    <div className="rounded-[20px] border border-white/10 bg-black/20 px-4 py-4">
+                      <div className="text-[11px] font-black uppercase tracking-[0.18em] text-white/42">Decision</div>
+                      <div className="mt-2 text-lg font-black text-white">{featuredWinner ? `Victoire ${featuredWinner.pseudo}` : featuredMatch.status === "PENDING" ? formatCountdown(new Date(featuredMatch.date).getTime() - now) : "Aucune"}</div>
+                    </div>
+                    <div className="rounded-[20px] border border-white/10 bg-black/20 px-4 py-4 sm:col-span-2 xl:col-span-1">
+                      <div className="text-[11px] font-black uppercase tracking-[0.18em] text-white/42">Impact</div>
+                      <div className="mt-2 text-sm text-white/62">Le gagnant prend 1 credit et 3 points. Le perdant perd 1 credit.</div>
+                    </div>
+                  </div>
+
+                  <button type="button" className="mt-6 inline-flex items-center gap-2 rounded-[16px] border border-cyan-300/20 bg-cyan-300/10 px-4 py-3 text-sm font-black uppercase tracking-[0.14em] text-white">
+                    <Swords className="h-4 w-4" />
+                    {featuredMatch.status === "LIVE" ? "Suivre le match" : featuredMatch.status === "FINISHED" ? "Voir le resume" : "Preparer le duel"}
+                  </button>
+                </>
+              ) : (
+                <div className="rounded-[20px] border border-white/10 bg-white/5 px-4 py-10 text-center text-sm text-white/48">Aucun affrontement disponible pour le moment.</div>
+              )}
+            </section>
+
+            <aside className="rounded-[24px] border border-white/10 bg-black/20 p-4 backdrop-blur-md">
+              <div className="flex items-center gap-2 text-sm font-black uppercase tracking-[0.18em] text-white">
+                <Trophy className="h-4 w-4 text-amber-300" />
+                Top 3 du moment
               </div>
-            </div>
 
-            <div className="tp-matchs-cards-grid">
-              {lowerMatches.map((match, index) => (
-                <motion.article
-                  key={match.id}
-                  initial={{ opacity: 0, y: 14 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.38, delay: index * 0.08 }}
-                  className="tp-matchs-duel-card"
-                >
-                  {getWinnerSide(match) === "left" ? (
-                    <span className="tp-matchs-duel-crown tp-matchs-duel-crown-left">
-                      <Crown className="h-4 w-4" />
-                    </span>
-                  ) : null}
-                  {getWinnerSide(match) === "right" ? (
-                    <span className="tp-matchs-duel-crown tp-matchs-duel-crown-right">
-                      <Crown className="h-4 w-4" />
-                    </span>
-                  ) : null}
-                  <div className="tp-matchs-duel-top">
-                    <span className="tp-matchs-duel-level">Lvl {index + 3}</span>
-                    <span className="tp-matchs-duel-badge">{match.status === "LIVE" ? "Live" : match.status === "FINISHED" ? "Validé" : "À suivre"}</span>
+              <div className="mt-4 space-y-3">
+                {ranking.slice(0, 3).map((entry, index) => (
+                  <div key={entry.id} className="rounded-[18px] border border-white/10 bg-white/[0.03] px-3 py-3">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-full border border-amber-300/24 bg-amber-300/10 text-sm font-black text-amber-100">#{index + 1}</div>
+                      <img src={entry.logoUrl} alt={entry.pseudo} className="h-12 w-12 rounded-[16px] border border-white/10 bg-black/20 object-contain p-1.5" />
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <CountryFlag countryCode={entry.countryCode} className="h-4 w-4 rounded-full" />
+                          <div className="truncate text-sm font-black text-white">{entry.pseudo}</div>
+                        </div>
+                        <div className="mt-1 text-xs text-white/48">{entry.points} pts • {entry.wins} victoires • serie x{entry.winStreak}</div>
+                      </div>
+                    </div>
                   </div>
-                  <div className="tp-matchs-duel-logos">
-                    <Image src={match.player1.logoUrl} alt={match.player1.pseudo} width={54} height={54} className="tp-matchs-duel-logo" />
-                    <span className="tp-matchs-duel-vs">VS</span>
-                    <Image src={match.player2.logoUrl} alt={match.player2.pseudo} width={54} height={54} className="tp-matchs-duel-logo" />
-                  </div>
-                  <div className="tp-matchs-duel-names">{match.player1.pseudo} <span>vs</span> {match.player2.pseudo}</div>
-                  <button type="button" className="tp-matchs-duel-action">Suivre l&apos;affrontement</button>
-                </motion.article>
-              ))}
-            </div>
-          </section>
+                ))}
+              </div>
+            </aside>
+          </div>
 
-          <aside className="tp-matchs-panel tp-matchs-rules">
-            <div className="tp-matchs-panel-title">
-              <Shield className="h-4 w-4" />
-              Règlement 1VS1 KING LEAGUE
-            </div>
-            <div className="tp-matchs-rules-list">
-              <div className="tp-matchs-rule-item"><Sparkles className="h-4 w-4" /> Format: 1v1 Spam / One Tap</div>
-              <div className="tp-matchs-rule-item"><Sparkles className="h-4 w-4" /> Le gagnant prend 1 crédit et 3 points</div>
-              <div className="tp-matchs-rule-item"><Sparkles className="h-4 w-4" /> Le perdant perd 1 crédit</div>
-              <div className="tp-matchs-rule-item"><Sparkles className="h-4 w-4" /> Avant le ROI, les joueurs peuvent défier qui ils veulent</div>
-            </div>
-          </aside>
+          <div className="mt-5 grid gap-5 xl:grid-cols-[1fr_300px]">
+            <section className="rounded-[24px] border border-white/10 bg-black/20 p-4 backdrop-blur-md">
+              <div className="flex items-center gap-2 text-sm font-black uppercase tracking-[0.18em] text-white">
+                <Flame className="h-4 w-4 text-amber-300" />
+                A surveiller
+              </div>
+
+              <div className="mt-4 grid gap-3 md:grid-cols-3">
+                {lowerMatches.length ? (
+                  lowerMatches.map((match) => {
+                    const winner = getWinner(match);
+                    return (
+                      <article key={match.id} className="rounded-[20px] border border-white/10 bg-white/[0.03] p-4">
+                        <div className="flex items-center justify-between gap-3 text-[11px] font-black uppercase tracking-[0.18em] text-white/45">
+                          <span>{match.status === "PENDING" ? "A venir" : match.status === "LIVE" ? "Live" : "Resultat"}</span>
+                          <span>{formatDateLabel(match.date)}</span>
+                        </div>
+                        <div className="mt-4 flex items-center justify-between gap-3">
+                          <img src={match.player1.logoUrl} alt={match.player1.pseudo} className="h-14 w-14 rounded-[18px] border border-white/10 bg-black/20 object-contain p-2" />
+                          <span className="text-sm font-black uppercase tracking-[0.18em] text-amber-200">VS</span>
+                          <img src={match.player2.logoUrl} alt={match.player2.pseudo} className="h-14 w-14 rounded-[18px] border border-white/10 bg-black/20 object-contain p-2" />
+                        </div>
+                        <div className="mt-3 text-sm font-black text-white">{match.player1.pseudo} vs {match.player2.pseudo}</div>
+                        <div className="mt-1 text-xs text-white/52">{winner ? `Victoire ${winner.pseudo}` : match.status === "PENDING" ? "Match pret a etre joue" : "Aucun gagnant valide"}</div>
+                      </article>
+                    );
+                  })
+                ) : (
+                  <div className="rounded-[20px] border border-white/10 bg-white/5 px-4 py-8 text-center text-sm text-white/48 md:col-span-3">Aucun autre match a afficher.</div>
+                )}
+              </div>
+            </section>
+
+            <aside className="rounded-[24px] border border-white/10 bg-black/20 p-4 backdrop-blur-md">
+              <div className="flex items-center gap-2 text-sm font-black uppercase tracking-[0.18em] text-white">
+                <Shield className="h-4 w-4 text-cyan-300" />
+                Regles cles
+              </div>
+              <div className="mt-4 space-y-3 text-sm text-white/62">
+                <div className="flex items-start gap-2"><Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-amber-300" /> Format 1v1 Spam / One Tap.</div>
+                <div className="flex items-start gap-2"><Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-amber-300" /> Gagnant: +1 credit et +3 points.</div>
+                <div className="flex items-start gap-2"><Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-amber-300" /> Perdant: -1 credit.</div>
+                <div className="flex items-start gap-2"><Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-amber-300" /> Les matchs programmes peuvent etre annules par l'admin avant leur lancement.</div>
+              </div>
+            </aside>
+          </div>
         </div>
       </section>
     </div>

@@ -58,7 +58,7 @@ export default function CreditsHub({
 
   const filteredPlayers = useMemo(() => {
     const needle = query.trim().toLowerCase();
-    if (!needle) return marketPlayers;
+    if (!needle) return marketPlayers.slice(0, 3);
     return marketPlayers.filter((player) => {
       return player.pseudo.toLowerCase().includes(needle) || player.freefireId.toLowerCase().includes(needle);
     });
@@ -246,6 +246,8 @@ export default function CreditsHub({
               className="w-full bg-transparent text-sm text-white outline-none placeholder:text-white/30"
             />
           </div>
+
+          {!query.trim() ? <div className="mt-3 text-xs uppercase tracking-[0.18em] text-white/42">Top 3 affiché par défaut. Recherche un pseudo ou un ID pour voir plus de joueurs.</div> : null}
 
           <div className="mt-5 space-y-3">
             {filteredPlayers.length ? (

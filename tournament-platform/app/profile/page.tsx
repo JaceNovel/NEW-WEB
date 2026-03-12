@@ -93,9 +93,9 @@ export default async function ProfilePage() {
       <section className="relative overflow-hidden rounded-[24px] border border-fuchsia-300/20 bg-[radial-gradient(circle_at_50%_0%,rgba(214,114,255,0.16),transparent_32%),linear-gradient(180deg,rgba(27,14,48,0.8),rgba(6,7,19,0.72))] p-4 shadow-[0_0_40px_rgba(158,82,255,0.12)] sm:rounded-[30px] sm:p-5">
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_70%_20%,rgba(255,149,76,0.12),transparent_18%),radial-gradient(circle_at_35%_78%,rgba(196,111,255,0.12),transparent_24%)]" />
 
-        <div className="relative grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
+        <div className="relative grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
           <div className="rounded-[22px] border border-fuchsia-300/20 bg-black/25 p-4 backdrop-blur-md sm:rounded-[26px] sm:p-5">
-            <div className="grid items-center gap-6 md:grid-cols-[minmax(260px,360px)_1fr]">
+            <div className="grid items-center gap-6 lg:grid-cols-[minmax(260px,360px)_1fr]">
               <div className="relative mx-auto flex h-[240px] w-[240px] items-center justify-center sm:h-[280px] sm:w-[280px] md:h-[320px] md:w-[320px] lg:h-[360px] lg:w-[360px]">
                 <img
                   src={player.logoUrl}
@@ -130,7 +130,7 @@ export default async function ProfilePage() {
             </div>
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-2">
+          <div className="grid gap-3 sm:grid-cols-2">
             {statCards.map((card) => {
               const Icon = card.icon;
 
@@ -149,7 +149,7 @@ export default async function ProfilePage() {
       </section>
 
       <section className="mt-6 rounded-[24px] border border-fuchsia-300/18 bg-[linear-gradient(180deg,rgba(28,14,49,0.74),rgba(7,8,18,0.72))] p-3 shadow-[0_0_40px_rgba(158,82,255,0.1)] sm:mt-8 sm:rounded-[30px] sm:p-4">
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid gap-3 sm:grid-cols-2">
           <div className="rounded-[18px] border border-white/10 bg-black/20 px-4 py-3 text-sm font-bold uppercase tracking-[0.22em] text-white">Matchs</div>
           <div className="rounded-[18px] border border-white/10 bg-black/20 px-4 py-3 text-sm font-bold uppercase tracking-[0.22em] text-white/55">Défis</div>
         </div>
@@ -163,10 +163,10 @@ export default async function ProfilePage() {
                   const victory = match.winnerId ? match.winnerId === id : null;
 
                   return (
-                    <div key={match.id} className="grid gap-4 rounded-[20px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.01))] px-4 py-4 md:grid-cols-[56px_1.4fr_1fr_0.9fr_150px] md:items-center">
+                    <div key={match.id} className="grid gap-4 rounded-[20px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.01))] px-4 py-4 xl:grid-cols-[56px_1.4fr_1fr_0.9fr_150px] xl:items-center">
                       <div className="text-3xl font-black text-amber-200 sm:text-4xl">{index + 1}</div>
                       <div className="flex items-center gap-3">
-                        <img src={opponent.logoUrl} alt={opponent.pseudo} className="h-14 w-14 rounded-full border border-white/10 bg-black/20 object-contain p-2" />
+                        <img src={opponent.logoUrl} alt={opponent.pseudo} className="h-14 w-14 rounded-[18px] border border-white/10 bg-black/20 object-contain p-2" />
                         <div>
                           <div className="text-lg font-black text-white sm:text-xl">{player.pseudo} <span className="bg-[linear-gradient(180deg,#ffbe73,#ff76dd)] bg-clip-text text-transparent">VS</span> {opponent.pseudo}</div>
                           <div className="mt-1 text-sm text-white/55">{opponent.freefireId}</div>
@@ -200,7 +200,7 @@ export default async function ProfilePage() {
                   return (
                     <div key={challenge.id} className="rounded-[18px] border border-white/10 bg-white/5 px-4 py-4">
                       <div className="flex items-center gap-3">
-                        <img src={opponent.logoUrl} alt={opponent.pseudo} className="h-12 w-12 rounded-full border border-white/10 bg-black/20 object-contain p-2" />
+                        <img src={opponent.logoUrl} alt={opponent.pseudo} className="h-12 w-12 rounded-[16px] border border-white/10 bg-black/20 object-contain p-2" />
                         <div>
                           <div className="font-bold text-white">{opponent.pseudo}</div>
                           <div className="text-xs uppercase tracking-[0.18em] text-white/45">{challenge.status}</div>

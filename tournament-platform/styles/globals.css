@@ -151,6 +151,24 @@ body {
   @apply w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder:text-white/40 outline-none ring-0 transition;
 }
 
+select.tp-input {
+  appearance: none;
+  background-image:
+    linear-gradient(45deg, transparent 50%, rgba(255, 255, 255, 0.72) 50%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.72) 50%, transparent 50%);
+  background-position:
+    calc(100% - 18px) calc(50% - 2px),
+    calc(100% - 12px) calc(50% - 2px);
+  background-size: 6px 6px, 6px 6px;
+  background-repeat: no-repeat;
+  padding-right: 2.75rem;
+}
+
+select.tp-input option {
+  background: #111426;
+  color: #f8fafc;
+}
+
 .tp-input:focus {
   @apply border-violet-400/50;
   box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.20);
