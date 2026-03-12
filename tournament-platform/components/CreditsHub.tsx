@@ -247,8 +247,6 @@ export default function CreditsHub({
             />
           </div>
 
-          {!query.trim() ? <div className="mt-3 text-xs uppercase tracking-[0.18em] text-white/42">Top 3 affiché par défaut. Recherche un pseudo ou un ID pour voir plus de joueurs.</div> : null}
-
           <div className="mt-5 space-y-3">
             {filteredPlayers.length ? (
               filteredPlayers.map((player, index) => (
