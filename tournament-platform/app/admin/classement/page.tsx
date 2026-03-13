@@ -26,7 +26,7 @@ export default async function AdminClassementPage() {
   if (!process.env.DATABASE_URL) {
     return (
       <main>
-        <div className="tp-glass rounded-3xl p-6">
+        <div className="rounded-3xl border border-slate-950 bg-black p-6 text-white">
           <div className="text-lg font-bold text-white">Configuration requise</div>
           <p className="mt-2 text-sm text-white/70">DATABASE_URL manquant. Configure la base PostgreSQL pour utiliser le classement admin.</p>
         </div>
@@ -39,7 +39,7 @@ export default async function AdminClassementPage() {
   const [config, ranking, playersCount] = await Promise.all([
     getTournamentConfig(),
     getTournamentRanking(),
-    prisma.player.count(),
+    prisma.player.count({ where: { role: "PLAYER" } }),
   ]);
 
   const roi = ranking.find((entry) => entry.status === "ROI") ?? null;
@@ -62,7 +62,7 @@ export default async function AdminClassementPage() {
         {summaryCards.map((card) => {
           const Icon = card.icon;
           return (
-            <article key={card.label} className="tp-glass rounded-3xl p-5">
+            <article key={card.label} className="rounded-3xl border border-slate-950 bg-black p-5 text-white">
               <div className="flex items-center justify-between gap-3">
                 <div>
                   <div className="text-xs uppercase tracking-[0.22em] text-white/45">{card.label}</div>
@@ -78,7 +78,7 @@ export default async function AdminClassementPage() {
       </section>
 
       <section className="grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_360px]">
-        <article className="tp-glass rounded-3xl p-6">
+        <article className="rounded-3xl border border-slate-950 bg-black p-6 text-white">
           <div className="flex items-center justify-between gap-3">
             <div>
               <div className="text-lg font-bold text-white">Classement actuel</div>
@@ -131,12 +131,12 @@ export default async function AdminClassementPage() {
           </div>
         </article>
 
-        <article className="tp-glass rounded-3xl p-6">
+        <article className="rounded-3xl border border-slate-950 bg-black p-6 text-white">
           <div className="text-lg font-bold text-white">Gestion du classement</div>
           <div className="mt-2 text-sm text-white/60">Le module avancé du tournoi est désormais embarqué directement sous le tableau de classement.</div>
 
           <div className="mt-5 space-y-3">
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-white/75">
+            <div className="rounded-2xl border border-white/10 bg-[#080808] p-4 text-sm text-white/75">
               Choisir le ROI, sélectionner le top 10, finaliser le top 20 et recalculer le tournoi sans quitter cette page.
             </div>
             <Link href="/admin/matchs" className="tp-button-ghost w-full justify-center">

@@ -55,6 +55,7 @@ export default function CreditsHub({
   const [query, setQuery] = useState("");
   const [loadingKey, setLoadingKey] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [validatedPendingRecruitId, setValidatedPendingRecruitId] = useState<string | null>(null);
   const lastRefreshRef = useRef(0);
 
   useEffect(() => {
@@ -135,7 +136,46 @@ export default function CreditsHub({
 
   const acceptedRecruit = currentPlayer.recruitedPlayers.find((player) => !player.alliancePending) ?? null;
   const pendingRecruit = currentPlayer.recruitedPlayers.find((player) => player.alliancePending) ?? null;
+  const visiblePendingRecruit = pendingRecruit && validatedPendingRecruitId === pendingRecruit.id ? pendingRecruit : null;
   const hasAnyRecruit = currentPlayer.recruitedPlayers.length > 0;
+
+  useEffect(() => {
+    let cancelled = false;
+
+    if (!pendingRecruit) {
+      setValidatedPendingRecruitId(null);
+      return;
+    }
+
+    async function validatePendingRecruit() {
+      try {
+        const res = await fetch("/api/player/list", { cache: "no-store" });
+        const json = await res.json();
+
+        if (!res.ok || !Array.isArray(json?.players)) {
+          if (!cancelled) setValidatedPendingRecruitId(null);
+          return;
+        }
+
+        const stillExists = json.players.some(
+          (player: { id: string; purchasedById?: string | null; alliancePending?: boolean }) =>
+            player.id === pendingRecruit.id && player.purchasedById === currentPlayer.id && player.alliancePending === true,
+        );
+
+        if (!cancelled) {
+          setValidatedPendingRecruitId(stillExists ? pendingRecruit.id : null);
+        }
+      } catch {
+        if (!cancelled) setValidatedPendingRecruitId(null);
+      }
+    }
+
+    void validatePendingRecruit();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [currentPlayer.id, pendingRecruit]);
 
   return (
     <main className="relative mx-auto max-w-[1280px] px-4 py-8 sm:py-10">
@@ -192,10 +232,10 @@ export default function CreditsHub({
                   <div className="mt-2 text-2xl font-black text-white">{currentPlayer.pseudo} X {acceptedRecruit.pseudo}</div>
                   <div className="mt-2 text-sm text-white/65">Si cette place est défiée, elle est considérée comme une position renforcée.</div>
                 </div>
-              ) : pendingRecruit ? (
+              ) : visiblePendingRecruit ? (
                 <div className="rounded-[22px] border border-cyan-300/18 bg-cyan-300/10 px-4 py-4">
                   <div className="text-[11px] font-black uppercase tracking-[0.22em] text-cyan-100/70">Demande envoyée</div>
-                  <div className="mt-2 text-2xl font-black text-white">{currentPlayer.pseudo} → {pendingRecruit.pseudo}</div>
+                  <div className="mt-2 text-2xl font-black text-white">{currentPlayer.pseudo} → {visiblePendingRecruit.pseudo}</div>
                   <div className="mt-2 text-sm text-white/65">En attente de la réponse du joueur.</div>
                 </div>
               ) : (

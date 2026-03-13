@@ -84,6 +84,7 @@ export default async function AdminTournamentManager({ compact = false }: { comp
 
     await prisma.$transaction(async (tx) => {
       const tournamentPlayers = await tx.player.findMany({
+        where: { role: "PLAYER" },
         orderBy: [{ createdAt: "asc" }],
         select: {
           id: true,
@@ -182,6 +183,7 @@ export default async function AdminTournamentManager({ compact = false }: { comp
       .filter(Boolean);
 
     const tournamentPlayers = await prisma.player.findMany({
+      where: { role: "PLAYER" },
       orderBy: [{ createdAt: "asc" }],
       select: {
         id: true,
@@ -233,6 +235,7 @@ export default async function AdminTournamentManager({ compact = false }: { comp
     const previousConfig = await getTournamentConfig();
 
     const tournamentPlayers = await prisma.player.findMany({
+      where: { role: "PLAYER" },
       orderBy: [{ createdAt: "asc" }],
       select: {
         id: true,
@@ -341,6 +344,7 @@ export default async function AdminTournamentManager({ compact = false }: { comp
 
   const config = await getTournamentConfig();
   const players = await prisma.player.findMany({
+    where: { role: "PLAYER" },
     orderBy: [{ createdAt: "asc" }],
     select: {
       id: true,
@@ -354,7 +358,10 @@ export default async function AdminTournamentManager({ compact = false }: { comp
     },
   });
 
-  const { top20Pool: lockedPlayers, laterPlayers } = splitTournamentPools(players, config.registrationLimit);
+  const pools = splitTournamentPools(players, config.registrationLimit);
+  const lockedPlayers = pools.top20Pool.length ? pools.top20Pool : players;
+  const lockedPlayerIds = new Set(lockedPlayers.map((player) => player.id));
+  const laterPlayers = pools.laterPlayers.filter((player) => !lockedPlayerIds.has(player.id));
   const top10Count = lockedPlayers.filter((player) => player.isSeededTop10).length;
   const requiredTop10Count = Math.min(10, lockedPlayers.length);
   const top20Capacity = players.length ? Math.min(config.registrationLimit, players.length) : config.registrationLimit;
@@ -375,21 +382,21 @@ export default async function AdminTournamentManager({ compact = false }: { comp
       ) : null}
 
       <div className="grid gap-4 md:grid-cols-4">
-        <div className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="rounded-[28px] border border-slate-950 bg-[#050505] p-5 shadow-sm">
           <div className="text-xs uppercase tracking-[0.22em] text-slate-400">Phase</div>
-          <div className="mt-2 text-lg font-bold text-slate-950">{stageLabels[config.stage]}</div>
+          <div className="mt-2 text-lg font-bold text-white">{stageLabels[config.stage]}</div>
         </div>
-        <div className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="rounded-[28px] border border-slate-950 bg-[#050505] p-5 shadow-sm">
           <div className="text-xs uppercase tracking-[0.22em] text-slate-400">Top 20 retenu</div>
-          <div className="mt-2 text-lg font-bold text-slate-950">{lockedPlayers.length} / {top20Capacity}</div>
+          <div className="mt-2 text-lg font-bold text-white">{lockedPlayers.length} / {top20Capacity}</div>
         </div>
-        <div className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="rounded-[28px] border border-slate-950 bg-[#050505] p-5 shadow-sm">
           <div className="text-xs uppercase tracking-[0.22em] text-slate-400">Top prioritaire</div>
-          <div className="mt-2 text-lg font-bold text-slate-950">{top10Count} / {requiredTop10Count}</div>
+          <div className="mt-2 text-lg font-bold text-white">{top10Count} / {requiredTop10Count}</div>
         </div>
-        <div className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="rounded-[28px] border border-slate-950 bg-[#050505] p-5 shadow-sm">
           <div className="text-xs uppercase tracking-[0.22em] text-slate-400">ROI actif</div>
-          <div className="mt-2 text-lg font-bold text-slate-950">
+          <div className="mt-2 text-lg font-bold text-white">
             {lockedPlayers.find((player) => player.id === config.activeRoiId)?.pseudo ?? "Non choisi"}
           </div>
         </div>
@@ -397,12 +404,12 @@ export default async function AdminTournamentManager({ compact = false }: { comp
 
       <div className="grid gap-4 xl:grid-cols-[1.05fr_0.95fr]">
         <div className="space-y-4">
-          <form action={setRoiAction} className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm">
-            <div className="text-lg font-bold text-slate-950">Choisir le ROI</div>
-            <p className="mt-2 text-sm text-slate-500">
+          <form action={setRoiAction} className="rounded-[28px] border border-slate-950 bg-[#050505] p-6 shadow-sm">
+            <div className="text-lg font-bold text-white">Choisir le ROI</div>
+            <p className="mt-2 text-sm text-white/60">
               Tant que ce choix n&apos;est pas fait, personne n&apos;apparait dans le classement public.
             </p>
-            <select name="activeRoiId" defaultValue={config.activeRoiId ?? ""} className="mt-5 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-700 outline-none">
+            <select name="activeRoiId" defaultValue={config.activeRoiId ?? ""} className="mt-5 w-full rounded-2xl border border-white/10 bg-[#101010] px-4 py-3 text-sm font-medium text-white outline-none">
               <option value="">Selectionner un joueur du top 20</option>
               {lockedPlayers.map((player) => (
                 <option key={player.id} value={player.id}>
@@ -417,14 +424,14 @@ export default async function AdminTournamentManager({ compact = false }: { comp
             </div>
           </form>
 
-          <form action={setTop10Action} className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm">
-            <div className="text-lg font-bold text-slate-950">Selectionner le top prioritaire</div>
-            <p className="mt-2 text-sm text-slate-500">
+          <form action={setTop10Action} className="rounded-[28px] border border-slate-950 bg-[#050505] p-6 shadow-sm">
+            <div className="text-lg font-bold text-white">Selectionner le top prioritaire</div>
+            <p className="mt-2 text-sm text-white/60">
               Choisis les {requiredTop10Count} joueurs prioritaires du top 20 actuel. Le ROI doit faire partie de cette liste.
             </p>
             <div className="mt-5 grid gap-3 md:grid-cols-2">
               {lockedPlayers.map((player) => (
-                <label key={player.id} className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
+                <label key={player.id} className="flex items-center gap-3 rounded-2xl border border-white/10 bg-[#101010] px-4 py-3 text-sm text-white/88">
                   <input type="checkbox" name="top10" value={player.id} defaultChecked={player.isSeededTop10} className="h-4 w-4 accent-orange-400" />
                   <span>
                     {player.pseudo} • {player.gameMode}
@@ -439,15 +446,15 @@ export default async function AdminTournamentManager({ compact = false }: { comp
             </div>
           </form>
 
-          <form action={finalizeTop20Action} className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm">
-            <div className="text-lg font-bold text-slate-950">Finaliser le top 20</div>
-            <p className="mt-2 text-sm text-slate-500">
+          <form action={finalizeTop20Action} className="rounded-[28px] border border-slate-950 bg-[#050505] p-6 shadow-sm">
+            <div className="text-lg font-bold text-white">Finaliser le top 20</div>
+            <p className="mt-2 text-sm text-white/60">
               Attribue à chacun un rang final unique de 1 à {lockedPlayers.length}. Les inscrits après la clôture seront automatiquement classés à partir du rang suivant.
             </p>
             <div className="mt-5 grid gap-3 md:grid-cols-2">
               {lockedPlayers.map((player) => (
-                <label key={player.id} className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
-                  <span className="block font-semibold text-slate-950">{player.pseudo}</span>
+                <label key={player.id} className="rounded-2xl border border-white/10 bg-[#101010] px-4 py-3 text-sm text-white/88">
+                  <span className="block font-semibold text-white">{player.pseudo}</span>
                   <span className="mt-1 block text-xs uppercase tracking-[0.18em] text-slate-400">
                     {player.gameMode} • {player.freefireId}
                   </span>
@@ -457,7 +464,7 @@ export default async function AdminTournamentManager({ compact = false }: { comp
                     max={lockedPlayers.length}
                     name={`rank-${player.id}`}
                     defaultValue={player.finalRank ?? ""}
-                    className="mt-3 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 outline-none"
+                    className="mt-3 w-full rounded-2xl border border-white/10 bg-black px-4 py-3 text-sm font-medium text-white outline-none"
                     required
                   />
                 </label>
@@ -472,21 +479,21 @@ export default async function AdminTournamentManager({ compact = false }: { comp
         </div>
 
         <div className="space-y-4">
-          <div className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm">
-            <div className="text-lg font-bold text-slate-950">Joueurs hors top 20</div>
-            <p className="mt-2 text-sm text-slate-500">
+          <div className="rounded-[28px] border border-slate-950 bg-[#050505] p-6 shadow-sm">
+            <div className="text-lg font-bold text-white">Joueurs hors top 20</div>
+            <p className="mt-2 text-sm text-white/60">
               Ces joueurs seront classés automatiquement à partir du rang suivant, selon l&apos;ordre d&apos;inscription.
             </p>
             <div className="mt-4 space-y-2">
               {laterPlayers.length ? (
                 laterPlayers.map((player, index) => (
-                  <div key={player.id} className="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+                  <div key={player.id} className="flex items-center justify-between rounded-2xl border border-white/10 bg-[#101010] px-4 py-3 text-sm text-white/72">
                     <span>{player.pseudo}</span>
                     <span>Rang provisoire #{lockedPlayers.length + index + 1}</span>
                   </div>
                 ))
               ) : (
-                <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-500">
+                <div className="rounded-2xl border border-white/10 bg-[#101010] px-4 py-4 text-sm text-white/58">
                   {players.length < config.registrationLimit
                     ? "Aucun joueur n'est hors top 20 pour l'instant. Les inscrits actuels composent encore le top 20 provisoire."
                     : "Aucun inscrit apres la cloture du top 20."}
@@ -496,9 +503,9 @@ export default async function AdminTournamentManager({ compact = false }: { comp
           </div>
 
           <div className="grid gap-4 md:grid-cols-2">
-            <form action={recalcAction} className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm">
-              <div className="text-lg font-bold text-slate-950">Recalculer</div>
-              <p className="mt-2 text-sm text-slate-500">Met à jour statuts, éliminations et ROI selon la phase active.</p>
+            <form action={recalcAction} className="rounded-[28px] border border-slate-950 bg-[#050505] p-6 shadow-sm">
+              <div className="text-lg font-bold text-white">Recalculer</div>
+              <p className="mt-2 text-sm text-white/60">Met à jour statuts, éliminations et ROI selon la phase active.</p>
               <div className="mt-5 flex justify-end">
                 <button className="tp-button-primary" type="submit">
                   Recalculer
@@ -506,9 +513,9 @@ export default async function AdminTournamentManager({ compact = false }: { comp
               </div>
             </form>
 
-            <form action={resetAction} className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm">
-              <div className="text-lg font-bold text-slate-950">Reset tournoi</div>
-              <p className="mt-2 text-sm text-slate-500">Réinitialise les marqueurs top 20, le ROI, les matchs et les défis.</p>
+            <form action={resetAction} className="rounded-[28px] border border-slate-950 bg-[#050505] p-6 shadow-sm">
+              <div className="text-lg font-bold text-white">Reset tournoi</div>
+              <p className="mt-2 text-sm text-white/60">Réinitialise les marqueurs top 20, le ROI, les matchs et les défis.</p>
               <div className="mt-5 flex justify-end">
                 <button className="tp-button-ghost" type="submit">
                   Reset

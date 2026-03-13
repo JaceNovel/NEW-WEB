@@ -223,28 +223,28 @@ export default async function Home() {
             <div className="mt-2 overflow-hidden rounded-[14px] border border-white/8 bg-[rgba(6,7,18,0.14)]">
               {matches.length ? (
                 matches.map((match) => (
-                  <div key={match.id} className="tp-reference-match-row grid gap-3 px-3 py-3 sm:grid-cols-[1fr_auto_1fr_auto] sm:items-center">
-                    <div className="flex min-w-0 items-center gap-2.5">
-                      <Image src={match.player1.logoUrl} alt={match.player1.pseudo} width={40} height={40} className="h-10 w-10 rounded-full border border-violet-300/35 object-cover shadow-[0_0_14px_rgba(157,101,255,0.18)]" />
-                      <div className="min-w-0">
-                        <div className="truncate text-[1.05rem] font-semibold text-white">{match.player1.pseudo}</div>
-                        <div className="truncate text-[11px] tracking-wide text-white/60">🎮 {match.player1.freefireId}</div>
+                  <div key={match.id} className="tp-reference-match-row px-3 py-3">
+                    <div className="tp-reference-match-shell">
+                      <div className="tp-reference-match-side tp-reference-match-side-left">
+                        <Image src={match.player1.logoUrl} alt={match.player1.pseudo} width={54} height={54} className="tp-reference-match-logo" />
+                        <div className="min-w-0">
+                          <div className="truncate text-[1.05rem] font-semibold text-white">{match.player1.pseudo}</div>
+                          <div className="truncate text-[11px] tracking-wide text-white/60">🎮 {match.player1.freefireId}</div>
+                        </div>
                       </div>
-                    </div>
 
-                    <div className="tp-reference-vs">VS</div>
-
-                    <div className="flex min-w-0 items-center gap-2.5 text-left sm:justify-self-end sm:text-right">
-                      <div className="min-w-0">
-                        <div className="truncate text-[1.05rem] font-semibold text-white">{match.player2.pseudo}</div>
-                        <div className="truncate text-[11px] tracking-wide text-white/60">🎮 {match.player2.freefireId}</div>
+                      <div className="tp-reference-match-center">
+                        <div className="tp-reference-vs">VS</div>
+                        <div className="tp-reference-match-status-pill">{match.status === "LIVE" ? "En direct" : "Programmé"}</div>
                       </div>
-                      <Image src={match.player2.logoUrl} alt={match.player2.pseudo} width={40} height={40} className="h-10 w-10 rounded-full border border-violet-300/35 object-cover shadow-[0_0_14px_rgba(157,101,255,0.18)]" />
-                    </div>
 
-                    <div className="text-left sm:text-right">
-                      <div className="text-[10px] uppercase tracking-[0.16em] text-white/45">Statut</div>
-                      <div className="mt-0.5 text-[1.05rem] font-black text-white">{match.status === "LIVE" ? "En direct" : "Programmé"}</div>
+                      <div className="tp-reference-match-side tp-reference-match-side-right">
+                        <div className="min-w-0 text-left sm:text-right">
+                          <div className="truncate text-[1.05rem] font-semibold text-white">{match.player2.pseudo}</div>
+                          <div className="truncate text-[11px] tracking-wide text-white/60">🎮 {match.player2.freefireId}</div>
+                        </div>
+                        <Image src={match.player2.logoUrl} alt={match.player2.pseudo} width={54} height={54} className="tp-reference-match-logo" />
+                      </div>
                     </div>
                   </div>
                 ))

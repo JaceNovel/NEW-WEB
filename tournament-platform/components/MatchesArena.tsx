@@ -383,7 +383,19 @@ export default function MatchesArena({
                 {isCompactViewport ? (
                   <div className="tp-matchs-battle-mobile-card">
                     <div className="tp-matchs-battle-mobile-stage">
-                      <div className="tp-matchs-battle-mobile-player tp-matchs-battle-mobile-player-top">
+                      <motion.div
+                        animate={
+                          enableBattleEffects
+                            ? isHistoryView
+                              ? leftWinner
+                                ? { y: [0, -4, 0], rotate: [0, -2, 0], scale: [1, 1.03, 1] }
+                                : { y: [0, 2, 0], rotate: [0, 2, 0], opacity: [0.88, 0.72, 0.88] }
+                              : { x: [0, -10, -2, 0], y: [0, -4, 0], rotate: [0, -6, 0], scale: [1, 1.04, 1] }
+                            : undefined
+                        }
+                        transition={enableBattleEffects ? { duration: isHistoryView ? 2.8 : 1.35, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" } : undefined}
+                        className="tp-matchs-battle-mobile-player tp-matchs-battle-mobile-player-top"
+                      >
                         <div className="tp-matchs-emblem-frame tp-matchs-emblem-frame-left tp-matchs-battle-mobile-frame">
                           <Image src={featuredMatch.player1.logoUrl} alt={featuredMatch.player1.pseudo} width={184} height={184} className="tp-matchs-emblem-logo tp-matchs-emblem-logo-left" />
                         </div>
@@ -392,14 +404,42 @@ export default function MatchesArena({
                           <span>{featuredMatch.player1.pseudo}</span>
                         </div>
                         <div className="tp-matchs-battle-mobile-id">{featuredMatch.player1.freefireId}</div>
-                      </div>
+                      </motion.div>
 
                       <div className="tp-matchs-battle-mobile-center">
-                        <div className="tp-matchs-versus tp-matchs-versus-mobile">{isHistoryView ? "WIN" : "VS"}</div>
+                        <motion.div
+                          animate={
+                            enableBattleEffects
+                              ? isHistoryView
+                                ? { scale: [1, 1.05, 1], rotate: [0, -1, 0] }
+                                : { scale: [1, 1.08, 1.16, 1], rotate: [0, -4, 3, 0] }
+                              : undefined
+                          }
+                          transition={enableBattleEffects ? { duration: isHistoryView ? 2.6 : 1.2, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" } : undefined}
+                          className="tp-matchs-battle-mobile-clash"
+                        >
+                          {enableBattleEffects && !isHistoryView ? <span className="tp-matchs-battle-mobile-clash-burst" aria-hidden="true" /> : null}
+                          {enableBattleEffects && !isHistoryView ? <Swords className="tp-matchs-battle-mobile-swords" aria-hidden="true" /> : null}
+                          <div className="tp-matchs-versus tp-matchs-versus-mobile">
+                            <span className="tp-matchs-versus-mobile-label">{isHistoryView ? "WIN" : "VS"}</span>
+                          </div>
+                        </motion.div>
                         <Image src="/pp1-removebg-preview (1).png" alt="KING League" width={54} height={54} className="tp-matchs-battle-mobile-brand" />
                       </div>
 
-                      <div className="tp-matchs-battle-mobile-player tp-matchs-battle-mobile-player-bottom">
+                      <motion.div
+                        animate={
+                          enableBattleEffects
+                            ? isHistoryView
+                              ? rightWinner
+                                ? { y: [0, -4, 0], rotate: [0, 2, 0], scale: [1, 1.03, 1] }
+                                : { y: [0, 2, 0], rotate: [0, -2, 0], opacity: [0.88, 0.72, 0.88] }
+                              : { x: [0, 10, 2, 0], y: [0, 4, 0], rotate: [0, 6, 0], scale: [1, 1.04, 1] }
+                            : undefined
+                        }
+                        transition={enableBattleEffects ? { duration: isHistoryView ? 2.8 : 1.35, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" } : undefined}
+                        className="tp-matchs-battle-mobile-player tp-matchs-battle-mobile-player-bottom"
+                      >
                         <div className="tp-matchs-emblem-frame tp-matchs-emblem-frame-right tp-matchs-battle-mobile-frame">
                           <Image src={featuredMatch.player2.logoUrl} alt={featuredMatch.player2.pseudo} width={184} height={184} className="tp-matchs-emblem-logo tp-matchs-emblem-logo-right" />
                         </div>
@@ -408,7 +448,7 @@ export default function MatchesArena({
                           <span>{featuredMatch.player2.pseudo}</span>
                         </div>
                         <div className="tp-matchs-battle-mobile-id">{featuredMatch.player2.freefireId}</div>
-                      </div>
+                      </motion.div>
                     </div>
                   </div>
                 ) : (
