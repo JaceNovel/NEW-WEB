@@ -103,6 +103,10 @@ function drawTextBlock(page: PDFPage, font: PDFFont, text: string, options: {
   return options.top + lines.length * lineHeight;
 }
 
+function measureTextBlockHeight(font: PDFFont, text: string, size: number, maxWidth: number, lineHeight = size * 1.35) {
+  return wrapText(font, text, size, maxWidth).length * lineHeight;
+}
+
 function drawBulletList(page: PDFPage, font: PDFFont, items: string[], options: {
   x: number;
   top: number;
@@ -208,6 +212,37 @@ export async function createRulesPdf(payload: RulesPdfPayload) {
     "Document reserve au titulaire du compte et a la moderation KING League.",
   ];
 
+  const contentPanelTop = 160;
+  const contentPanelHeight = 654;
+  const leftCardX = 52;
+  const leftCardWidth = 222;
+  const rightCardX = 290;
+  const rightCardWidth = 253;
+  const cardsTop = 264;
+  const summaryTextSize = 9.6;
+  const summaryLineHeight = 13.5;
+  const summaryLineGap = 3;
+  const summaryTextWidth = leftCardWidth - 36;
+  const verificationTextSize = 10.1;
+  const verificationLineHeight = 14;
+  const verificationTextWidth = 215;
+
+  const summaryContentHeight = summaryLines.reduce((total, line, index) => {
+    const lineHeight = measureTextBlockHeight(fontRegular, line, summaryTextSize, summaryTextWidth, summaryLineHeight);
+    return total + lineHeight + (index === summaryLines.length - 1 ? 0 : summaryLineGap);
+  }, 0);
+
+  const verificationIntroHeight = measureTextBlockHeight(fontItalic, "Conformite numerique KING League", 10.8, verificationTextWidth, 14);
+  const verificationContentHeight = verificationLines.reduce((total, line, index) => {
+    const lineHeight = measureTextBlockHeight(fontRegular, line, verificationTextSize, verificationTextWidth, verificationLineHeight);
+    return total + lineHeight + (index === verificationLines.length - 1 ? 0 : 6);
+  }, 0);
+
+  const cardHeight = Math.max(
+    76 + summaryContentHeight,
+    82 + verificationIntroHeight + verificationContentHeight,
+  );
+
   page.drawRectangle({ x: 0, y: 0, width: PAGE_WIDTH, height: PAGE_HEIGHT, color: colors.page });
   page.drawRectangle({
     x: 16,
@@ -221,9 +256,9 @@ export async function createRulesPdf(payload: RulesPdfPayload) {
   page.drawRectangle({ x: 16, y: pdfY(26, 118), width: PAGE_WIDTH - 32, height: 118, color: colors.header });
   page.drawRectangle({
     x: 34,
-    y: pdfY(160, 610),
+    y: pdfY(contentPanelTop, contentPanelHeight),
     width: PAGE_WIDTH - 68,
-    height: 610,
+    height: contentPanelHeight,
     color: rgb(0.11, 0.05, 0.2),
     borderColor: colors.softBorder,
     borderWidth: 0.9,
@@ -248,13 +283,13 @@ export async function createRulesPdf(payload: RulesPdfPayload) {
   });
 
   page.drawText("ATTESTATION SOLO KING LEAGUE", {
-    x: 150,
-    y: pdfY(468, 26),
-    size: 28,
+    x: 162,
+    y: pdfY(486, 24),
+    size: 24,
     font: fontBold,
     color: colors.watermark,
     rotate: degrees(56),
-    opacity: 0.18,
+    opacity: 0.14,
   });
 
   page.drawText("Attestation Solo des regles du tournoi", {
@@ -295,8 +330,24 @@ export async function createRulesPdf(payload: RulesPdfPayload) {
     color: colors.muted,
   });
 
-  page.drawRectangle({ x: 52, y: pdfY(264, 118), width: 222, height: 118, color: colors.card, borderColor: colors.border, borderWidth: 0.9 });
-  page.drawRectangle({ x: 290, y: pdfY(264, 118), width: 253, height: 118, color: colors.card, borderColor: colors.softBorder, borderWidth: 0.9 });
+  page.drawRectangle({
+    x: leftCardX,
+    y: pdfY(cardsTop, cardHeight),
+    width: leftCardWidth,
+    height: cardHeight,
+    color: colors.card,
+    borderColor: colors.border,
+    borderWidth: 0.9,
+  });
+  page.drawRectangle({
+    x: rightCardX,
+    y: pdfY(cardsTop, cardHeight),
+    width: rightCardWidth,
+    height: cardHeight,
+    color: colors.card,
+    borderColor: colors.softBorder,
+    borderWidth: 0.9,
+  });
 
   page.drawText("Titulaire KING", {
     x: 70,
@@ -308,14 +359,14 @@ export async function createRulesPdf(payload: RulesPdfPayload) {
 
   let summaryTop = 308;
   for (const line of summaryLines) {
-    page.drawText(line, {
+    summaryTop = drawTextBlock(page, fontRegular, line, {
       x: 70,
-      y: pdfY(summaryTop, 10),
-      size: 10.3,
-      font: fontRegular,
+      top: summaryTop,
+      size: summaryTextSize,
+      maxWidth: summaryTextWidth,
       color: colors.text,
-    });
-    summaryTop += 18;
+      lineHeight: summaryLineHeight,
+    }) + summaryLineGap;
   }
 
   page.drawText("Verification officielle", {
@@ -325,12 +376,13 @@ export async function createRulesPdf(payload: RulesPdfPayload) {
     font: fontBold,
     color: colors.accent,
   });
-  page.drawText("Conformite numerique KING League", {
+  drawTextBlock(page, fontItalic, "Conformite numerique KING League", {
     x: 308,
-    y: pdfY(304, 13),
+    top: 304,
     size: 10.8,
-    font: fontItalic,
+    maxWidth: verificationTextWidth,
     color: colors.text,
+    lineHeight: 14,
   });
 
   let verificationTop = 334;
@@ -338,42 +390,55 @@ export async function createRulesPdf(payload: RulesPdfPayload) {
     verificationTop = drawTextBlock(page, fontRegular, line, {
       x: 308,
       top: verificationTop,
-      size: 10.1,
-      maxWidth: 215,
+      size: verificationTextSize,
+      maxWidth: verificationTextWidth,
       color: colors.text,
-      lineHeight: 14,
+      lineHeight: verificationLineHeight,
     }) + 6;
   }
 
+  const clausesTitleTop = cardsTop + cardHeight + 28;
+
   page.drawText("Clauses principales", {
     x: 52,
-    y: pdfY(404, 14),
+    y: pdfY(clausesTitleTop, 14),
     size: 14,
     font: fontBold,
     color: colors.accent,
   });
 
-  drawBulletList(page, fontRegular, ruleLines, {
+  const rulesEndTop = drawBulletList(page, fontRegular, ruleLines, {
     x: 62,
-    top: 438,
+    top: clausesTitleTop + 24,
     width: 470,
-    size: 11,
+    size: 10.4,
     bulletGap: 18,
-    rowGap: 7,
+    rowGap: 6,
   });
 
-  page.drawRectangle({ x: 52, y: pdfY(676, 114), width: 491, height: 114, color: colors.card, borderColor: colors.border, borderWidth: 0.9 });
+  const footerBoxTop = Math.max(rulesEndTop + 22, 668);
+  const footerBoxHeight = 104;
+
+  page.drawRectangle({
+    x: 52,
+    y: pdfY(footerBoxTop, footerBoxHeight),
+    width: 491,
+    height: footerBoxHeight,
+    color: colors.card,
+    borderColor: colors.border,
+    borderWidth: 0.9,
+  });
 
   page.drawText("Signature KING", {
     x: 72,
-    y: pdfY(698, 13),
+    y: pdfY(footerBoxTop + 20, 13),
     size: 13,
     font: fontBold,
     color: colors.accent,
   });
   const signatureBottom = drawTextBlock(page, fontItalic, "Signe electroniquement par la direction KING League", {
     x: 72,
-    top: 726,
+    top: footerBoxTop + 48,
     size: 11.2,
     maxWidth: 220,
     color: colors.text,
@@ -396,12 +461,12 @@ export async function createRulesPdf(payload: RulesPdfPayload) {
 
   page.drawText("Verification officielle", {
     x: 370,
-    y: pdfY(698, 13),
+    y: pdfY(footerBoxTop + 20, 13),
     size: 13,
     font: fontBold,
     color: colors.title,
   });
-  let footerRightTop = 726;
+  let footerRightTop = footerBoxTop + 48;
   footerRightTop = drawTextBlock(page, fontRegular, "Document conforme au circuit KING League", {
     x: 370,
     top: footerRightTop,
@@ -421,11 +486,11 @@ export async function createRulesPdf(payload: RulesPdfPayload) {
 
   drawTextBlock(page, fontRegular, "Filigrane numerique actif. Toute copie non autorisee reste traquable via la reference unique et l'identite du titulaire.", {
     x: 52,
-    top: 800,
-    size: 9.4,
-    maxWidth: 480,
+    top: footerBoxTop + footerBoxHeight + 14,
+    size: 9,
+    maxWidth: 490,
     color: colors.muted,
-    lineHeight: 13,
+    lineHeight: 12,
   });
 
   const pdfBytes = await pdf.save();
