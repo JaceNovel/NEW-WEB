@@ -103,13 +103,13 @@ export default async function ProfilePage() {
 
         <div className="relative grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
           <div className="rounded-[22px] border border-fuchsia-300/20 bg-black/25 p-4 backdrop-blur-md sm:rounded-[26px] sm:p-5">
-            <div className="grid items-center gap-6 lg:grid-cols-[minmax(220px,300px)_1fr]">
-              <div className="relative mx-auto flex h-[220px] w-[220px] items-center justify-center rounded-[28px] border border-white/10 bg-[radial-gradient(circle_at_50%_30%,rgba(255,255,255,0.08),transparent_65%),rgba(8,8,20,0.22)] p-5 sm:h-[240px] sm:w-[240px] md:h-[260px] md:w-[260px] lg:h-[280px] lg:w-[280px]">
-                <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-[24px] bg-black/10 p-4">
+            <div className="grid items-center gap-6 lg:grid-cols-[minmax(240px,320px)_1fr]">
+              <div className="relative mx-auto flex h-[240px] w-[240px] items-center justify-center rounded-[28px] border border-white/10 bg-[radial-gradient(circle_at_50%_30%,rgba(255,255,255,0.08),transparent_65%),rgba(8,8,20,0.22)] p-4 sm:h-[260px] sm:w-[260px] md:h-[280px] md:w-[280px] lg:h-[300px] lg:w-[300px]">
+                <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-[24px] bg-black/10 p-3">
                   <img
                     src={player.logoUrl}
                     alt={player.pseudo}
-                    className="max-h-full max-w-full object-contain drop-shadow-[0_0_30px_rgba(255,150,84,0.20)]"
+                    className="max-h-full max-w-full scale-[1.08] object-contain drop-shadow-[0_0_30px_rgba(255,150,84,0.20)]"
                   />
                 </div>
               </div>
