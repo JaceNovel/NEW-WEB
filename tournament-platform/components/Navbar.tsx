@@ -3,15 +3,41 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect } from "react";
 import { signIn, signOut, useSession } from "next-auth/react";
 import { motion } from "framer-motion";
-import { Coins, History, LogIn, LogOut, Shield, Swords, Trophy, UserCircle2 } from "lucide-react";
+import { Coins, History, LogIn, LogOut, Shield, Swords, Trophy } from "lucide-react";
 
 export default function Navbar() {
-  const { data } = useSession();
+  const { data, status, update } = useSession();
+  const isAuthenticated = status === "authenticated" && Boolean(data?.user);
   const isAdmin = data?.user?.role === "ADMIN";
   const pathname = usePathname();
   const credits = data?.user?.credits ?? 0;
+
+  useEffect(() => {
+    void update();
+  }, [pathname, update]);
+
+  useEffect(() => {
+    function refreshSession() {
+      void update();
+    }
+
+    function handleVisibilityChange() {
+      if (document.visibilityState === "visible") {
+        void update();
+      }
+    }
+
+    window.addEventListener("focus", refreshSession);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener("focus", refreshSession);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [update]);
 
   const navItems: Array<{ href: string; label: string; isActive?: boolean; icon: typeof Coins }> = [
     { href: "/credits", label: "CRÉDITS", icon: Coins },
@@ -41,7 +67,11 @@ export default function Navbar() {
             />
           </Link>
 
-          {!data?.user?.id ? (
+          {status === "loading" ? (
+            <div className="tp-nav-mobile-auth" aria-hidden="true">
+              <div className="tp-nav-mobile-cta tp-nav-mobile-cta-primary opacity-60">Chargement</div>
+            </div>
+          ) : !isAuthenticated ? (
             <div className="tp-nav-mobile-auth">
               <Link href="/inscription" className="tp-nav-mobile-cta tp-nav-mobile-cta-primary">
                 S&apos;inscrire
@@ -62,9 +92,8 @@ export default function Navbar() {
                   className="h-[20px] w-[20px] object-contain brightness-[2.3] contrast-[1.15]"
                 />
               </Link>
-              <button onClick={() => signOut()} className="tp-nav-mobile-cta tp-nav-mobile-cta-secondary">
-                <LogOut className="h-3.5 w-3.5" />
-                <span>Sortir</span>
+              <button onClick={() => signOut()} className="tp-nav-mobile-profile tp-nav-mobile-profile-logout" aria-label="Se deconnecter">
+                <LogOut className="h-[18px] w-[18px]" />
               </button>
             </div>
           )}
@@ -107,7 +136,11 @@ export default function Navbar() {
             </nav>
 
             <div className="flex min-w-fit items-center gap-2 md:ml-auto">
-              {!data?.user?.id ? (
+              {status === "loading" ? (
+                <div className="tp-nav-action tp-nav-action-secondary tp-nav-action-mobile-secondary inline-flex items-center gap-2 opacity-60">
+                  Chargement
+                </div>
+              ) : !isAuthenticated ? (
                 <>
                   <Link href="/inscription" className="tp-nav-action tp-nav-action-primary tp-nav-action-mobile-primary">
                     S&apos;inscrire

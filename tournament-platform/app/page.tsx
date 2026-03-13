@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
+import { getServerSession } from "next-auth";
 import Image from "next/image";
 import Link from "next/link";
 import { Gift, ShieldCheck, Trophy } from "lucide-react";
 
+import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { buildPageMetadata } from "@/lib/seo";
 
@@ -14,6 +16,8 @@ export const metadata: Metadata = buildPageMetadata({
 });
 
 export default async function Home() {
+  const session = await getServerSession(authOptions);
+  const isAuthenticated = Boolean(session?.user?.id);
   const hasDb = Boolean(process.env.DATABASE_URL);
 
   const [players, matches] = hasDb
@@ -116,12 +120,26 @@ export default async function Home() {
           </div>
 
           <div className="mt-7 flex flex-col items-center justify-center gap-4 sm:flex-row">
-            <Link href="/inscription" className="tp-home-cta tp-home-cta-primary">
-              S&apos;inscrire
-            </Link>
-            <Link href="/login" className="tp-home-cta tp-home-cta-secondary">
-              Connexion
-            </Link>
+            {isAuthenticated ? (
+              <Link href="/profile" className="tp-home-profile-cta" aria-label="Ouvrir mon profil">
+                <img
+                  src="https://img.icons8.com/?size=100&id=82349&format=png&color=000000"
+                  alt="Profil"
+                  width="72"
+                  height="72"
+                  className="tp-home-profile-cta-icon"
+                />
+              </Link>
+            ) : (
+              <>
+                <Link href="/inscription" className="tp-home-cta tp-home-cta-primary">
+                  S&apos;inscrire
+                </Link>
+                <Link href="/login" className="tp-home-cta tp-home-cta-secondary">
+                  Connexion
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </section>

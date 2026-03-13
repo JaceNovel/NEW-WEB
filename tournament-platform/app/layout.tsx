@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { getServerSession } from "next-auth";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import Script from "next/script";
 
@@ -10,6 +11,7 @@ import PwaRegistrar from "@/components/PwaRegistrar";
 import SponsorFooter from "@/components/SponsorFooter";
 import { Providers } from "@/components/Providers";
 import SponsorTicker from "@/components/SponsorTicker";
+import { authOptions } from "@/lib/auth";
 import { defaultKeywords, logoPath, siteDescription, siteName, siteUrl } from "@/lib/seo";
 
 const inter = Inter({
@@ -84,11 +86,12 @@ export const viewport: Viewport = {
   themeColor: "#050816",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const session = await getServerSession(authOptions);
   const organizationJsonLd = {
     "@context": "https://schema.org",
     "@type": "Organization",
@@ -123,7 +126,7 @@ export default function RootLayout({
         <Script id="google-analytics" strategy="afterInteractive">
           {`window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', 'G-GL5VMT7B3C');`}
         </Script>
-        <Providers>
+        <Providers session={session}>
           <PwaRegistrar />
           <AppInstallPopup />
           <Navbar />

@@ -431,7 +431,7 @@ export default function MatchesArena({
                       transition={enableBattleEffects ? { duration: isHistoryView ? 2.8 : 1.55, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" } : undefined}
                       className={`tp-matchs-versus ${isHistoryView ? "tp-matchs-versus-history" : ""}`}
                     >
-                      {isHistoryView ? "ROI" : "VS"}
+                      {isHistoryView ? "WIN" : "VS"}
                     </motion.div>
                   </div>
 

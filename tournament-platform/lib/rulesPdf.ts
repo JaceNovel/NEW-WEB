@@ -1,7 +1,8 @@
 import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
-import { deflateSync, inflateSync } from "node:zlib";
+
+import { PDFDocument, StandardFonts, degrees, rgb, type PDFImage, type PDFFont, type PDFPage } from "pdf-lib";
 
 type RulesPdfPayload = {
   pseudo: string;
@@ -14,262 +15,163 @@ type RulesPdfPayload = {
   recipientId?: string;
 };
 
-type PdfImageAsset = {
-  width: number;
-  height: number;
-  colorData: Buffer;
-  alphaData: Buffer;
+const PAGE_WIDTH = 595;
+const PAGE_HEIGHT = 842;
+
+const colors = {
+  page: rgb(0.04, 0.02, 0.1),
+  panel: rgb(0.1, 0.05, 0.18),
+  header: rgb(0.15, 0.08, 0.27),
+  card: rgb(0.16, 0.08, 0.28),
+  border: rgb(0.98, 0.76, 0.43),
+  softBorder: rgb(0.47, 0.33, 0.68),
+  title: rgb(0.99, 0.9, 0.76),
+  accent: rgb(0.98, 0.78, 0.45),
+  text: rgb(0.93, 0.93, 0.98),
+  muted: rgb(0.76, 0.78, 0.88),
+  watermark: rgb(0.28, 0.21, 0.38),
 };
 
-type PdfObject = string | Buffer;
-
-const PRIME_MARK_URL = "https://img.icons8.com/?size=100&id=LWzqKcfS2RVS&format=png&color=000000";
-const PNG_SIGNATURE = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
-
-function escapePdfText(value: string) {
-  return value.replace(/\\/g, "\\\\").replace(/\(/g, "\\(").replace(/\)/g, "\\)");
+function normalizeText(value: string) {
+  return value
+    .normalize("NFKC")
+    .replace(/[\u2018\u2019]/g, "'")
+    .replace(/[\u201C\u201D]/g, '"')
+    .replace(/[\u2013\u2014]/g, "-");
 }
 
-function sanitizePdfText(value: string) {
-  return escapePdfText(value.normalize("NFKD").replace(/[^\x20-\x7E]/g, ""));
+function pdfY(top: number, height = 0) {
+  return PAGE_HEIGHT - top - height;
 }
 
-function drawText(font: "F1" | "F2" | "F3", size: number, x: number, y: number, text: string, color?: [number, number, number]) {
-  const colorCommand = color ? `${color[0].toFixed(3)} ${color[1].toFixed(3)} ${color[2].toFixed(3)} rg\n` : "";
-  return `${colorCommand}BT\n/${font} ${size} Tf\n1 0 0 1 ${x} ${y} Tm\n(${sanitizePdfText(text)}) Tj\nET\n`;
-}
-
-function drawRect(x: number, y: number, width: number, height: number, color: [number, number, number]) {
-  return `${color[0].toFixed(3)} ${color[1].toFixed(3)} ${color[2].toFixed(3)} rg\n${x} ${y} ${width} ${height} re f\n`;
-}
-
-function drawStrokeRect(x: number, y: number, width: number, height: number, color: [number, number, number], lineWidth = 1) {
-  return `${color[0].toFixed(3)} ${color[1].toFixed(3)} ${color[2].toFixed(3)} RG\n${lineWidth} w\n${x} ${y} ${width} ${height} re S\n`;
-}
-
-function drawLine(x1: number, y1: number, x2: number, y2: number, color: [number, number, number], lineWidth = 1) {
-  return `${color[0].toFixed(3)} ${color[1].toFixed(3)} ${color[2].toFixed(3)} RG\n${lineWidth} w\n${x1} ${y1} m ${x2} ${y2} l S\n`;
-}
-
-function drawRule(font: "F1" | "F2", y: number, text: string) {
-  return `${drawText("F2", 11, 64, y, "-", [0.96, 0.77, 0.46])}${drawText(font, 11, 80, y, text, [0.93, 0.93, 0.98])}`;
-}
-
-function drawWrappedText(font: "F1" | "F2" | "F3", size: number, x: number, y: number, text: string, maxChars: number, color: [number, number, number], lineHeight = 14) {
-  const lines = wrapText(text, maxChars);
-  let content = "";
-  let cursorY = y;
-
-  for (const line of lines) {
-    content += drawText(font, size, x, cursorY, line, color);
-    cursorY -= lineHeight;
-  }
-
-  return { content, nextY: cursorY };
-}
-
-function wrapText(text: string, maxChars: number) {
-  const words = text.split(/\s+/).filter(Boolean);
+function wrapText(font: PDFFont, text: string, size: number, maxWidth: number) {
+  const words = normalizeText(text).split(/\s+/).filter(Boolean);
   const lines: string[] = [];
   let current = "";
 
   for (const word of words) {
-    const next = current ? `${current} ${word}` : word;
-    if (next.length <= maxChars) {
-      current = next;
+    const candidate = current ? `${current} ${word}` : word;
+    if (font.widthOfTextAtSize(candidate, size) <= maxWidth) {
+      current = candidate;
       continue;
     }
 
-    if (current) lines.push(current);
-    current = word;
+    if (current) {
+      lines.push(current);
+      current = word;
+      continue;
+    }
+
+    let chunk = "";
+    for (const char of word) {
+      const next = `${chunk}${char}`;
+      if (font.widthOfTextAtSize(next, size) <= maxWidth) {
+        chunk = next;
+      } else {
+        if (chunk) lines.push(chunk);
+        chunk = char;
+      }
+    }
+    current = chunk;
   }
 
   if (current) lines.push(current);
   return lines;
 }
 
-function buildPdf(objects: PdfObject[]) {
-  const buffers: Buffer[] = [Buffer.from("%PDF-1.4\n%\x80\x80\x80\x80\n", "binary")];
-  const offsets: number[] = [0];
-  let cursor = buffers[0].length;
+function drawTextBlock(page: PDFPage, font: PDFFont, text: string, options: {
+  x: number;
+  top: number;
+  size: number;
+  maxWidth: number;
+  color: ReturnType<typeof rgb>;
+  lineHeight?: number;
+}) {
+  const lineHeight = options.lineHeight ?? options.size * 1.35;
+  const lines = wrapText(font, text, options.size, options.maxWidth);
 
-  for (let index = 0; index < objects.length; index += 1) {
-    const object = objects[index];
-    const payload: Buffer = typeof object === "string" ? Buffer.from(object, "utf8") : object;
-    offsets.push(cursor);
-    const header = Buffer.from(`${index + 1} 0 obj\n`, "utf8");
-    const footer = Buffer.from("\nendobj\n", "utf8");
-    buffers.push(header, payload, footer);
-    cursor += header.length + payload.length + footer.length;
-  }
+  lines.forEach((line, index) => {
+    page.drawText(line, {
+      x: options.x,
+      y: pdfY(options.top + index * lineHeight, options.size),
+      size: options.size,
+      font,
+      color: options.color,
+    });
+  });
 
-  const xrefOffset = cursor;
-  const xrefParts = [Buffer.from(`xref\n0 ${objects.length + 1}\n`, "utf8"), Buffer.from("0000000000 65535 f \n", "utf8")];
-
-  for (let index = 1; index < offsets.length; index += 1) {
-    xrefParts.push(Buffer.from(`${String(offsets[index]).padStart(10, "0")} 00000 n \n`, "utf8"));
-  }
-
-  xrefParts.push(Buffer.from(`trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF`, "utf8"));
-  return Buffer.concat([...buffers, ...xrefParts]);
+  return options.top + lines.length * lineHeight;
 }
 
-function paethPredictor(left: number, up: number, upLeft: number) {
-  const predictor = left + up - upLeft;
-  const leftDelta = Math.abs(predictor - left);
-  const upDelta = Math.abs(predictor - up);
-  const upLeftDelta = Math.abs(predictor - upLeft);
-  if (leftDelta <= upDelta && leftDelta <= upLeftDelta) return left;
-  if (upDelta <= upLeftDelta) return up;
-  return upLeft;
+function drawBulletList(page: PDFPage, font: PDFFont, items: string[], options: {
+  x: number;
+  top: number;
+  width: number;
+  size: number;
+  bulletGap?: number;
+  rowGap?: number;
+}) {
+  const bulletGap = options.bulletGap ?? 16;
+  const rowGap = options.rowGap ?? 8;
+  let cursorTop = options.top;
+
+  for (const item of items) {
+    page.drawText("-", {
+      x: options.x,
+      y: pdfY(cursorTop, options.size),
+      size: options.size,
+      font,
+      color: colors.accent,
+    });
+
+    const endTop = drawTextBlock(page, font, item, {
+      x: options.x + bulletGap,
+      top: cursorTop,
+      size: options.size,
+      maxWidth: options.width - bulletGap,
+      color: colors.text,
+      lineHeight: options.size * 1.55,
+    });
+
+    cursorTop = endTop + rowGap;
+  }
+
+  return cursorTop;
 }
 
-function parsePngAsset(buffer: Buffer): PdfImageAsset {
-  if (!buffer.subarray(0, 8).equals(PNG_SIGNATURE)) {
-    throw new Error("Unsupported logo format: only PNG is supported.");
-  }
-
-  let cursor = 8;
-  let width = 0;
-  let height = 0;
-  let bitDepth = 0;
-  let colorType = 0;
-  const idatChunks: Buffer[] = [];
-
-  while (cursor < buffer.length) {
-    const length = buffer.readUInt32BE(cursor);
-    cursor += 4;
-    const chunkType = buffer.toString("ascii", cursor, cursor + 4);
-    cursor += 4;
-    const chunkData = buffer.subarray(cursor, cursor + length);
-    cursor += length + 4;
-
-    if (chunkType === "IHDR") {
-      width = chunkData.readUInt32BE(0);
-      height = chunkData.readUInt32BE(4);
-      bitDepth = chunkData[8] ?? 0;
-      colorType = chunkData[9] ?? 0;
-      const interlace = chunkData[12] ?? 0;
-      if (bitDepth !== 8 || colorType !== 6 || interlace !== 0) {
-        throw new Error("Unsupported PNG asset. Expected non-interlaced 8-bit RGBA image.");
-      }
-    }
-
-    if (chunkType === "IDAT") {
-      idatChunks.push(chunkData);
-    }
-
-    if (chunkType === "IEND") {
-      break;
-    }
-  }
-
-  const inflated = inflateSync(Buffer.concat(idatChunks));
-  const stride = width * 4;
-  const rowLength = stride + 1;
-  const rgbRows: Buffer[] = [];
-  const alphaRows: Buffer[] = [];
-  let prevRow = Buffer.alloc(stride);
-
-  for (let row = 0; row < height; row += 1) {
-    const rowStart = row * rowLength;
-    const filter = inflated[rowStart] ?? 0;
-    const rawRow = Buffer.from(inflated.subarray(rowStart + 1, rowStart + 1 + stride));
-
-    for (let index = 0; index < stride; index += 1) {
-      const left = index >= 4 ? rawRow[index - 4] ?? 0 : 0;
-      const up = prevRow[index] ?? 0;
-      const upLeft = index >= 4 ? prevRow[index - 4] ?? 0 : 0;
-
-      if (filter === 1) rawRow[index] = (rawRow[index] + left) & 0xff;
-      if (filter === 2) rawRow[index] = (rawRow[index] + up) & 0xff;
-      if (filter === 3) rawRow[index] = (rawRow[index] + Math.floor((left + up) / 2)) & 0xff;
-      if (filter === 4) rawRow[index] = (rawRow[index] + paethPredictor(left, up, upLeft)) & 0xff;
-    }
-
-    const rgbRow = Buffer.alloc(1 + width * 3);
-    const alphaRow = Buffer.alloc(1 + width);
-    rgbRow[0] = 0;
-    alphaRow[0] = 0;
-
-    for (let pixel = 0; pixel < width; pixel += 1) {
-      const source = pixel * 4;
-      const rgb = 1 + pixel * 3;
-      rgbRow[rgb] = rawRow[source] ?? 0;
-      rgbRow[rgb + 1] = rawRow[source + 1] ?? 0;
-      rgbRow[rgb + 2] = rawRow[source + 2] ?? 0;
-      alphaRow[1 + pixel] = rawRow[source + 3] ?? 255;
-    }
-
-    rgbRows.push(rgbRow);
-    alphaRows.push(alphaRow);
-    prevRow = rawRow;
-  }
-
-  return {
-    width,
-    height,
-    colorData: deflateSync(Buffer.concat(rgbRows)),
-    alphaData: deflateSync(Buffer.concat(alphaRows)),
-  };
-}
-
-async function loadIconAsset() {
-  const response = await fetch(PRIME_MARK_URL, { cache: "force-cache" });
-  if (!response.ok) {
-    throw new Error("Unable to fetch association icon for KING PDF.");
-  }
-  return Buffer.from(await response.arrayBuffer());
-}
-
-async function loadPdfAssets() {
+async function loadPngAssets(pdf: PDFDocument) {
   const publicDir = join(process.cwd(), "public");
-  const [leftLogo, rightLogo, markLogo] = await Promise.all([
+  const [primeLogoBytes, leagueLogoBytes] = await Promise.all([
     readFile(join(publicDir, "WhatsApp_Image_2026-03-12_at_12.25.53-removebg-preview.png")),
     readFile(join(publicDir, "pp1-removebg-preview (1).png")),
-    loadIconAsset(),
   ]);
 
-  return {
-    left: parsePngAsset(leftLogo),
-    right: parsePngAsset(rightLogo),
-    mark: parsePngAsset(markLogo),
-  };
+  const [primeLogo, leagueLogo] = await Promise.all([
+    pdf.embedPng(primeLogoBytes),
+    pdf.embedPng(leagueLogoBytes),
+  ]);
+
+  return { primeLogo, leagueLogo };
 }
 
-function drawImage(name: string, asset: PdfImageAsset, x: number, y: number, maxWidth: number, maxHeight: number) {
-  const scale = Math.min(maxWidth / asset.width, maxHeight / asset.height);
-  const width = asset.width * scale;
-  const height = asset.height * scale;
-  const xOffset = x + (maxWidth - width) / 2;
-  const yOffset = y + (maxHeight - height) / 2;
-  return `q\n${width.toFixed(2)} 0 0 ${height.toFixed(2)} ${xOffset.toFixed(2)} ${yOffset.toFixed(2)} cm\n/${name} Do\nQ\n`;
-}
+function drawContainedImage(page: PDFPage, image: PDFImage, options: { x: number; top: number; width: number; height: number }) {
+  const scale = Math.min(options.width / image.width, options.height / image.height);
+  const drawWidth = image.width * scale;
+  const drawHeight = image.height * scale;
+  const x = options.x + (options.width - drawWidth) / 2;
+  const y = pdfY(options.top, options.height) + (options.height - drawHeight) / 2;
 
-function createImageObjects(asset: PdfImageAsset, smaskObjectNumber: number) {
-  const imageObject = Buffer.concat([
-    Buffer.from(
-      `<< /Type /XObject /Subtype /Image /Width ${asset.width} /Height ${asset.height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /FlateDecode /DecodeParms << /Predictor 15 /Colors 3 /BitsPerComponent 8 /Columns ${asset.width} >> /SMask ${smaskObjectNumber} 0 R /Length ${asset.colorData.length} >>\nstream\n`,
-      "utf8",
-    ),
-    asset.colorData,
-    Buffer.from("\nendstream", "utf8"),
-  ]);
-
-  const smaskObject = Buffer.concat([
-    Buffer.from(
-      `<< /Type /XObject /Subtype /Image /Width ${asset.width} /Height ${asset.height} /ColorSpace /DeviceGray /BitsPerComponent 8 /Filter /FlateDecode /DecodeParms << /Predictor 15 /Colors 1 /BitsPerComponent 8 /Columns ${asset.width} >> /Length ${asset.alphaData.length} >>\nstream\n`,
-      "utf8",
-    ),
-    asset.alphaData,
-    Buffer.from("\nendstream", "utf8"),
-  ]);
-
-  return { imageObject, smaskObject };
+  page.drawImage(image, { x, y, width: drawWidth, height: drawHeight });
 }
 
 export async function createRulesPdf(payload: RulesPdfPayload) {
-  const assets = await loadPdfAssets();
+  const pdf = await PDFDocument.create();
+  const page = pdf.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
+  const fontRegular = await pdf.embedFont(StandardFonts.Helvetica);
+  const fontBold = await pdf.embedFont(StandardFonts.HelveticaBold);
+  const fontItalic = await pdf.embedFont(StandardFonts.HelveticaOblique);
+  const { primeLogo, leagueLogo } = await loadPngAssets(pdf);
+
   const issuedAt = payload.issuedAt ?? new Date();
   const issuedAtLabel = new Intl.DateTimeFormat("fr-FR", {
     day: "2-digit",
@@ -279,11 +181,8 @@ export async function createRulesPdf(payload: RulesPdfPayload) {
     minute: "2-digit",
   }).format(issuedAt);
 
-  const recipientSeed = `${payload.recipientId ?? payload.pseudo}|${payload.freefireId}|${issuedAt.toISOString()}`;
-  const reference = `KING-${createHash("sha256").update(recipientSeed).digest("hex").slice(0, 12).toUpperCase()}`;
-  const recipientLine = `Document emis pour ${payload.pseudo} - compte Free Fire ${payload.freefireId}`;
-  const watermark = `ATTESTATION SOLO KING LEAGUE`;
-  const premiumStamp = `${payload.pseudo.toUpperCase()} - ${reference}`;
+  const seed = `${payload.recipientId ?? payload.pseudo}|${payload.freefireId}|${issuedAt.toISOString()}`;
+  const reference = `KING-${createHash("sha256").update(seed).digest("hex").slice(0, 12).toUpperCase()}`;
 
   const summaryLines = [
     `Titulaire : ${payload.pseudo}`,
@@ -303,120 +202,232 @@ export async function createRulesPdf(payload: RulesPdfPayload) {
     "Toute reproduction, diffusion ou falsification invalide automatiquement cette attestation.",
   ];
 
-  const controlLines = [
+  const verificationLines = [
     "Filigrane nominatif integre dans la mise en page et l'empreinte numerique.",
     "Reference unique KING necessaire pour toute verification officielle.",
     "Document reserve au titulaire du compte et a la moderation KING League.",
   ];
 
-  const footerNotice = wrapText(
-    "Filigrane numerique actif. Toute copie non autorisee reste traquable via la reference unique et l'identite du titulaire.",
-    96,
-  );
+  page.drawRectangle({ x: 0, y: 0, width: PAGE_WIDTH, height: PAGE_HEIGHT, color: colors.page });
+  page.drawRectangle({
+    x: 16,
+    y: 16,
+    width: PAGE_WIDTH - 32,
+    height: PAGE_HEIGHT - 32,
+    color: colors.panel,
+    borderColor: colors.border,
+    borderWidth: 1.4,
+  });
+  page.drawRectangle({ x: 16, y: pdfY(26, 118), width: PAGE_WIDTH - 32, height: 118, color: colors.header });
+  page.drawRectangle({
+    x: 34,
+    y: pdfY(160, 610),
+    width: PAGE_WIDTH - 68,
+    height: 610,
+    color: rgb(0.11, 0.05, 0.2),
+    borderColor: colors.softBorder,
+    borderWidth: 0.9,
+  });
 
-  let content = "";
-  content += drawRect(0, 0, 595, 842, [0.050, 0.024, 0.100]);
-  content += drawRect(22, 22, 551, 798, [0.084, 0.040, 0.150]);
-  content += drawRect(22, 718, 551, 102, [0.136, 0.060, 0.230]);
-  content += drawRect(38, 96, 519, 612, [0.112, 0.056, 0.196]);
-  content += drawStrokeRect(22, 22, 551, 798, [0.980, 0.760, 0.430], 1.5);
-  content += drawStrokeRect(38, 96, 519, 612, [0.565, 0.392, 0.765], 0.8);
-  content += drawLine(50, 654, 545, 654, [0.980, 0.760, 0.430], 1);
-  content += drawLine(50, 706, 545, 706, [0.430, 0.320, 0.610], 0.8);
+  drawContainedImage(page, primeLogo, { x: 24, top: 40, width: 150, height: 74 });
+  drawContainedImage(page, leagueLogo, { x: PAGE_WIDTH - 164, top: 38, width: 132, height: 74 });
 
-  content += drawImage("ImLeft", assets.left, 38, 734, 124, 64);
-  content += drawImage("ImMark", assets.mark, 248, 734, 48, 48);
-  content += drawImage("ImRight", assets.right, 430, 730, 92, 58);
+  page.drawText("KING LEAGUE", {
+    x: 198,
+    y: pdfY(44, 28),
+    size: 24,
+    font: fontBold,
+    color: colors.title,
+  });
+  page.drawText("Reglement officiel personnalise et signe numeriquement", {
+    x: 194,
+    y: pdfY(78, 12),
+    size: 11.5,
+    font: fontRegular,
+    color: colors.muted,
+  });
 
-  content += "q\n0.285 0.285 -0.959 0.959 190 230 cm\n";
-  content += drawText("F2", 24, 0, 0, watermark, [0.26, 0.18, 0.36]);
-  content += "Q\n";
-  content += "q\n0.285 0.285 -0.959 0.959 290 146 cm\n";
-  content += drawText("F2", 17, 0, 0, premiumStamp, [0.24, 0.16, 0.34]);
-  content += "Q\n";
+  page.drawText("ATTESTATION SOLO KING LEAGUE", {
+    x: 150,
+    y: pdfY(468, 26),
+    size: 28,
+    font: fontBold,
+    color: colors.watermark,
+    rotate: degrees(56),
+    opacity: 0.18,
+  });
 
-  content += drawText("F2", 24, 182, 780, "KING LEAGUE", [0.99, 0.90, 0.76]);
-  content += drawText("F1", 11, 176, 762, "Reglement officiel personnalise et signe numeriquement", [0.88, 0.87, 0.96]);
-  content += drawText("F2", 18, 56, 684, "Attestation Solo des regles du tournoi", [0.98, 0.78, 0.45]);
-  content += drawText("F1", 11, 56, 664, recipientLine, [0.93, 0.93, 0.98]);
-  content += drawText("F1", 10, 56, 644, `Date d'emission : ${issuedAtLabel}`, [0.73, 0.76, 0.86]);
-  content += drawText("F1", 10, 334, 644, `Reference : ${reference}`, [0.73, 0.76, 0.86]);
+  page.drawText("Attestation Solo des regles du tournoi", {
+    x: 52,
+    y: pdfY(174, 19),
+    size: 18,
+    font: fontBold,
+    color: colors.accent,
+  });
 
-  content += drawRect(56, 534, 214, 96, [0.145, 0.078, 0.240]);
-  content += drawStrokeRect(56, 534, 214, 96, [0.980, 0.760, 0.430], 0.8);
-  content += drawText("F2", 12, 72, 606, "Titulaire KING", [0.98, 0.78, 0.45]);
+  page.drawText(`Document emis pour ${payload.pseudo} - compte Free Fire ${payload.freefireId}`, {
+    x: 52,
+    y: pdfY(204, 12),
+    size: 11.5,
+    font: fontRegular,
+    color: colors.text,
+  });
 
-  let summaryY = 584;
+  page.drawLine({
+    start: { x: 48, y: pdfY(232) },
+    end: { x: 547, y: pdfY(232) },
+    thickness: 1,
+    color: colors.border,
+  });
+
+  page.drawText(`Date d'emission : ${issuedAtLabel}`, {
+    x: 52,
+    y: pdfY(240, 10),
+    size: 10,
+    font: fontRegular,
+    color: colors.muted,
+  });
+  page.drawText(`Reference : ${reference}`, {
+    x: 344,
+    y: pdfY(240, 10),
+    size: 10,
+    font: fontRegular,
+    color: colors.muted,
+  });
+
+  page.drawRectangle({ x: 52, y: pdfY(264, 118), width: 222, height: 118, color: colors.card, borderColor: colors.border, borderWidth: 0.9 });
+  page.drawRectangle({ x: 290, y: pdfY(264, 118), width: 253, height: 118, color: colors.card, borderColor: colors.softBorder, borderWidth: 0.9 });
+
+  page.drawText("Titulaire KING", {
+    x: 70,
+    y: pdfY(282, 12),
+    size: 12,
+    font: fontBold,
+    color: colors.accent,
+  });
+
+  let summaryTop = 308;
   for (const line of summaryLines) {
-    content += drawText("F1", 10, 72, summaryY, line, [0.95, 0.95, 0.98]);
-    summaryY -= 14;
+    page.drawText(line, {
+      x: 70,
+      y: pdfY(summaryTop, 10),
+      size: 10.3,
+      font: fontRegular,
+      color: colors.text,
+    });
+    summaryTop += 18;
   }
 
-  content += drawRect(286, 534, 253, 96, [0.132, 0.072, 0.226]);
-  content += drawStrokeRect(286, 534, 253, 96, [0.565, 0.392, 0.765], 0.8);
-  content += drawText("F2", 12, 302, 606, "Alliance certifiee", [0.98, 0.78, 0.45]);
-  content += drawText("F3", 14, 302, 586, "Document de conformite KING League", [0.93, 0.93, 0.98]);
+  page.drawText("Verification officielle", {
+    x: 308,
+    y: pdfY(282, 12),
+    size: 12,
+    font: fontBold,
+    color: colors.accent,
+  });
+  page.drawText("Conformite numerique KING League", {
+    x: 308,
+    y: pdfY(304, 13),
+    size: 10.8,
+    font: fontItalic,
+    color: colors.text,
+  });
 
-  let controlY = 564;
-  for (const line of controlLines) {
-    for (const wrappedLine of wrapText(line, 33)) {
-      content += drawText("F1", 10, 302, controlY, wrappedLine, [0.93, 0.93, 0.98]);
-      controlY -= 14;
-    }
-    controlY -= 4;
+  let verificationTop = 334;
+  for (const line of verificationLines) {
+    verificationTop = drawTextBlock(page, fontRegular, line, {
+      x: 308,
+      top: verificationTop,
+      size: 10.1,
+      maxWidth: 215,
+      color: colors.text,
+      lineHeight: 14,
+    }) + 6;
   }
 
-  content += drawText("F2", 14, 56, 492, "Clauses principales", [0.98, 0.78, 0.45]);
+  page.drawText("Clauses principales", {
+    x: 52,
+    y: pdfY(404, 14),
+    size: 14,
+    font: fontBold,
+    color: colors.accent,
+  });
 
-  let ruleY = 468;
-  for (const line of ruleLines) {
-    for (const wrappedLine of wrapText(line, 82)) {
-      content += drawRule("F1", ruleY, wrappedLine);
-      ruleY -= 18;
-    }
-    ruleY -= 6;
-  }
+  drawBulletList(page, fontRegular, ruleLines, {
+    x: 62,
+    top: 438,
+    width: 470,
+    size: 11,
+    bulletGap: 18,
+    rowGap: 7,
+  });
 
-  content += drawRect(56, 168, 483, 90, [0.122, 0.065, 0.214]);
-  content += drawStrokeRect(56, 168, 483, 90, [0.970, 0.720, 0.370], 0.8);
-  content += drawText("F2", 13, 72, 230, "Signature KING", [0.98, 0.78, 0.45]);
-  const signatureBlock = drawWrappedText("F3", 14, 72, 208, "Signe electroniquement par la direction KING League", 38, [0.95, 0.95, 0.98], 16);
-  content += signatureBlock.content;
-  content += drawText("F1", 10, 72, 180, "Cachet numerique actif - reproduction interdite", [0.80, 0.82, 0.90]);
-  content += drawText("F1", 10, 72, 162, `Empreinte : ${reference}`, [0.80, 0.82, 0.90]);
-  content += drawText("F2", 12, 372, 206, "Verification officielle", [0.99, 0.90, 0.76]);
-  content += drawText("F1", 10, 372, 188, "Document conforme au circuit KING League", [0.80, 0.82, 0.90]);
-  content += drawText("F1", 10, 372, 170, "Controle numerique via la reference unique", [0.80, 0.82, 0.90]);
+  page.drawRectangle({ x: 52, y: pdfY(676, 114), width: 491, height: 114, color: colors.card, borderColor: colors.border, borderWidth: 0.9 });
 
-  let noticeY = 122;
-  for (const line of footerNotice) {
-    content += drawText("F1", 9, 56, noticeY, line, [0.88, 0.88, 0.94]);
-    noticeY -= 14;
-  }
+  page.drawText("Signature KING", {
+    x: 72,
+    y: pdfY(698, 13),
+    size: 13,
+    font: fontBold,
+    color: colors.accent,
+  });
+  const signatureBottom = drawTextBlock(page, fontItalic, "Signe electroniquement par la direction KING League", {
+    x: 72,
+    top: 726,
+    size: 11.2,
+    maxWidth: 220,
+    color: colors.text,
+    lineHeight: 15,
+  });
+  page.drawText("Cachet numerique actif - reproduction interdite", {
+    x: 72,
+    y: pdfY(signatureBottom + 4, 10),
+    size: 10,
+    font: fontRegular,
+    color: colors.muted,
+  });
+  page.drawText(`Empreinte : ${reference}`, {
+    x: 72,
+    y: pdfY(signatureBottom + 22, 10),
+    size: 10,
+    font: fontRegular,
+    color: colors.muted,
+  });
 
-  const leftObjects = createImageObjects(assets.left, 8);
-  const markObjects = createImageObjects(assets.mark, 10);
-  const rightObjects = createImageObjects(assets.right, 12);
+  page.drawText("Verification officielle", {
+    x: 370,
+    y: pdfY(698, 13),
+    size: 13,
+    font: fontBold,
+    color: colors.title,
+  });
+  let footerRightTop = 726;
+  footerRightTop = drawTextBlock(page, fontRegular, "Document conforme au circuit KING League", {
+    x: 370,
+    top: footerRightTop,
+    size: 10.3,
+    maxWidth: 145,
+    color: colors.text,
+    lineHeight: 14,
+  }) + 6;
+  drawTextBlock(page, fontRegular, "Controle numerique via la reference unique", {
+    x: 370,
+    top: footerRightTop,
+    size: 10.3,
+    maxWidth: 145,
+    color: colors.text,
+    lineHeight: 14,
+  });
 
-  const streamObject = Buffer.concat([
-    Buffer.from(`<< /Length ${Buffer.byteLength(content, "utf8")} >>\nstream\n`, "utf8"),
-    Buffer.from(content, "utf8"),
-    Buffer.from("endstream", "utf8"),
-  ]);
+  drawTextBlock(page, fontRegular, "Filigrane numerique actif. Toute copie non autorisee reste traquable via la reference unique et l'identite du titulaire.", {
+    x: 52,
+    top: 800,
+    size: 9.4,
+    maxWidth: 480,
+    color: colors.muted,
+    lineHeight: 13,
+  });
 
-  return buildPdf([
-    "<< /Type /Catalog /Pages 2 0 R >>",
-    "<< /Type /Pages /Count 1 /Kids [3 0 R] >>",
-    "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 4 0 R /F2 5 0 R /F3 6 0 R >> /XObject << /ImLeft 7 0 R /ImMark 9 0 R /ImRight 11 0 R >> >> /Contents 13 0 R >>",
-    "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
-    "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>",
-    "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Oblique >>",
-    leftObjects.imageObject,
-    leftObjects.smaskObject,
-    markObjects.imageObject,
-    markObjects.smaskObject,
-    rightObjects.imageObject,
-    rightObjects.smaskObject,
-    streamObject,
-  ]);
+  const pdfBytes = await pdf.save();
+  return Buffer.from(pdfBytes);
 }
