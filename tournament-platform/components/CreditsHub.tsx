@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Search, ShoppingBag, Sparkles, Swords, Trophy, UserPlus2 } from "lucide-react";
@@ -55,6 +55,33 @@ export default function CreditsHub({
   const [query, setQuery] = useState("");
   const [loadingKey, setLoadingKey] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const lastRefreshRef = useRef(0);
+
+  useEffect(() => {
+    function refreshIfNeeded() {
+      const now = Date.now();
+      if (now - lastRefreshRef.current < 15_000) {
+        return;
+      }
+
+      lastRefreshRef.current = now;
+      router.refresh();
+    }
+
+    function handleVisibilityChange() {
+      if (document.visibilityState === "visible") {
+        refreshIfNeeded();
+      }
+    }
+
+    window.addEventListener("focus", refreshIfNeeded);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener("focus", refreshIfNeeded);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [router]);
 
   const filteredPlayers = useMemo(() => {
     const needle = query.trim().toLowerCase();

@@ -158,7 +158,6 @@ export default function Navbar() {
               ) : (
                 <>
                   <Link href="/profile" className="tp-nav-action tp-nav-action-primary tp-nav-action-mobile-primary inline-flex items-center gap-2">
-                    <span className="rounded-full border border-white/15 bg-white/10 px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.18em]">WELCOME</span>
                     <span>PROFIL</span>
                   </Link>
                   <div className="tp-nav-action tp-nav-action-secondary tp-nav-action-mobile-secondary inline-flex items-center gap-2">
