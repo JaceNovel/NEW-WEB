@@ -498,6 +498,24 @@ select.tp-input option {
   line-height: 1.45;
 }
 
+.tp-app-popup-optout {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  margin-top: 0.8rem;
+  color: rgba(235, 239, 255, 0.76);
+  font-size: 0.73rem;
+  line-height: 1.4;
+}
+
+.tp-app-popup-optout input {
+  margin-top: 0.08rem;
+  width: 0.95rem;
+  height: 0.95rem;
+  accent-color: #ffb15f;
+  flex: 0 0 auto;
+}
+
 @keyframes tp-app-popup-float {
   0% {
     opacity: 0;

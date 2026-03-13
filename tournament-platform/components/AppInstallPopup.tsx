@@ -8,7 +8,27 @@ type BeforeInstallPromptEvent = Event & {
   userChoice: Promise<{ outcome: "accepted" | "dismissed"; platform: string }>;
 };
 
-const STORAGE_KEY = "tp-hide-install-popup";
+const STORAGE_KEY = "tp-hide-install-popup-permanent";
+const SESSION_STORAGE_KEY = "tp-hide-install-popup-session";
+
+type RelatedApp = {
+  id?: string;
+  platform?: string;
+  url?: string;
+};
+
+type BrowserNavigator = Navigator & {
+  getInstalledRelatedApps?: () => Promise<RelatedApp[]>;
+  standalone?: boolean;
+};
+
+type BrowserWindow = Window & {
+  Capacitor?: unknown;
+  kingLeagueApp?: {
+    shell?: string;
+    platform?: string;
+  };
+};
 
 type DownloadInfo = {
   available: boolean;
@@ -37,7 +57,15 @@ type InstallTarget = {
 
 function isStandaloneMode() {
   if (typeof window === "undefined") return false;
-  return window.matchMedia("(display-mode: standalone)").matches || Boolean((window.navigator as Navigator & { standalone?: boolean }).standalone);
+  const browserWindow = window as BrowserWindow;
+  const browserNavigator = window.navigator as BrowserNavigator;
+
+  return (
+    window.matchMedia("(display-mode: standalone)").matches
+    || Boolean(browserNavigator.standalone)
+    || Boolean(browserWindow.Capacitor)
+    || browserWindow.kingLeagueApp?.shell === "electron"
+  );
 }
 
 function readPopupPreference() {
@@ -50,6 +78,16 @@ function readPopupPreference() {
   }
 }
 
+function readSessionPopupPreference() {
+  if (typeof window === "undefined") return false;
+
+  try {
+    return window.sessionStorage.getItem(SESSION_STORAGE_KEY) === "true";
+  } catch {
+    return false;
+  }
+}
+
 function writePopupPreference(value: boolean) {
   if (typeof window === "undefined") return;
 
@@ -57,6 +95,34 @@ function writePopupPreference(value: boolean) {
     window.localStorage.setItem(STORAGE_KEY, value ? "true" : "false");
   } catch {
     // Ignore storage failures in restricted browser contexts.
+  }
+}
+
+function writeSessionPopupPreference(value: boolean) {
+  if (typeof window === "undefined") return;
+
+  try {
+    window.sessionStorage.setItem(SESSION_STORAGE_KEY, value ? "true" : "false");
+  } catch {
+    // Ignore storage failures in restricted browser contexts.
+  }
+}
+
+async function detectInstalledApp() {
+  if (typeof window === "undefined") return false;
+  if (isStandaloneMode()) return true;
+
+  const browserNavigator = window.navigator as BrowserNavigator;
+
+  if (typeof browserNavigator.getInstalledRelatedApps !== "function") {
+    return false;
+  }
+
+  try {
+    const installedApps = await browserNavigator.getInstalledRelatedApps();
+    return installedApps.length > 0;
+  } catch {
+    return false;
   }
 }
 
@@ -74,24 +140,35 @@ function getTargetIcon(target: InstallTarget["key"]) {
 export default function AppInstallPopup() {
   const [isVisible, setIsVisible] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
-  const [isInstalled, setIsInstalled] = useState(false);
+  const [isInstalled, setIsInstalled] = useState<boolean | null>(null);
   const [isIos, setIsIos] = useState(false);
   const [showManualSteps, setShowManualSteps] = useState(false);
+  const [hideForever, setHideForever] = useState(false);
   const [downloads, setDownloads] = useState<DownloadsPayload | null>(null);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    setIsInstalled(isStandaloneMode());
+    let cancelled = false;
+
     setIsIos(/iphone|ipad|ipod/i.test(window.navigator.userAgent));
 
-    const hidden = readPopupPreference();
-    if (hidden || isStandaloneMode()) return;
+    void detectInstalledApp().then((installed) => {
+      if (cancelled) return;
 
-    const timer = window.setTimeout(() => setIsVisible(true), 1800);
+      setIsInstalled(installed);
+
+      const permanentlyHidden = readPopupPreference();
+      const sessionHidden = readSessionPopupPreference();
+
+      if (!installed && !permanentlyHidden && !sessionHidden) {
+        setIsVisible(true);
+      }
+    });
 
     const handleBeforeInstallPrompt = (event: Event) => {
       event.preventDefault();
+      if (readPopupPreference() || readSessionPopupPreference() || isStandaloneMode()) return;
       setDeferredPrompt(event as BeforeInstallPromptEvent);
       setIsVisible(true);
     };
@@ -100,6 +177,7 @@ export default function AppInstallPopup() {
       setIsInstalled(true);
       setIsVisible(false);
       writePopupPreference(true);
+      writeSessionPopupPreference(true);
     };
 
     window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
@@ -117,7 +195,7 @@ export default function AppInstallPopup() {
       .catch(() => setDownloads(null));
 
     return () => {
-      window.clearTimeout(timer);
+      cancelled = true;
       window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
       window.removeEventListener("appinstalled", handleInstalled);
     };
@@ -195,9 +273,17 @@ export default function AppInstallPopup() {
 
   const InstallIcon = getTargetIcon(installTarget.key);
 
-  function closePopup() {
-    writePopupPreference(true);
+  function dismissPopup() {
+    if (hideForever) {
+      writePopupPreference(true);
+    }
+
+    writeSessionPopupPreference(true);
     setIsVisible(false);
+  }
+
+  function closePopup() {
+    dismissPopup();
   }
 
   async function installWebApp() {
@@ -210,7 +296,7 @@ export default function AppInstallPopup() {
     const choice = await deferredPrompt.userChoice;
 
     if (choice.outcome === "accepted") {
-      writePopupPreference(true);
+      writeSessionPopupPreference(true);
       setIsVisible(false);
       setDeferredPrompt(null);
     }
@@ -218,8 +304,7 @@ export default function AppInstallPopup() {
 
   function handlePrimaryAction() {
     if (installTarget.mode === "download" && installTarget.url) {
-      writePopupPreference(true);
-      setIsVisible(false);
+      dismissPopup();
       window.location.href = installTarget.url;
       return;
     }
@@ -232,7 +317,7 @@ export default function AppInstallPopup() {
     setShowManualSteps(true);
   }
 
-  if (!isVisible || isInstalled) return null;
+  if (!isVisible || isInstalled !== false) return null;
 
   return (
     <div className="tp-app-popup-backdrop" role="presentation">
@@ -264,6 +349,15 @@ export default function AppInstallPopup() {
             <div className="tp-app-popup-manual-step">iPhone: Safari puis Partager et Sur l'ecran d'accueil.</div>
           </div>
         ) : null}
+
+        <label className="tp-app-popup-optout">
+          <input
+            type="checkbox"
+            checked={hideForever}
+            onChange={(event) => setHideForever(event.target.checked)}
+          />
+          <span>Ne plus recevoir cette popup</span>
+        </label>
 
         <div className="tp-app-popup-actions">
           <button type="button" className="tp-app-popup-install" onClick={handlePrimaryAction}>
