@@ -327,9 +327,6 @@ export default function AppInstallPopup() {
         </button>
 
         <div className="tp-app-popup-head">
-          <div className="tp-app-popup-logo-wrap">
-            <img src="/pp1-removebg-preview%20(1).png" alt="Logo KING League" className="tp-app-popup-logo" />
-          </div>
           <div className="tp-app-popup-content">
             <div className="tp-app-popup-kicker">App officielle</div>
             <h2 id="tp-app-popup-title" className="tp-app-popup-title">Installer KING League</h2>

@@ -1,6 +1,8 @@
-import { FedaPay, Transaction, Webhook } from "fedapay";
+import { createHmac, timingSafeEqual } from "node:crypto";
 
 const DEFAULT_PUBLIC_SITE_URL = "https://kingleague.space";
+const FEDAPAY_SANDBOX_BASE_URL = "https://sandbox-api.fedapay.com/v1";
+const FEDAPAY_LIVE_BASE_URL = "https://api.fedapay.com/v1";
 const PAID_STATUSES = new Set([
   "approved",
   "transferred",
@@ -17,26 +19,153 @@ type HostedTransactionInput = {
   metadata?: Record<string, unknown>;
 };
 
+type FedaPayEnvironment = "sandbox" | "live";
+
 function normalizeUrl(value: string) {
   return value.replace(/\/+$/, "");
 }
 
-function getFedaPayEnvironment() {
-  const value = (process.env.FEDAPAY_ENVIRONMENT ?? "sandbox").trim().toLowerCase();
-  return value === "live" ? "live" : "sandbox";
+function normalizeEnvironment(value: string | null | undefined): FedaPayEnvironment {
+  const normalized = (value ?? "sandbox").trim().toLowerCase();
+  return normalized === "live" || normalized === "production" ? "live" : "sandbox";
 }
 
-function getEnvValue(baseName: string) {
-  const environment = getFedaPayEnvironment();
-  const direct = process.env[baseName]?.trim();
-  if (direct) return direct;
+function inferEnvironmentFromSecret(value: string | null | undefined): FedaPayEnvironment | null {
+  const normalized = value?.trim().toLowerCase() ?? "";
+  if (!normalized) return null;
+  if (normalized.startsWith("sk_live") || normalized.startsWith("wh_live")) return "live";
+  if (
+    normalized.startsWith("sk_sandbox") ||
+    normalized.startsWith("sk_test") ||
+    normalized.startsWith("wh_sandbox") ||
+    normalized.startsWith("wh_test")
+  ) {
+    return "sandbox";
+  }
+  return null;
+}
 
+function getVariantValue(baseName: string, environment: FedaPayEnvironment) {
   const suffix = environment === "live" ? "LIVE" : "TEST";
   return process.env[`${baseName}_${suffix}`]?.trim() ?? "";
 }
 
+function getEnvValue(baseName: string, environment: FedaPayEnvironment) {
+  const direct = process.env[baseName]?.trim();
+  if (direct) return direct;
+
+  const preferred = getVariantValue(baseName, environment);
+  if (preferred) return preferred;
+
+  return getVariantValue(baseName, environment === "live" ? "sandbox" : "live");
+}
+
 function serializeResource<T>(value: T): T {
   return JSON.parse(JSON.stringify(value)) as T;
+}
+
+function getFedaPayBaseUrl(environment: FedaPayEnvironment) {
+  return environment === "live" ? FEDAPAY_LIVE_BASE_URL : FEDAPAY_SANDBOX_BASE_URL;
+}
+
+function buildFedaPayError(errorPayload: unknown, fallbackStatus: number): never {
+  const payload = errorPayload && typeof errorPayload === "object" ? (errorPayload as Record<string, unknown>) : null;
+  const message =
+    typeof payload?.message === "string"
+      ? payload.message
+      : fallbackStatus === 401
+        ? "Clé FedaPay invalide ou environnement FedaPay incorrect."
+        : "Erreur FedaPay.";
+
+  const error = new Error(message);
+  // @ts-expect-error attach status
+  error.status = fallbackStatus;
+  // @ts-expect-error attach details
+  error.details = payload?.errors ?? payload ?? {};
+  throw error;
+}
+
+function resolveFedaPayConfig() {
+  const requestedEnvironment = normalizeEnvironment(process.env.FEDAPAY_ENVIRONMENT);
+  const directApiKey = process.env.FEDAPAY_SECRET_KEY?.trim() ?? "";
+  const apiKey = directApiKey || getEnvValue("FEDAPAY_SECRET_KEY", requestedEnvironment);
+
+  if (!apiKey) {
+    const error = new Error("Configuration FedaPay incomplète: clé secrète manquante.");
+    // @ts-expect-error attach status
+    error.status = 500;
+    throw error;
+  }
+
+  const environment = inferEnvironmentFromSecret(apiKey) ?? requestedEnvironment;
+  const webhookSecret = getEnvValue("FEDAPAY_WEBHOOK_SECRET", environment);
+
+  return {
+    environment,
+    apiKey,
+    webhookSecret,
+    baseUrl: getFedaPayBaseUrl(environment),
+  };
+}
+
+async function fedapayRequest<T>(
+  path: string,
+  options?: {
+    method?: "GET" | "POST";
+    body?: Record<string, unknown>;
+  },
+) {
+  const config = resolveFedaPayConfig();
+
+  const res = await fetch(`${config.baseUrl}${path}`, {
+    method: options?.method ?? "GET",
+    headers: {
+      Authorization: `Bearer ${config.apiKey}`,
+      "content-type": "application/json",
+      "x-source": "KING League",
+    },
+    body: options?.body ? JSON.stringify(options.body) : undefined,
+    cache: "no-store",
+  });
+
+  let payload: unknown = null;
+
+  try {
+    payload = await res.json();
+  } catch {
+    payload = null;
+  }
+
+  if (!res.ok) {
+    buildFedaPayError(payload, res.status);
+  }
+
+  return payload as T;
+}
+
+function parseSignatureHeader(header: string) {
+  const timestamps: string[] = [];
+  const signatures: string[] = [];
+
+  for (const part of header.split(",")) {
+    const [key, value] = part.split("=");
+    if (!key || !value) continue;
+    if (key === "t") timestamps.push(value);
+    if (key === "s") signatures.push(value);
+  }
+
+  return {
+    timestamp: timestamps[0] ?? null,
+    signatures,
+  };
+}
+
+function secureCompare(left: string, right: string) {
+  const leftBuffer = Buffer.from(left);
+  const rightBuffer = Buffer.from(right);
+
+  if (leftBuffer.length !== rightBuffer.length) return false;
+  return timingSafeEqual(leftBuffer, rightBuffer);
 }
 
 export function getPublicSiteUrl() {
@@ -50,55 +179,56 @@ export function getPublicSiteUrl() {
 }
 
 export function ensureFedaPayConfigured() {
-  const apiKey = getEnvValue("FEDAPAY_SECRET_KEY");
-  const webhookSecret = getEnvValue("FEDAPAY_WEBHOOK_SECRET");
+  const config = resolveFedaPayConfig();
+  return {
+    environment: config.environment,
+    baseUrl: config.baseUrl,
+  };
+}
 
-  if (!apiKey) {
-    const error = new Error("Configuration FedaPay incomplète: clé secrète manquante.");
-    // @ts-expect-error attach status
-    error.status = 500;
-    throw error;
-  }
-
-  if (!webhookSecret) {
+function ensureFedaPayWebhookConfigured() {
+  const config = resolveFedaPayConfig();
+  if (!config.webhookSecret) {
     const error = new Error("Configuration FedaPay incomplète: secret webhook manquant.");
     // @ts-expect-error attach status
     error.status = 500;
     throw error;
   }
 
-  FedaPay.setEnvironment(getFedaPayEnvironment());
-  FedaPay.setApiKey(apiKey);
-}
-
-function getWebhookSecret() {
-  const secret = getEnvValue("FEDAPAY_WEBHOOK_SECRET");
-  if (!secret) {
-    const error = new Error("Secret webhook FedaPay manquant.");
-    // @ts-expect-error attach status
-    error.status = 500;
-    throw error;
-  }
-
-  return secret;
+  return config;
 }
 
 export async function createHostedCreditTransaction(input: HostedTransactionInput) {
   ensureFedaPayConfigured();
 
-  const transaction = await Transaction.create({
-    description: input.description,
-    amount: input.amountFcfa,
-    currency: { iso: "XOF" },
-    callback_url: input.callbackUrl,
-    merchant_reference: input.merchantReference,
-    custom_metadata: input.metadata ?? {},
+  const transactionPayload = await fedapayRequest<Record<string, unknown>>("/transactions", {
+    method: "POST",
+    body: {
+      description: input.description,
+      amount: input.amountFcfa,
+      currency: { iso: "XOF" },
+      callback_url: input.callbackUrl,
+      merchant_reference: input.merchantReference,
+      custom_metadata: input.metadata ?? {},
+    },
   });
 
-  const token = await transaction.generateToken();
+  const transaction = (transactionPayload["v1/transaction"] ?? transactionPayload.transaction ?? transactionPayload) as Record<string, unknown>;
+  const transactionId = transaction.id ? String(transaction.id) : null;
+
+  if (!transactionId) {
+    const error = new Error("FedaPay n'a pas retourné d'identifiant de transaction.");
+    // @ts-expect-error attach status
+    error.status = 502;
+    throw error;
+  }
+
+  const token = await fedapayRequest<Record<string, unknown>>(`/transactions/${encodeURIComponent(transactionId)}/token`, {
+    method: "POST",
+  });
 
   return {
-    transactionId: transaction.id ? String(transaction.id) : null,
+    transactionId,
     transactionKey: transaction.transaction_key ? String(transaction.transaction_key) : null,
     reference: transaction.reference ? String(transaction.reference) : null,
     token: token.token ? String(token.token) : null,
@@ -110,23 +240,51 @@ export async function createHostedCreditTransaction(input: HostedTransactionInpu
 }
 
 export function constructWebhookEvent(payload: string, signature: string) {
-  ensureFedaPayConfigured();
-  return Webhook.constructEvent(payload, signature, getWebhookSecret());
+  const config = ensureFedaPayWebhookConfigured();
+  const { timestamp, signatures } = parseSignatureHeader(signature);
+
+  if (!timestamp || !signatures.length) {
+    const error = new Error("Signature webhook FedaPay invalide.");
+    // @ts-expect-error attach status
+    error.status = 400;
+    throw error;
+  }
+
+  const expected = createHmac("sha256", config.webhookSecret)
+    .update(`${timestamp}.${payload}`, "utf8")
+    .digest("hex");
+
+  if (!signatures.some((candidate) => secureCompare(candidate, expected))) {
+    const error = new Error("Signature webhook FedaPay invalide.");
+    // @ts-expect-error attach status
+    error.status = 400;
+    throw error;
+  }
+
+  const ageSeconds = Math.floor(Date.now() / 1000) - Number(timestamp);
+  if (Number.isFinite(ageSeconds) && ageSeconds > 300) {
+    const error = new Error("Signature webhook FedaPay expirée.");
+    // @ts-expect-error attach status
+    error.status = 400;
+    throw error;
+  }
+
+  return JSON.parse(payload) as Record<string, unknown>;
 }
 
 export async function retrieveTransaction(transactionId: string) {
   ensureFedaPayConfigured();
-  const transaction = await Transaction.retrieve(transactionId);
-  const serialized = serializeResource(transaction) as Record<string, unknown>;
+  const payload = await fedapayRequest<Record<string, unknown>>(`/transactions/${encodeURIComponent(transactionId)}`);
+  const transaction = (payload["v1/transaction"] ?? payload.transaction ?? payload) as Record<string, unknown>;
 
   return {
     transactionId,
-    status: typeof serialized.status === "string" ? serialized.status.toLowerCase() : "pending",
-    reference: typeof serialized.reference === "string" ? serialized.reference : null,
-    merchantReference: typeof serialized.merchant_reference === "string" ? serialized.merchant_reference : null,
-    transactionKey: typeof serialized.transaction_key === "string" ? serialized.transaction_key : null,
-    payload: serialized,
-    wasPaid: typeof transaction.wasPaid === "function" ? transaction.wasPaid() : PAID_STATUSES.has(String(serialized.status ?? "").toLowerCase()),
+    status: typeof transaction.status === "string" ? transaction.status.toLowerCase() : "pending",
+    reference: typeof transaction.reference === "string" ? transaction.reference : null,
+    merchantReference: typeof transaction.merchant_reference === "string" ? transaction.merchant_reference : null,
+    transactionKey: typeof transaction.transaction_key === "string" ? transaction.transaction_key : null,
+    payload: serializeResource(transaction),
+    wasPaid: PAID_STATUSES.has(String(transaction.status ?? "").toLowerCase()),
   };
 }
 

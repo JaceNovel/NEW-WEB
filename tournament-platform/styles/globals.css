@@ -382,26 +382,9 @@ select.tp-input option {
 
 .tp-app-popup-head {
   display: grid;
-  grid-template-columns: 56px minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr);
   align-items: center;
   gap: 0.8rem;
-}
-
-.tp-app-popup-logo-wrap {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 56px;
-  height: 56px;
-  border-radius: 16px;
-  border: 1px solid rgba(255, 214, 162, 0.22);
-  background: linear-gradient(180deg, rgba(255, 173, 94, 0.16), rgba(255, 255, 255, 0.04));
-}
-
-.tp-app-popup-logo {
-  width: 42px;
-  height: 42px;
-  object-fit: contain;
 }
 
 .tp-app-popup-kicker {

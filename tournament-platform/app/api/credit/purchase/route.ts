@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { randomUUID } from "node:crypto";
+import { Prisma } from "@prisma/client";
 import { z } from "zod";
 
 import { prisma } from "@/lib/prisma";
@@ -125,8 +126,8 @@ export async function POST(req: Request) {
         fedapayReference: remotePayment.reference,
         fedapayPaymentToken: remotePayment.token,
         checkoutUrl: remotePayment.checkoutUrl,
-        rawTransaction: remotePayment.rawTransaction,
-        rawToken: remotePayment.rawToken,
+        rawTransaction: remotePayment.rawTransaction as Prisma.InputJsonValue,
+        rawToken: remotePayment.rawToken as Prisma.InputJsonValue,
       },
     });
 
