@@ -123,10 +123,6 @@ export default function LoginPage() {
 
               {error ? <div className="rounded-2xl border border-red-400/20 bg-red-500/10 px-4 py-3 text-sm text-red-100">{error}</div> : null}
 
-              <div className="tp-auth-inline-note">
-                <Crown className="h-4 w-4" /> Après connexion, tu accèdes directement à ton profil joueur ou à l'espace admin selon ton compte.
-              </div>
-
               <button disabled={busy} className="tp-auth-submit w-full justify-center disabled:opacity-60">
                 {busy ? "Connexion au serveur..." : "Se connecter"}
               </button>

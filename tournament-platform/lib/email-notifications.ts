@@ -1,7 +1,7 @@
 import { Prisma } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
-import { getAppBaseUrl, isBrevoConfigured, sendBrevoBroadcastEmail, sendBrevoEmail, type BrevoRecipient } from "@/lib/brevo";
+import { getAppBaseUrl, getBrevoConfigurationStatus, isBrevoConfigured, sendBrevoBroadcastEmail, sendBrevoEmail, type BrevoRecipient } from "@/lib/brevo";
 
 type PlayerRecipient = {
   id: string;
@@ -21,20 +21,83 @@ function escapeHtml(value: string) {
 function emailFrame(title: string, intro: string, body: string, ctaLabel?: string, ctaHref?: string) {
   const safeTitle = escapeHtml(title);
   const safeIntro = escapeHtml(intro);
+  const safeCtaLabel = ctaLabel ? escapeHtml(ctaLabel) : "";
+  const safeCtaHref = ctaHref ? escapeHtml(ctaHref) : "";
 
   return `
     <html>
-      <body style="margin:0;background:#090b16;padding:24px;font-family:Arial,Helvetica,sans-serif;color:#f6f0ff;">
-        <div style="max-width:640px;margin:0 auto;border:1px solid rgba(255,255,255,0.12);border-radius:24px;overflow:hidden;background:linear-gradient(180deg,#1b1032,#0a0d1d);box-shadow:0 18px 60px rgba(0,0,0,0.35);">
-          <div style="padding:28px 28px 12px;border-bottom:1px solid rgba(255,255,255,0.08);background:radial-gradient(circle at top left,rgba(255,181,107,0.18),transparent 38%),radial-gradient(circle at top right,rgba(99,204,255,0.16),transparent 32%);">
-            <div style="font-size:11px;letter-spacing:0.24em;text-transform:uppercase;color:#ffcf99;font-weight:800;">KING League</div>
-            <h1 style="margin:14px 0 8px;font-size:30px;line-height:1.05;color:#fff7ea;">${safeTitle}</h1>
-            <p style="margin:0;font-size:15px;line-height:1.7;color:rgba(255,255,255,0.78);">${safeIntro}</p>
-          </div>
-          <div style="padding:28px;line-height:1.7;font-size:15px;color:rgba(255,255,255,0.88);">${body}
-            ${ctaLabel && ctaHref ? `<div style="margin-top:24px;"><a href="${ctaHref}" style="display:inline-block;padding:14px 18px;border-radius:14px;background:linear-gradient(180deg,#ffb96e,#ff7d6a);color:#140d0e;text-decoration:none;font-weight:800;">${escapeHtml(ctaLabel)}</a></div>` : ""}
-          </div>
-        </div>
+      <head>
+        <meta charSet="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="x-apple-disable-message-reformatting" />
+        <style>
+          body, table, td, a {
+            -webkit-text-size-adjust: 100%;
+            -ms-text-size-adjust: 100%;
+          }
+          table, td {
+            mso-table-lspace: 0pt;
+            mso-table-rspace: 0pt;
+          }
+          img {
+            -ms-interpolation-mode: bicubic;
+          }
+          @media only screen and (max-width: 680px) {
+            .tp-shell {
+              width: 100% !important;
+            }
+            .tp-card {
+              border-radius: 18px !important;
+            }
+            .tp-pad {
+              padding: 20px !important;
+            }
+            .tp-title {
+              font-size: 26px !important;
+              line-height: 1.12 !important;
+            }
+            .tp-copy {
+              font-size: 14px !important;
+              line-height: 1.65 !important;
+            }
+            .tp-button {
+              display: block !important;
+              width: 100% !important;
+              box-sizing: border-box !important;
+              text-align: center !important;
+            }
+          }
+        </style>
+      </head>
+      <body style="margin:0;padding:0;background:#090b16;font-family:Arial,Helvetica,sans-serif;color:#f6f0ff;">
+        <table role="presentation" width="100%" cellPadding="0" cellSpacing="0" border="0" style="background:#090b16;margin:0;padding:0;width:100%;">
+          <tr>
+            <td align="center" style="padding:24px 12px;">
+              <table role="presentation" width="640" cellPadding="0" cellSpacing="0" border="0" class="tp-shell" style="width:100%;max-width:640px;">
+                <tr>
+                  <td class="tp-card" style="border:1px solid rgba(255,255,255,0.12);border-radius:24px;overflow:hidden;background:linear-gradient(180deg,#1b1032,#0a0d1d);box-shadow:0 18px 60px rgba(0,0,0,0.35);">
+                    <table role="presentation" width="100%" cellPadding="0" cellSpacing="0" border="0">
+                      <tr>
+                        <td class="tp-pad" style="padding:28px 28px 12px;border-bottom:1px solid rgba(255,255,255,0.08);background:radial-gradient(circle at top left,rgba(255,181,107,0.18),transparent 38%),radial-gradient(circle at top right,rgba(99,204,255,0.16),transparent 32%);">
+                          <div style="font-size:11px;letter-spacing:0.24em;text-transform:uppercase;color:#ffcf99;font-weight:800;">KING League</div>
+                          <h1 class="tp-title" style="margin:14px 0 8px;font-size:30px;line-height:1.05;color:#fff7ea;">${safeTitle}</h1>
+                          <p class="tp-copy" style="margin:0;font-size:15px;line-height:1.7;color:rgba(255,255,255,0.78);">${safeIntro}</p>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td class="tp-pad tp-copy" style="padding:28px;line-height:1.7;font-size:15px;color:rgba(255,255,255,0.88);">
+                          ${body}
+                          ${ctaLabel && ctaHref ? `<div style="margin-top:24px;"><a href="${safeCtaHref}" class="tp-button" style="display:inline-block;padding:14px 18px;border-radius:14px;background:linear-gradient(180deg,#ffb96e,#ff7d6a);color:#140d0e;text-decoration:none;font-weight:800;">${safeCtaLabel}</a></div>
+                          <p style="margin:16px 0 0;font-size:12px;line-height:1.6;color:rgba(255,255,255,0.56);">Si le bouton ne s'affiche pas bien sur ton téléphone Android, ton iPhone ou ton ordinateur, ouvre directement ce lien :<br /><a href="${safeCtaHref}" style="color:#8cd9ff;word-break:break-all;">${safeCtaHref}</a></p>` : ""}
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
       </body>
     </html>
   `;
@@ -77,7 +140,15 @@ async function markDispatchPending(eventKey: string, type: string, payload?: Rec
 
 async function runNotificationOnce(eventKey: string, type: string, payload: Record<string, unknown>, task: () => Promise<unknown>) {
   if (!isBrevoConfigured()) {
-    console.warn("[notifications] Brevo not configured, skipping", { eventKey, type });
+    const configuration = getBrevoConfigurationStatus();
+    console.warn("[notifications] Brevo not configured, skipping", {
+      eventKey,
+      type,
+      missing: configuration.missing,
+      senderEmail: configuration.senderEmail || null,
+      senderName: configuration.senderName,
+      apiKeyLooksValid: configuration.apiKeyLooksValid,
+    });
     return false;
   }
 
@@ -149,12 +220,13 @@ export async function sendPasswordResetEmail(params: { eventKey: string; player:
       to: [recipient],
       subject: "Réinitialisation de ton mot de passe KING League",
       htmlContent: emailFrame(
-        "Mot de passe oublié ?",
-        `Un accès de réinitialisation a été demandé pour le compte ${params.player.pseudo}.`,
+        "Réinitialise ton mot de passe",
+        `Une demande de réinitialisation du mot de passe a été reçue pour le compte ${params.player.pseudo}.`,
         `<p>Si tu es bien à l'origine de cette demande, clique sur le bouton ci-dessous pour choisir un nouveau mot de passe.</p>
+         <p>Le lien fonctionne sur téléphone Android, iPhone et ordinateur.</p>
          <p>Ce lien expire dans une heure.</p>
          <p>Si tu n'es pas à l'origine de cette demande, ignore simplement cet email.</p>`,
-        "Réinitialiser mon mot de passe",
+        "Choisir un nouveau mot de passe",
         params.resetUrl,
       ),
       textContent: `Réinitialise ton mot de passe KING League: ${params.resetUrl}`,

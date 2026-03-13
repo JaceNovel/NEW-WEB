@@ -1,6 +1,14 @@
 const BREVO_BASE_URL = "https://api.brevo.com/v3";
 const DEFAULT_SENDER_NAME = "KING League";
 
+export type BrevoConfigurationStatus = {
+  configured: boolean;
+  senderEmail: string;
+  senderName: string;
+  apiKeyLooksValid: boolean;
+  missing: string[];
+};
+
 function firstNonEmpty(...values: Array<string | null | undefined>) {
   for (const value of values) {
     const normalized = value?.trim();
@@ -44,11 +52,34 @@ export function getAppBaseUrl() {
   return normalizeUrl(candidate);
 }
 
-export function isBrevoConfigured() {
+export function getBrevoConfigurationStatus(): BrevoConfigurationStatus {
   const senderEmail = firstNonEmpty(process.env.BREVO_SENDER_EMAIL, process.env.MAIL_FROM_ADDRESS);
+  const senderName = firstNonEmpty(process.env.BREVO_SENDER_NAME, process.env.MAIL_FROM_NAME) || DEFAULT_SENDER_NAME;
   const apiKeyCandidate = firstNonEmpty(process.env.BREVO_API_KEY, process.env.MAIL_PASSWORD, process.env.MAIL_USERNAME);
+  const apiKeyLooksValid = looksLikeBrevoApiKey(apiKeyCandidate);
+  const missing: string[] = [];
 
-  return Boolean(senderEmail && looksLikeBrevoApiKey(apiKeyCandidate));
+  if (!senderEmail) {
+    missing.push("BREVO_SENDER_EMAIL|MAIL_FROM_ADDRESS");
+  }
+
+  if (!apiKeyCandidate) {
+    missing.push("BREVO_API_KEY|MAIL_PASSWORD|MAIL_USERNAME");
+  } else if (!apiKeyLooksValid) {
+    missing.push("BREVO_API_KEY_FORMAT");
+  }
+
+  return {
+    configured: missing.length === 0,
+    senderEmail,
+    senderName,
+    apiKeyLooksValid,
+    missing,
+  };
+}
+
+export function isBrevoConfigured() {
+  return getBrevoConfigurationStatus().configured;
 }
 
 export function getBrevoSender() {
