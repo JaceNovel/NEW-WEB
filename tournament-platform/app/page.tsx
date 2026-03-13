@@ -119,7 +119,7 @@ export default async function Home() {
             />
           </div>
 
-          <div className="mt-7 flex flex-col items-center justify-center gap-4 sm:flex-row">
+          <div className="mt-7 flex items-center justify-center">
             {isAuthenticated ? (
               <Link href="/profile" className="tp-home-profile-cta" aria-label="Ouvrir mon profil">
                 <img
@@ -131,14 +131,14 @@ export default async function Home() {
                 />
               </Link>
             ) : (
-              <>
+              <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
                 <Link href="/inscription" className="tp-home-cta tp-home-cta-primary">
                   S&apos;inscrire
                 </Link>
                 <Link href="/login" className="tp-home-cta tp-home-cta-secondary">
                   Connexion
                 </Link>
-              </>
+              </div>
             )}
           </div>
         </div>

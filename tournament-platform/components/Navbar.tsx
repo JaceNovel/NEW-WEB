@@ -3,30 +3,50 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { signIn, signOut, useSession } from "next-auth/react";
 import { motion } from "framer-motion";
 import { Coins, History, LogIn, LogOut, Shield, Swords, Trophy } from "lucide-react";
 
 export default function Navbar() {
   const { data, status, update } = useSession();
-  const isAuthenticated = status === "authenticated" && Boolean(data?.user);
+  const isAuthenticated = Boolean(data?.user?.id) || status === "authenticated";
   const isAdmin = data?.user?.role === "ADMIN";
   const pathname = usePathname();
   const credits = data?.user?.credits ?? 0;
+  const updateRef = useRef(update);
+  const lastSessionRefreshRef = useRef(0);
 
   useEffect(() => {
-    void update();
-  }, [pathname, update]);
+    updateRef.current = update;
+  }, [update]);
+
+  useEffect(() => {
+    const now = Date.now();
+
+    if (now - lastSessionRefreshRef.current < 30_000) {
+      return;
+    }
+
+    lastSessionRefreshRef.current = now;
+    void updateRef.current();
+  }, [pathname]);
 
   useEffect(() => {
     function refreshSession() {
-      void update();
+      const now = Date.now();
+
+      if (now - lastSessionRefreshRef.current < 30_000) {
+        return;
+      }
+
+      lastSessionRefreshRef.current = now;
+      void updateRef.current();
     }
 
     function handleVisibilityChange() {
       if (document.visibilityState === "visible") {
-        void update();
+        refreshSession();
       }
     }
 
@@ -37,7 +57,7 @@ export default function Navbar() {
       window.removeEventListener("focus", refreshSession);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [update]);
+  }, []);
 
   const navItems: Array<{ href: string; label: string; isActive?: boolean; icon: typeof Coins }> = [
     { href: "/credits", label: "CRÉDITS", icon: Coins },
@@ -67,11 +87,7 @@ export default function Navbar() {
             />
           </Link>
 
-          {status === "loading" ? (
-            <div className="tp-nav-mobile-auth" aria-hidden="true">
-              <div className="tp-nav-mobile-cta tp-nav-mobile-cta-primary opacity-60">Chargement</div>
-            </div>
-          ) : !isAuthenticated ? (
+          {!isAuthenticated ? (
             <div className="tp-nav-mobile-auth">
               <Link href="/inscription" className="tp-nav-mobile-cta tp-nav-mobile-cta-primary">
                 S&apos;inscrire
@@ -136,11 +152,7 @@ export default function Navbar() {
             </nav>
 
             <div className="flex min-w-fit items-center gap-2 md:ml-auto">
-              {status === "loading" ? (
-                <div className="tp-nav-action tp-nav-action-secondary tp-nav-action-mobile-secondary inline-flex items-center gap-2 opacity-60">
-                  Chargement
-                </div>
-              ) : !isAuthenticated ? (
+              {!isAuthenticated ? (
                 <>
                   <Link href="/inscription" className="tp-nav-action tp-nav-action-primary tp-nav-action-mobile-primary">
                     S&apos;inscrire
