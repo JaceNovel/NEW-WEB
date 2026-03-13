@@ -5,6 +5,7 @@ import { z } from "zod";
 
 import { prisma } from "@/lib/prisma";
 import { COUNTRY_OPTIONS } from "@/lib/countries";
+import { sendSignupWelcomeEmail } from "@/lib/email-notifications";
 import { recalculateTournamentState } from "@/lib/tournament";
 import { apiError, applyRateLimit } from "@/app/api/_utils";
 
@@ -65,6 +66,7 @@ export async function POST(req: Request) {
         select: {
           id: true,
           pseudo: true,
+          email: true,
           freefireId: true,
           countryCode: true,
           gameMode: true,
@@ -89,6 +91,17 @@ export async function POST(req: Request) {
 
       await recalculateTournamentState(tx);
       return player;
+    });
+
+    void sendSignupWelcomeEmail({
+      eventKey: `account-created:${created.id}:${created.createdAt.toISOString()}`,
+      player: {
+        id: created.id,
+        pseudo: created.pseudo,
+        email: created.email,
+      },
+    }).catch((error) => {
+      console.error("[player-create] signup welcome email failed", error);
     });
 
     return NextResponse.json({ ok: true, player: created });

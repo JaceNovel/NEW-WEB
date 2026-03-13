@@ -163,6 +163,38 @@ export async function sendPasswordResetEmail(params: { eventKey: string; player:
   );
 }
 
+export async function sendSignupWelcomeEmail(params: {
+  eventKey: string;
+  player: PlayerRecipient;
+}) {
+  const recipient = toRecipient(params.player);
+  if (!recipient) return false;
+
+  const profileUrl = `${getAppBaseUrl()}/profile`;
+  const rankingUrl = `${getAppBaseUrl()}/classement`;
+
+  return runNotificationOnce(
+    params.eventKey,
+    "ACCOUNT_CREATED",
+    { playerId: params.player.id, email: params.player.email },
+    () => sendBrevoEmail({
+      to: [recipient],
+      subject: "Bienvenue sur KING League",
+      htmlContent: emailFrame(
+        "Ton compte est prêt",
+        `${params.player.pseudo}, ton inscription KING League est confirmée.`,
+        `<p>Ton profil joueur est maintenant créé et prêt pour les défis, les achats de crédits et la course au ROI.</p>
+         <p>Tu peux te connecter immédiatement pour accéder à ton espace joueur.</p>
+         <p>Le classement public reste disponible à tout moment si tu veux suivre l'arène avant ton premier duel.</p>`,
+        "Ouvrir mon profil",
+        profileUrl,
+      ),
+      textContent: `Bienvenue sur KING League ${params.player.pseudo}. Ton compte est créé. Profil: ${profileUrl} Classement: ${rankingUrl}`,
+      tags: ["account-created"],
+    }),
+  );
+}
+
 export async function sendAllianceRequestEmail(params: {
   eventKey: string;
   buyer: PlayerRecipient;
