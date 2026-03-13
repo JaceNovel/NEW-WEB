@@ -51,12 +51,12 @@ export const authOptions: NextAuthOptions = {
         password: { label: "Mot de passe", type: "password" },
       },
       async authorize(credentials) {
-        const pseudo = (credentials?.pseudo ?? "").trim();
+        const identifier = (credentials?.pseudo ?? "").trim();
         const password = credentials?.password ?? "";
 
-        if (!pseudo || !password) return null;
+        if (!identifier || !password) return null;
 
-        if (matchesConfiguredAdminIdentifier(pseudo)) {
+        if (matchesConfiguredAdminIdentifier(identifier)) {
           const ok = await verifyConfiguredAdminPassword(password);
           if (!ok) return null;
 
@@ -72,8 +72,10 @@ export const authOptions: NextAuthOptions = {
           } as any;
         }
 
-        const player = await prisma.player.findUnique({
-          where: { pseudo },
+        const player = await prisma.player.findFirst({
+          where: {
+            OR: [{ pseudo: identifier }, { email: identifier.toLowerCase() }],
+          },
           select: { id: true, pseudo: true, passwordHash: true, role: true, status: true, gameMode: true, credits: true, logoUrl: true, freefireId: true },
         });
 

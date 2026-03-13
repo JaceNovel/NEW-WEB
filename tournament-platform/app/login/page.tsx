@@ -30,6 +30,11 @@ export default function LoginPage() {
     }
 
     const session = await getSession();
+    if (!(session?.user as any)?.id) {
+      setError("Connexion acceptee mais session introuvable. Reessaie dans quelques secondes.");
+      return;
+    }
+
     const isAdmin = (session?.user as any)?.role === "ADMIN";
     router.push(isAdmin ? "/admin" : "/profile");
   }
@@ -102,8 +107,8 @@ export default function LoginPage() {
 
             <form onSubmit={onSubmit} className="space-y-5">
               <div>
-                <label className="tp-auth-label">Pseudo</label>
-                <input value={pseudo} onChange={(e) => setPseudo(e.target.value)} className="tp-input tp-auth-input" placeholder="Ton pseudo joueur" required />
+                <label className="tp-auth-label">Pseudo ou email</label>
+                <input value={pseudo} onChange={(e) => setPseudo(e.target.value)} className="tp-input tp-auth-input" placeholder="Ton pseudo joueur ou ton email" autoComplete="username" required />
               </div>
 
               <div>
@@ -119,7 +124,7 @@ export default function LoginPage() {
               {error ? <div className="rounded-2xl border border-red-400/20 bg-red-500/10 px-4 py-3 text-sm text-red-100">{error}</div> : null}
 
               <div className="tp-auth-inline-note">
-                <Crown className="h-4 w-4" /> Après connexion, tu accèdes directement à ton profil joueur.
+                <Crown className="h-4 w-4" /> Après connexion, tu accèdes directement à ton profil joueur ou à l'espace admin selon ton compte.
               </div>
 
               <button disabled={busy} className="tp-auth-submit w-full justify-center disabled:opacity-60">

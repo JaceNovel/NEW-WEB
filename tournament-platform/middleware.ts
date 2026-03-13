@@ -1,6 +1,7 @@
 import { withAuth } from "next-auth/middleware";
 
 export default withAuth({
+  secret: process.env.NEXTAUTH_SECRET ?? process.env.AUTH_SECRET,
   callbacks: {
     authorized: ({ req, token }) => {
       const pathname = req.nextUrl.pathname;
