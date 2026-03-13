@@ -103,6 +103,31 @@ function drawTextBlock(page: PDFPage, font: PDFFont, text: string, options: {
   return options.top + lines.length * lineHeight;
 }
 
+function drawCenteredTextBlock(page: PDFPage, font: PDFFont, text: string, options: {
+  x: number;
+  top: number;
+  size: number;
+  maxWidth: number;
+  color: ReturnType<typeof rgb>;
+  lineHeight?: number;
+}) {
+  const lineHeight = options.lineHeight ?? options.size * 1.35;
+  const lines = wrapText(font, text, options.size, options.maxWidth);
+
+  lines.forEach((line, index) => {
+    const lineWidth = font.widthOfTextAtSize(line, options.size);
+    page.drawText(line, {
+      x: options.x + Math.max((options.maxWidth - lineWidth) / 2, 0),
+      y: pdfY(options.top + index * lineHeight, options.size),
+      size: options.size,
+      font,
+      color: options.color,
+    });
+  });
+
+  return options.top + lines.length * lineHeight;
+}
+
 function measureTextBlockHeight(font: PDFFont, text: string, size: number, maxWidth: number, lineHeight = size * 1.35) {
   return wrapText(font, text, size, maxWidth).length * lineHeight;
 }
@@ -242,6 +267,60 @@ export async function createRulesPdf(payload: RulesPdfPayload) {
     76 + summaryContentHeight,
     82 + verificationIntroHeight + verificationContentHeight,
   );
+  const footerTitleHeight = 13;
+  const footerBodyTopOffset = 48;
+  const footerLeftWidth = 220;
+  const footerRightWidth = 145;
+  const signatureIntroHeight = measureTextBlockHeight(
+    fontItalic,
+    "Signe electroniquement par la direction KING League",
+    11.2,
+    footerLeftWidth,
+    15,
+  );
+  const footerLeftContentHeight = signatureIntroHeight + 10 + 4 + 10 + 12;
+  const footerRightFirstHeight = measureTextBlockHeight(
+    fontRegular,
+    "Document conforme au circuit KING League",
+    10.3,
+    footerRightWidth,
+    14,
+  );
+  const footerRightSecondHeight = measureTextBlockHeight(
+    fontRegular,
+    "Controle numerique via la reference unique",
+    10.3,
+    footerRightWidth,
+    14,
+  );
+  const footerRightContentHeight = footerRightFirstHeight + 6 + footerRightSecondHeight;
+  const footerBoxHeight = Math.max(footerBodyTopOffset + footerLeftContentHeight + 14, footerBodyTopOffset + footerRightContentHeight + 14);
+  const footerNoteTopGap = 12;
+  const footerNoteTop = contentPanelTop + contentPanelHeight - 24;
+  const headerTop = 26;
+  const headerHeight = 118;
+  const leftLogoBox = { x: 24, top: 40, width: 150, height: 74 };
+  const rightLogoBox = { x: PAGE_WIDTH - 164, top: 38, width: 132, height: 74 };
+  const headerTextX = leftLogoBox.x + leftLogoBox.width + 20;
+  const headerTextWidth = rightLogoBox.x - 18 - headerTextX;
+  let headerTitleSize = 24;
+  while (headerTitleSize > 19 && fontBold.widthOfTextAtSize("KING LEAGUE", headerTitleSize) > headerTextWidth) {
+    headerTitleSize -= 1;
+  }
+  const headerSubtitleSize = 10.6;
+  const headerSubtitleLineHeight = 13;
+  const headerTitleHeight = headerTitleSize;
+  const headerSubtitleHeight = measureTextBlockHeight(
+    fontRegular,
+    "Reglement officiel personnalise et signe numeriquement",
+    headerSubtitleSize,
+    headerTextWidth,
+    headerSubtitleLineHeight,
+  );
+  const headerTextBlockHeight = headerTitleHeight + 8 + headerSubtitleHeight;
+  const headerTextTop = headerTop + Math.max((headerHeight - headerTextBlockHeight) / 2, 0) - 1;
+  const headerTitleWidth = fontBold.widthOfTextAtSize("KING LEAGUE", headerTitleSize);
+  const headerTitleX = headerTextX + Math.max((headerTextWidth - headerTitleWidth) / 2, 0);
 
   page.drawRectangle({ x: 0, y: 0, width: PAGE_WIDTH, height: PAGE_HEIGHT, color: colors.page });
   page.drawRectangle({
@@ -253,7 +332,7 @@ export async function createRulesPdf(payload: RulesPdfPayload) {
     borderColor: colors.border,
     borderWidth: 1.4,
   });
-  page.drawRectangle({ x: 16, y: pdfY(26, 118), width: PAGE_WIDTH - 32, height: 118, color: colors.header });
+  page.drawRectangle({ x: 16, y: pdfY(headerTop, headerHeight), width: PAGE_WIDTH - 32, height: headerHeight, color: colors.header });
   page.drawRectangle({
     x: 34,
     y: pdfY(contentPanelTop, contentPanelHeight),
@@ -264,22 +343,23 @@ export async function createRulesPdf(payload: RulesPdfPayload) {
     borderWidth: 0.9,
   });
 
-  drawContainedImage(page, primeLogo, { x: 24, top: 40, width: 150, height: 74 });
-  drawContainedImage(page, leagueLogo, { x: PAGE_WIDTH - 164, top: 38, width: 132, height: 74 });
+  drawContainedImage(page, primeLogo, leftLogoBox);
+  drawContainedImage(page, leagueLogo, rightLogoBox);
 
   page.drawText("KING LEAGUE", {
-    x: 198,
-    y: pdfY(44, 28),
-    size: 24,
+    x: headerTitleX,
+    y: pdfY(headerTextTop, headerTitleHeight),
+    size: headerTitleSize,
     font: fontBold,
     color: colors.title,
   });
-  page.drawText("Reglement officiel personnalise et signe numeriquement", {
-    x: 194,
-    y: pdfY(78, 12),
-    size: 11.5,
-    font: fontRegular,
+  drawCenteredTextBlock(page, fontRegular, "Reglement officiel personnalise et signe numeriquement", {
+    x: headerTextX,
+    top: headerTextTop + headerTitleHeight + 8,
+    size: headerSubtitleSize,
+    maxWidth: headerTextWidth,
     color: colors.muted,
+    lineHeight: headerSubtitleLineHeight,
   });
 
   page.drawText("ATTESTATION SOLO KING LEAGUE", {
@@ -416,8 +496,7 @@ export async function createRulesPdf(payload: RulesPdfPayload) {
     rowGap: 6,
   });
 
-  const footerBoxTop = Math.max(rulesEndTop + 22, 668);
-  const footerBoxHeight = 104;
+  const footerBoxTop = Math.min(Math.max(rulesEndTop + 20, 656), footerNoteTop - footerNoteTopGap - footerBoxHeight);
 
   page.drawRectangle({
     x: 52,
@@ -486,7 +565,7 @@ export async function createRulesPdf(payload: RulesPdfPayload) {
 
   drawTextBlock(page, fontRegular, "Filigrane numerique actif. Toute copie non autorisee reste traquable via la reference unique et l'identite du titulaire.", {
     x: 52,
-    top: footerBoxTop + footerBoxHeight + 14,
+    top: footerBoxTop + footerBoxHeight + footerNoteTopGap,
     size: 9,
     maxWidth: 490,
     color: colors.muted,

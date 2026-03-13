@@ -9,6 +9,8 @@ Copier `.env.example` vers `.env` et remplir :
 - `DATABASE_URL` (PostgreSQL)
 - `NEXTAUTH_URL`, `NEXTAUTH_SECRET`
 - `CLOUDINARY_*`
+- `FEDAPAY_ENVIRONMENT`, `FEDAPAY_SECRET_KEY`, `FEDAPAY_WEBHOOK_SECRET`
+- Optionnel: `NEXT_PUBLIC_SITE_URL` si l'URL publique differe de `NEXTAUTH_URL`
 
 ### 2) Base de données (Prisma)
 
@@ -39,6 +41,34 @@ Pour créer un admin, mets `role=ADMIN` sur le joueur concerné (via Prisma Stud
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
 Stack: Next.js 14 (App Router), TypeScript, TailwindCSS, Prisma + PostgreSQL, NextAuth (Credentials), Cloudinary.
+
+## Paiement FedaPay
+
+La boutique de credits utilise maintenant FedaPay en mode checkout heberge.
+
+- Route de creation du paiement: `/api/credit/purchase`
+- Webhook de confirmation: `/api/fedapay/webhook`
+- Les credits sont accordes uniquement apres confirmation webhook signee par FedaPay
+
+Variables a configurer:
+
+- `FEDAPAY_ENVIRONMENT=sandbox` ou `live`
+- `FEDAPAY_SECRET_KEY` ou les variantes `FEDAPAY_SECRET_KEY_TEST` / `FEDAPAY_SECRET_KEY_LIVE`
+- `FEDAPAY_WEBHOOK_SECRET` ou les variantes `FEDAPAY_WEBHOOK_SECRET_TEST` / `FEDAPAY_WEBHOOK_SECRET_LIVE`
+- `NEXT_PUBLIC_SITE_URL=https://kingleague.space` pour construire les callbacks publics
+
+Etapes conseillees:
+
+```bash
+npx prisma db push
+npx prisma generate
+```
+
+Dans le dashboard FedaPay, configure le webhook vers:
+
+- `https://kingleague.space/api/fedapay/webhook`
+
+Le systeme est idempotent: si FedaPay reenvoie le meme evenement, les credits ne sont pas recrédités.
 
 ## App Mobile Et Desktop
 

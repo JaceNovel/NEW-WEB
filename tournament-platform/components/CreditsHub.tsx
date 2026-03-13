@@ -75,7 +75,11 @@ export default function CreditsHub({
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json?.error ?? "Achat impossible");
-      router.refresh();
+      if (!json?.checkoutUrl) {
+        throw new Error("Lien de paiement introuvable");
+      }
+
+      window.location.assign(json.checkoutUrl);
     } catch (purchaseError) {
       setError(purchaseError instanceof Error ? purchaseError.message : "Achat impossible");
     } finally {
@@ -185,7 +189,7 @@ export default function CreditsHub({
             <ShoppingBag className="h-5 w-5 text-amber-300" />
             <div>
               <h2 className="text-xl font-black uppercase tracking-[0.14em]">Boutique de crédits</h2>
-              <p className="mt-1 text-sm text-white/55">1 crédit = 500 FCFA, avec un pack secours limité à trois achats.</p>
+              <p className="mt-1 text-sm text-white/55">Paiement sécurisé via FedaPay. 1 crédit = 500 FCFA, avec un pack secours limité à trois achats.</p>
             </div>
           </div>
 
@@ -220,7 +224,7 @@ export default function CreditsHub({
                     onClick={() => buyPack(pack.key)}
                     className="rounded-[14px] border border-cyan-300/20 bg-[linear-gradient(180deg,rgba(62,87,255,0.28),rgba(22,35,88,0.22))] px-4 py-2 text-sm font-black uppercase tracking-[0.14em] text-white disabled:cursor-not-allowed disabled:opacity-50"
                   >
-                    {loadingKey === pack.key ? "Traitement..." : "Acheter"}
+                    {loadingKey === pack.key ? "Paiement..." : "Acheter"}
                   </button>
                 </div>
               </motion.article>

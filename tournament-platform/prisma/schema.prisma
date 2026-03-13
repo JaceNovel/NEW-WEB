@@ -78,6 +78,7 @@ model Player {
   purchasedBy        Player?      @relation("PlayerAlliance", fields: [purchasedById], references: [id])
   recruitedPlayers   Player[]     @relation("PlayerAlliance")
   creditPurchases    CreditPurchase[]
+  creditPayments     CreditPayment[]
 }
 
 model TournamentConfig {
@@ -151,4 +152,33 @@ model CreditProduct {
   updatedAt          DateTime @updatedAt
 
   @@index([isActive, credits])
+}
+
+model CreditPayment {
+  id                    String   @id @default(cuid())
+  playerId              String
+  packKey               String
+  credits               Int
+  amountFcfa            Int
+  provider              String   @default("FEDAPAY")
+  merchantReference     String   @unique
+  status                String   @default("PENDING")
+  fedapayTransactionId  String?  @unique
+  fedapayTransactionKey String?
+  fedapayReference      String?
+  fedapayPaymentToken   String?
+  checkoutUrl           String?
+  callbackUrl           String?
+  lastEventName         String?
+  failureReason         String?
+  rawTransaction        Json?
+  rawToken              Json?
+  completedAt           DateTime?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  player Player @relation(fields: [playerId], references: [id])
+
+  @@index([playerId, status, createdAt])
+  @@index([packKey, createdAt])
 }
