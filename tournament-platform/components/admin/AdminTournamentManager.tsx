@@ -348,6 +348,7 @@ export default async function AdminTournamentManager({ compact = false }: { comp
     orderBy: [{ createdAt: "asc" }],
     select: {
       id: true,
+      createdAt: true,
       pseudo: true,
       freefireId: true,
       gameMode: true,
