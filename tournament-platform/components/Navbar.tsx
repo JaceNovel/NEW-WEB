@@ -100,13 +100,7 @@ export default function Navbar() {
           ) : (
             <div className="tp-nav-mobile-auth">
               <Link href="/profile" className={`tp-nav-mobile-profile ${pathname === "/profile" ? "tp-nav-mobile-profile-active" : ""}`} aria-label="Mon profil">
-                <img
-                  src="https://img.icons8.com/?size=100&id=492ILERveW8G&format=png&color=000000"
-                  alt="Profil"
-                  width="22"
-                  height="22"
-                  className="h-[20px] w-[20px] object-contain brightness-[2.3] contrast-[1.15]"
-                />
+                <span className="text-[10px] font-black uppercase tracking-[0.18em]">WELCOME</span>
               </Link>
               <button onClick={() => signOut()} className="tp-nav-mobile-profile tp-nav-mobile-profile-logout" aria-label="Se deconnecter">
                 <LogOut className="h-[18px] w-[18px]" />
@@ -164,13 +158,7 @@ export default function Navbar() {
               ) : (
                 <>
                   <Link href="/profile" className="tp-nav-action tp-nav-action-primary tp-nav-action-mobile-primary inline-flex items-center gap-2">
-                    <img
-                      src="https://img.icons8.com/?size=100&id=492ILERveW8G&format=png&color=000000"
-                      alt="Profil"
-                      width="22"
-                      height="22"
-                      className="h-[18px] w-[18px] object-contain brightness-[2.3] contrast-[1.15]"
-                    />
+                    <span className="rounded-full border border-white/15 bg-white/10 px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.18em]">WELCOME</span>
                     <span>PROFIL</span>
                   </Link>
                   <div className="tp-nav-action tp-nav-action-secondary tp-nav-action-mobile-secondary inline-flex items-center gap-2">

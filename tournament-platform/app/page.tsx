@@ -121,14 +121,9 @@ export default async function Home() {
 
           <div className="mt-7 flex items-center justify-center">
             {isAuthenticated ? (
-              <Link href="/profile" className="tp-home-profile-cta" aria-label="Ouvrir mon profil">
-                <img
-                  src="https://img.icons8.com/?size=100&id=82349&format=png&color=000000"
-                  alt="Profil"
-                  width="72"
-                  height="72"
-                  className="tp-home-profile-cta-icon"
-                />
+              <Link href="/profile" className="tp-home-profile-cta flex flex-col items-center justify-center gap-1.5" aria-label="Ouvrir mon profil">
+                <span className="text-[11px] font-black uppercase tracking-[0.22em] text-amber-100">WELCOME</span>
+                <span className="text-[0.72rem] font-bold uppercase tracking-[0.18em] text-white/78">Mon profil</span>
               </Link>
             ) : (
               <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">

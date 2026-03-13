@@ -103,13 +103,15 @@ export default async function ProfilePage() {
 
         <div className="relative grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
           <div className="rounded-[22px] border border-fuchsia-300/20 bg-black/25 p-4 backdrop-blur-md sm:rounded-[26px] sm:p-5">
-            <div className="grid items-center gap-6 lg:grid-cols-[minmax(260px,360px)_1fr]">
-              <div className="relative mx-auto flex h-[240px] w-[240px] items-center justify-center sm:h-[280px] sm:w-[280px] md:h-[320px] md:w-[320px] lg:h-[360px] lg:w-[360px]">
-                <img
-                  src={player.logoUrl}
-                  alt={player.pseudo}
-                  className="h-full w-full object-contain drop-shadow-[0_0_46px_rgba(255,150,84,0.34)]"
-                />
+            <div className="grid items-center gap-6 lg:grid-cols-[minmax(220px,300px)_1fr]">
+              <div className="relative mx-auto flex h-[220px] w-[220px] items-center justify-center rounded-[28px] border border-white/10 bg-[radial-gradient(circle_at_50%_30%,rgba(255,255,255,0.08),transparent_65%),rgba(8,8,20,0.22)] p-5 sm:h-[240px] sm:w-[240px] md:h-[260px] md:w-[260px] lg:h-[280px] lg:w-[280px]">
+                <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-[24px] bg-black/10 p-4">
+                  <img
+                    src={player.logoUrl}
+                    alt={player.pseudo}
+                    className="max-h-full max-w-full object-contain drop-shadow-[0_0_30px_rgba(255,150,84,0.20)]"
+                  />
+                </div>
               </div>
 
               <div>
@@ -126,7 +128,7 @@ export default async function ProfilePage() {
                 </div>
                 <div className="mt-5 inline-flex items-center gap-2 rounded-[12px] border border-violet-300/24 bg-[linear-gradient(180deg,rgba(137,74,255,0.26),rgba(34,23,74,0.32))] px-4 py-3 text-sm font-black uppercase tracking-[0.18em] text-white shadow-[0_0_26px_rgba(142,83,255,0.18)]">
                   <Crown className="h-4 w-4 text-amber-300" />
-                  {rank ? `Rang #${rank}` : "En attente de classement"}
+                  {rank ? `Rang #${rank}` : "Welcome sur ton profil"}
                 </div>
                 {player.recruitedPlayers[0] ? <div className="mt-3 text-sm font-bold uppercase tracking-[0.18em] text-cyan-200/75">Position renforcée avec {player.recruitedPlayers[0].pseudo}</div> : null}
                 {player.purchasedBy && !player.alliancePending ? (
@@ -174,7 +176,7 @@ export default async function ProfilePage() {
                     <div key={match.id} className="grid gap-4 rounded-[20px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.01))] px-4 py-4 xl:grid-cols-[56px_1.4fr_1fr_0.9fr_150px] xl:items-center">
                       <div className="text-3xl font-black text-amber-200 sm:text-4xl">{index + 1}</div>
                       <div className="flex items-center gap-3">
-                        <img src={opponent.logoUrl} alt={opponent.pseudo} className="h-14 w-14 rounded-[18px] border border-white/10 bg-black/20 object-contain p-2" />
+                        <img src={opponent.logoUrl} alt={opponent.pseudo} className="h-12 w-12 rounded-[18px] border border-white/10 bg-black/20 object-contain p-1.5" />
                         <div>
                           <div className="text-lg font-black text-white sm:text-xl">{player.pseudo} <span className="bg-[linear-gradient(180deg,#ffbe73,#ff76dd)] bg-clip-text text-transparent">VS</span> {opponent.pseudo}</div>
                           <div className="mt-1 text-sm text-white/55">{opponent.freefireId}</div>
@@ -208,7 +210,7 @@ export default async function ProfilePage() {
                   return (
                     <div key={challenge.id} className="rounded-[18px] border border-white/10 bg-white/5 px-4 py-4">
                       <div className="flex items-center gap-3">
-                        <img src={opponent.logoUrl} alt={opponent.pseudo} className="h-12 w-12 rounded-[16px] border border-white/10 bg-black/20 object-contain p-2" />
+                        <img src={opponent.logoUrl} alt={opponent.pseudo} className="h-10 w-10 rounded-[16px] border border-white/10 bg-black/20 object-contain p-1.5" />
                         <div>
                           <div className="font-bold text-white">{opponent.pseudo}</div>
                           <div className="text-xs uppercase tracking-[0.18em] text-white/45">{challenge.status}</div>

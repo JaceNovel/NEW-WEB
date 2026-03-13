@@ -15,16 +15,17 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const credits = session.user.credits ?? 0;
 
   return (
-    <div className="mx-auto max-w-[1680px] px-4 py-5 lg:px-5">
-      <div className="grid gap-5 xl:grid-cols-[300px_minmax(0,1fr)] xl:items-start">
-        <div className="xl:sticky xl:top-24">
+    <div className="min-h-screen bg-[linear-gradient(180deg,#f8fafc_0%,#eef2f7_100%)]">
+      <div className="mx-auto max-w-[1680px] px-4 py-5 lg:px-5">
+        <div className="grid gap-5 xl:grid-cols-[300px_minmax(0,1fr)] xl:items-start">
+          <div className="xl:sticky xl:top-6">
           <AdminSidebar />
-        </div>
-        <div className="space-y-5">
-          <AdminTopbar displayName={displayName} credits={credits} avatarUrl={avatarUrl} />
-          <div className="relative overflow-hidden rounded-[34px] border border-fuchsia-300/12 bg-[linear-gradient(180deg,rgba(25,11,47,0.76),rgba(7,8,20,0.84))] p-4 shadow-[0_0_60px_rgba(151,74,255,0.10)] backdrop-blur-xl sm:p-5 lg:p-6">
-            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,157,79,0.12),transparent_24%),radial-gradient(circle_at_70%_10%,rgba(170,84,255,0.16),transparent_34%),linear-gradient(180deg,rgba(255,255,255,0.03),transparent_20%)]" />
-            <div className="relative">{children}</div>
+          </div>
+          <div className="space-y-5">
+            <AdminTopbar displayName={displayName} credits={credits} avatarUrl={avatarUrl} />
+            <div className="rounded-[34px] border border-slate-200 bg-white p-4 shadow-sm sm:p-5 lg:p-6">
+              {children}
+            </div>
           </div>
         </div>
       </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Coins, RefreshCw, Search, ShieldAlert, Trash2, Trophy, Users } from "lucide-react";
 
 type PlayerRow = {
   id: string;
@@ -28,7 +29,7 @@ export default function AdminPlayersManager() {
 
   async function load() {
     setError(null);
-    const res = await fetch("/api/player/list");
+    const res = await fetch("/api/player/list", { cache: "no-store" });
     const json = await res.json();
     if (!res.ok) {
       setError(json?.error ?? "Erreur");
@@ -101,7 +102,7 @@ export default function AdminPlayersManager() {
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json?.error ?? "Erreur");
-      await load();
+      setPlayers((current) => current.filter((player) => player.id !== playerId));
     } catch (e) {
       setError(e instanceof Error ? e.message : "Erreur");
     } finally {
@@ -109,16 +110,83 @@ export default function AdminPlayersManager() {
     }
   }
 
+  const totalCredits = filteredPlayers.reduce((sum, player) => sum + player.credits, 0);
+  const roiCount = filteredPlayers.filter((player) => player.status === "ROI").length;
+  const top10Count = filteredPlayers.filter((player) => player.isSeededTop10).length;
+
   return (
-    <div className="tp-glass rounded-3xl p-6">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div>
-          <div className="text-lg font-bold text-white">Tous les joueurs inscrits</div>
-          <div className="text-sm text-white/60">Liste complète des inscrits avec crédits, statut, bilan et actions</div>
-        </div>
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-          <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Rechercher un joueur..." className="tp-input min-w-[260px]" />
-          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="tp-input min-w-[180px]">
+    <section className="space-y-5">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <article className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-xs font-bold uppercase tracking-[0.18em] text-slate-400">Joueurs visibles</div>
+              <div className="mt-3 text-4xl font-black text-slate-950">{filteredPlayers.length}</div>
+            </div>
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-sky-100 text-sky-700">
+              <Users className="h-6 w-6" />
+            </div>
+          </div>
+          <p className="mt-3 text-sm text-slate-500">Résultat courant selon les filtres actifs.</p>
+        </article>
+
+        <article className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-xs font-bold uppercase tracking-[0.18em] text-slate-400">Crédits cumulés</div>
+              <div className="mt-3 text-4xl font-black text-slate-950">{totalCredits}</div>
+            </div>
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-100 text-amber-700">
+              <Coins className="h-6 w-6" />
+            </div>
+          </div>
+          <p className="mt-3 text-sm text-slate-500">Total des crédits des joueurs listés.</p>
+        </article>
+
+        <article className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-xs font-bold uppercase tracking-[0.18em] text-slate-400">ROI actifs</div>
+              <div className="mt-3 text-4xl font-black text-slate-950">{roiCount}</div>
+            </div>
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-700">
+              <Trophy className="h-6 w-6" />
+            </div>
+          </div>
+          <p className="mt-3 text-sm text-slate-500">Joueurs actuellement marqués ROI.</p>
+        </article>
+
+        <article className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-xs font-bold uppercase tracking-[0.18em] text-slate-400">Top 10 seedés</div>
+              <div className="mt-3 text-4xl font-black text-slate-950">{top10Count}</div>
+            </div>
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-rose-100 text-rose-700">
+              <ShieldAlert className="h-6 w-6" />
+            </div>
+          </div>
+          <p className="mt-3 text-sm text-slate-500">Joueurs protégés dans la phase Top 10.</p>
+        </article>
+      </div>
+
+      <div className="rounded-[32px] border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <div className="text-2xl font-black tracking-tight text-slate-950">Tous les joueurs inscrits</div>
+            <div className="mt-1 text-sm text-slate-500">Liste complète des inscrits avec crédits, statut, bilan et actions admin.</div>
+          </div>
+          <div className="flex flex-col gap-3 xl:flex-row xl:items-center">
+            <label className="flex min-w-[260px] items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-500">
+              <Search className="h-4 w-4 text-slate-400" />
+              <input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Rechercher un joueur..."
+                className="w-full bg-transparent text-sm outline-none placeholder:text-slate-400"
+              />
+            </label>
+            <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="min-w-[180px] rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-700 outline-none">
             <option value="ALL">Tous les statuts</option>
             {[...new Set(players.map((player) => player.status))].sort((left, right) => left.localeCompare(right)).map((status) => (
               <option key={status} value={status}>
@@ -126,7 +194,7 @@ export default function AdminPlayersManager() {
               </option>
             ))}
           </select>
-          <select value={modeFilter} onChange={(e) => setModeFilter(e.target.value)} className="tp-input min-w-[180px]">
+            <select value={modeFilter} onChange={(e) => setModeFilter(e.target.value)} className="min-w-[180px] rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-700 outline-none">
             <option value="ALL">Tous les modes</option>
             {modes.map((mode) => (
               <option key={mode} value={mode}>
@@ -134,21 +202,23 @@ export default function AdminPlayersManager() {
               </option>
             ))}
           </select>
-          <button onClick={() => void load()} className="tp-button-ghost">
-            Rafraîchir
-          </button>
+            <button onClick={() => void load()} className="inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-700 transition hover:bg-slate-50">
+              <RefreshCw className="h-4 w-4" />
+              Rafraîchir
+            </button>
+          </div>
         </div>
-      </div>
 
-      {error ? <div className="mt-4 rounded-2xl border border-red-400/20 bg-red-500/10 px-4 py-3 text-sm text-red-100">{error}</div> : null}
+        {error ? <div className="mt-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div> : null}
 
-      <div className="mt-5 overflow-x-auto rounded-2xl border border-white/10">
-        <table className="min-w-[980px] w-full text-left text-sm">
-          <thead className="bg-slate-950/60 text-xs uppercase tracking-wider text-white/60">
+        <div className="mt-5 overflow-x-auto rounded-[26px] border border-slate-200">
+          <table className="min-w-[1100px] w-full text-left text-sm">
+            <thead className="bg-slate-50 text-xs uppercase tracking-[0.16em] text-slate-500">
             <tr>
               <th className="px-4 py-3">Logo</th>
               <th className="px-4 py-3">Pseudo</th>
               <th className="px-4 py-3">ID</th>
+              <th className="px-4 py-3">Pays</th>
               <th className="px-4 py-3">Mode</th>
               <th className="px-4 py-3">Crédits</th>
               <th className="px-4 py-3">Bilan</th>
@@ -157,40 +227,42 @@ export default function AdminPlayersManager() {
               <th className="px-4 py-3">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-white/10">
+            <tbody className="divide-y divide-slate-100 bg-white">
             {filteredPlayers.map((p) => (
-              <tr key={p.id} className="hover:bg-white/5">
+              <tr key={p.id} className="transition hover:bg-slate-50/80">
                 <td className="px-4 py-3">
-                  <img src={p.logoUrl} alt={p.pseudo} className="h-12 w-12 rounded-2xl border border-white/10 bg-black/20 object-contain p-1" />
+                  <img src={p.logoUrl} alt={p.pseudo} className="h-12 w-12 rounded-2xl border border-slate-200 bg-slate-50 object-contain p-1" />
                 </td>
-                <td className="px-4 py-3 text-white">
+                <td className="px-4 py-3 text-slate-900">
                   <div className="font-bold">{p.pseudo}</div>
-                  <div className="text-xs text-white/45">{p.countryCode}</div>
+                  <div className="text-xs text-slate-400">Compte joueur</div>
                 </td>
-                <td className="px-4 py-3 text-white/70">{p.freefireId}</td>
-                <td className="px-4 py-3 text-white/70">{p.gameMode}</td>
-                <td className="px-4 py-3 text-white">{p.credits}</td>
-                <td className="px-4 py-3 text-white/70">
+                <td className="px-4 py-3 font-medium text-slate-600">{p.freefireId}</td>
+                <td className="px-4 py-3 text-slate-500">{p.countryCode}</td>
+                <td className="px-4 py-3 text-slate-600">{p.gameMode}</td>
+                <td className="px-4 py-3 font-bold text-slate-900">{p.credits}</td>
+                <td className="px-4 py-3 text-slate-600">
                   {p.wins}V / {p.losses}D
                 </td>
-                <td className="px-4 py-3 text-white/70">
-                  <div>{p.status}</div>
-                  {p.isSeededTop10 ? <div className="text-xs text-amber-200/80">Top 10</div> : null}
-                  {p.finalRank ? <div className="text-xs text-fuchsia-200/80">Rang final #{p.finalRank}</div> : null}
+                <td className="px-4 py-3 text-slate-600">
+                  <div className="inline-flex rounded-full bg-slate-100 px-2.5 py-1 text-xs font-bold uppercase tracking-[0.14em] text-slate-700">{p.status}</div>
+                  {p.isSeededTop10 ? <div className="mt-1 text-xs font-semibold text-amber-700">Top 10 protégé</div> : null}
+                  {p.finalRank ? <div className="mt-1 text-xs font-semibold text-sky-700">Rang final #{p.finalRank}</div> : null}
                 </td>
-                <td className="px-4 py-3 text-white/60">{new Date(p.createdAt).toLocaleDateString("fr-FR")}</td>
+                <td className="px-4 py-3 text-slate-500">{new Date(p.createdAt).toLocaleDateString("fr-FR")}</td>
                 <td className="px-4 py-3">
                   <div className="flex flex-wrap gap-2">
-                    <button disabled={busyId === p.id} onClick={() => void updateCredits(p.id, +1)} className="tp-button-ghost disabled:opacity-60">
+                    <button disabled={busyId === p.id} onClick={() => void updateCredits(p.id, +1)} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 transition hover:bg-slate-50 disabled:opacity-60">
                       +1
                     </button>
-                    <button disabled={busyId === p.id} onClick={() => void updateCredits(p.id, -1)} className="tp-button-ghost disabled:opacity-60">
+                    <button disabled={busyId === p.id} onClick={() => void updateCredits(p.id, -1)} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 transition hover:bg-slate-50 disabled:opacity-60">
                       -1
                     </button>
-                    <button disabled={busyId === p.id} onClick={() => void ban(p.id)} className="tp-button-ghost disabled:opacity-60">
+                    <button disabled={busyId === p.id} onClick={() => void ban(p.id)} className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-bold text-amber-800 transition hover:bg-amber-100 disabled:opacity-60">
                       Bannir
                     </button>
-                    <button disabled={busyId === p.id} onClick={() => void remove(p.id)} className="tp-button-ghost disabled:opacity-60">
+                    <button disabled={busyId === p.id} onClick={() => void remove(p.id)} className="inline-flex items-center gap-1 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs font-bold text-red-700 transition hover:bg-red-100 disabled:opacity-60">
+                      <Trash2 className="h-3.5 w-3.5" />
                       Supprimer
                     </button>
                   </div>
@@ -201,7 +273,8 @@ export default function AdminPlayersManager() {
         </table>
       </div>
 
-      {!filteredPlayers.length ? <div className="mt-4 text-sm text-white/45">Aucun joueur ne correspond à la recherche.</div> : null}
-    </div>
+        {!filteredPlayers.length ? <div className="mt-4 text-sm text-slate-500">Aucun joueur ne correspond à la recherche.</div> : null}
+      </div>
+    </section>
   );
 }
