@@ -164,8 +164,19 @@ export default function InscriptionPage() {
                   <input value={pseudo} onChange={(e) => setPseudo(e.target.value)} className="tp-input tp-auth-input" placeholder="Ton blaze" required />
                 </div>
                 <div>
-                  <label className="tp-auth-label">Email</label>
-                  <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="tp-input tp-auth-input" placeholder="ton@email.com" required />
+                  <label className="tp-auth-label">Adresse email</label>
+                  <input
+                    type="email"
+                    name="email"
+                    autoComplete="email"
+                    inputMode="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="tp-input tp-auth-input"
+                    placeholder="exemple@gmail.com"
+                    required
+                  />
+                  <p className="mt-2 text-xs text-white/45">Obligatoire pour la réinitialisation du mot de passe et les notifications.</p>
                 </div>
               </div>
 
