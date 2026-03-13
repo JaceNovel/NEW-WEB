@@ -266,51 +266,35 @@ export default async function ProfilePage() {
                         </div>
                       </div>
 
-                      <div className="hidden rounded-[26px] border border-white/10 bg-[linear-gradient(180deg,rgba(14,13,30,0.98),rgba(31,18,56,0.82))] p-5 shadow-[inset_0_0_26px_rgba(255,255,255,0.02)] lg:grid lg:grid-cols-[72px_minmax(0,1fr)_160px] lg:items-center lg:gap-5">
-                        <div className="flex h-16 w-16 items-center justify-center rounded-[20px] border border-amber-300/18 bg-amber-300/10 text-4xl font-black text-amber-100">
-                          {index + 1}
-                        </div>
-
-                        <div className="min-w-0 space-y-4">
-                          <div className="flex min-w-0 items-center gap-4">
-                            <div className="flex h-[78px] w-[78px] shrink-0 items-center justify-center rounded-[22px] border border-white/10 bg-black/25 p-3 shadow-[0_0_24px_rgba(0,0,0,0.22)]">
-                              <img src={opponent.logoUrl} alt={opponent.pseudo} className="h-full w-full object-contain" />
-                            </div>
-                            <div className="min-w-0">
-                              <div className="text-[0.68rem] font-black uppercase tracking-[0.24em] text-white/42">Adversaire</div>
-                              <div className="mt-2 truncate text-[1.45rem] font-black leading-none text-white">{opponent.pseudo}</div>
-                              <div className="mt-2 text-sm font-medium text-white/50">ID {opponent.freefireId}</div>
-                              <div className="mt-3 inline-flex max-w-full items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[0.68rem] font-bold uppercase tracking-[0.16em] text-white/68">
-                                <span className="truncate">{player.pseudo}</span>
-                                <span className="bg-[linear-gradient(180deg,#ffbe73,#ff76dd)] bg-clip-text text-transparent">VS</span>
-                                <span className="truncate">{opponent.pseudo}</span>
-                              </div>
-                            </div>
+                      <div className="hidden rounded-[26px] border border-white/10 bg-[radial-gradient(circle_at_50%_42%,rgba(223,104,255,0.18),transparent_28%),linear-gradient(180deg,rgba(36,20,67,0.96),rgba(20,13,43,0.92))] p-5 shadow-[inset_0_0_26px_rgba(255,255,255,0.02),0_0_28px_rgba(164,90,255,0.08)] lg:flex lg:items-center lg:justify-between lg:gap-6">
+                        <div className="flex min-w-0 flex-1 items-center gap-4">
+                          <div className="flex h-[70px] w-[70px] shrink-0 items-center justify-center rounded-[22px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.08),rgba(255,255,255,0.02))] p-2 shadow-[0_0_18px_rgba(0,0,0,0.22)]">
+                            <img src={player.logoUrl} alt={player.pseudo} className="h-full w-full object-contain" />
                           </div>
-
-                          <div className="grid gap-3 xl:grid-cols-2">
-                            <div className="rounded-[18px] border border-white/8 bg-black/20 px-4 py-4">
-                              <div className="inline-flex items-center gap-2 text-[0.68rem] font-black uppercase tracking-[0.18em] text-white/42">
-                                <CalendarDays className="h-3.5 w-3.5 text-cyan-300" />
-                                Date du duel
-                              </div>
-                              <div className="mt-2 text-base font-bold leading-6 text-white/84">
-                                {new Intl.DateTimeFormat("fr-FR", { dateStyle: "long", timeStyle: "short" }).format(match.date)}
-                              </div>
-                            </div>
-
-                            <div className="rounded-[18px] border border-white/8 bg-black/20 px-4 py-4">
-                              <div className="text-[0.68rem] font-black uppercase tracking-[0.18em] text-white/42">Résultat</div>
-                              <div className="mt-2 text-xl font-black text-white">{victory === null ? "En attente" : victory ? "Victoire" : "Défaite"}</div>
-                              <div className="mt-1 text-sm leading-6 text-amber-100/78">{victory === null ? "Aucun gain validé" : victory ? "+1 crédit confirmé" : "Défaite enregistrée"}</div>
-                            </div>
+                          <div className="min-w-0">
+                            <div className="truncate text-[1.1rem] font-black text-white">{player.pseudo}</div>
+                            <div className="mt-1 text-sm text-white/50">🎮 {player.freefireId}</div>
                           </div>
                         </div>
 
-                        <div className="flex justify-end">
-                          <span className="inline-flex min-h-[54px] min-w-[148px] items-center justify-center rounded-[16px] border border-violet-300/20 bg-violet-300/10 px-5 py-3 text-center text-sm font-black uppercase tracking-[0.2em] text-white shadow-[0_0_22px_rgba(166,96,255,0.08)]">
+                        <div className="flex shrink-0 flex-col items-center justify-center gap-3 px-2 text-center">
+                          <div className="bg-[linear-gradient(180deg,#ffbe73,#ff76dd)] bg-clip-text text-[3.1rem] font-black leading-none text-transparent">VS</div>
+                          <span className="inline-flex min-h-[44px] min-w-[170px] items-center justify-center rounded-full border border-amber-300/28 bg-[linear-gradient(180deg,rgba(255,177,105,0.16),rgba(104,44,28,0.22))] px-5 py-2 text-center text-sm font-black uppercase tracking-[0.18em] text-white shadow-[0_0_22px_rgba(255,168,91,0.08)]">
                             {victory === null ? statusLabel : victory ? "Victoire" : "Défaite"}
                           </span>
+                          <div className="text-xs font-bold uppercase tracking-[0.16em] text-white/45">
+                            {new Intl.DateTimeFormat("fr-FR", { dateStyle: "medium", timeStyle: "short" }).format(match.date)}
+                          </div>
+                        </div>
+
+                        <div className="flex min-w-0 flex-1 items-center justify-end gap-4 text-right">
+                          <div className="min-w-0">
+                            <div className="truncate text-[1.1rem] font-black text-white">{opponent.pseudo}</div>
+                            <div className="mt-1 text-sm text-white/50">🎮 {opponent.freefireId}</div>
+                          </div>
+                          <div className="flex h-[70px] w-[70px] shrink-0 items-center justify-center rounded-[22px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.08),rgba(255,255,255,0.02))] p-2 shadow-[0_0_18px_rgba(0,0,0,0.22)]">
+                            <img src={opponent.logoUrl} alt={opponent.pseudo} className="h-full w-full object-contain" />
+                          </div>
                         </div>
                       </div>
                     </article>
