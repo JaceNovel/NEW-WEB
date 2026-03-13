@@ -2458,6 +2458,28 @@ select.tp-input option {
   color: rgba(255, 255, 255, 0.82);
 }
 
+.tp-matchs-battle-dots {
+  margin-top: 0.9rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.tp-matchs-battle-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.12);
+  transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+}
+
+.tp-matchs-battle-dot-active {
+  transform: scale(1.15);
+  border-color: rgba(255, 192, 118, 0.65);
+  background: linear-gradient(180deg, rgba(255, 187, 110, 0.9), rgba(214, 103, 255, 0.9));
+}
+
 .tp-matchs-battle-cta {
   position: relative;
   z-index: 2;
@@ -3282,6 +3304,69 @@ select.tp-input option {
     gap: 0.65rem;
   }
 
+  .tp-matchs-battle-mobile-card {
+    margin-top: 0.75rem;
+  }
+
+  .tp-matchs-battle-mobile-stage {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.85rem;
+  }
+
+  .tp-matchs-battle-mobile-player {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.42rem;
+    text-align: center;
+  }
+
+  .tp-matchs-battle-mobile-frame {
+    width: 112px;
+    height: 112px;
+    border-radius: 28px;
+  }
+
+  .tp-matchs-battle-mobile-center {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.55rem;
+  }
+
+  .tp-matchs-versus-mobile {
+    min-width: 102px;
+    min-height: 102px;
+    font-size: 2rem;
+    box-shadow:
+      inset 0 0 16px rgba(255, 226, 174, 0.10),
+      0 0 26px rgba(255, 166, 84, 0.12);
+  }
+
+  .tp-matchs-battle-mobile-brand {
+    width: 42px;
+    height: 42px;
+    object-fit: contain;
+    opacity: 0.95;
+    filter: drop-shadow(0 0 14px rgba(255, 171, 92, 0.2));
+  }
+
+  .tp-matchs-battle-mobile-name {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 1rem;
+    font-weight: 900;
+    color: #fff3db;
+  }
+
+  .tp-matchs-battle-mobile-id {
+    font-size: 0.78rem;
+    color: rgba(255, 255, 255, 0.58);
+  }
+
   .tp-matchs-battle {
     min-height: 0;
     padding: 1rem 0.9rem 1.15rem;
@@ -3587,6 +3672,12 @@ select.tp-input option {
     margin-top: 0.75rem;
   }
 
+  .tp-matchs-battle-mobile-frame {
+    width: 96px;
+    height: 96px;
+    border-radius: 22px;
+  }
+
   .tp-matchs-emblem-frame {
     width: 96px;
     height: 96px;
@@ -3625,6 +3716,25 @@ select.tp-input option {
       0 0 22px rgba(255, 166, 84, 0.10);
     font-size: 1.55rem;
     letter-spacing: -0.04em;
+  }
+
+  .tp-matchs-versus-mobile {
+    min-width: 88px;
+    min-height: 88px;
+    font-size: 1.75rem;
+  }
+
+  .tp-matchs-battle-mobile-brand {
+    width: 34px;
+    height: 34px;
+  }
+
+  .tp-matchs-battle-mobile-name {
+    font-size: 0.88rem;
+  }
+
+  .tp-matchs-battle-mobile-id {
+    font-size: 0.72rem;
   }
 
   .tp-matchs-battle-history {
@@ -5755,7 +5865,7 @@ select.tp-input option {
   }
 
   .tp-history-card-side {
-    justify-content: flex-end;
+    display: none;
   }
 
   .tp-history-card-side-meta {
@@ -5788,6 +5898,10 @@ select.tp-input option {
 
   .tp-history-pagination {
     padding-top: 0.35rem;
+  }
+
+  .tp-profile-activity-item:nth-child(n + 6) {
+    display: none;
   }
 }
 

@@ -80,8 +80,11 @@ export async function POST(req: Request) {
     revalidatePath("/profile");
     revalidatePath("/classement");
     revalidatePath("/historique");
+    revalidatePath("/matchs");
+    revalidatePath("/admin/matchs");
     revalidatePath("/admin/joueurs");
     revalidatePath("/admin/credits");
+    revalidatePath("/admin");
 
     return NextResponse.json({ ok: true });
   } catch (error) {

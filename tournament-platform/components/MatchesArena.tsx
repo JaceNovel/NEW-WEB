@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { Bolt, Crown, Flame, Shield, Sparkles, Swords, Trophy } from "lucide-react";
 import { useSession } from "next-auth/react";
 
@@ -138,6 +138,22 @@ export default function MatchesArena({
     if (!featuredMatch) return filteredMatches.slice(0, 3);
     return filteredMatches.filter((match) => match.id !== featuredMatch.id).slice(0, 3);
   }, [featuredMatch, filteredMatches]);
+
+  useEffect(() => {
+    if (filteredMatches.length < 2) return;
+
+    const intervalId = window.setInterval(() => {
+      setSelectedMatchId((current) => {
+        const currentIndex = filteredMatches.findIndex((match) => match.id === current);
+        const nextIndex = currentIndex >= 0 ? (currentIndex + 1) % filteredMatches.length : 0;
+        return filteredMatches[nextIndex]?.id ?? current;
+      });
+    }, 5500);
+
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, [filteredMatches]);
 
   const winnerSide = getWinnerSide(featuredMatch);
   const isHistoryView = featuredMatch?.status === "FINISHED" && winnerSide !== null;
@@ -328,7 +344,15 @@ export default function MatchesArena({
             className={`tp-matchs-panel tp-matchs-battle ${isHistoryView ? "tp-matchs-battle-history" : ""} ${enableBattleEffects && !isHistoryView ? "tp-matchs-battle-shake" : ""}`}
           >
             {featuredMatch ? (
-              <>
+              <AnimatePresence mode="wait" initial={false}>
+                <motion.div
+                  key={featuredMatch.id}
+                  initial={{ opacity: 0, y: 18, scale: 0.985 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -18, scale: 0.985 }}
+                  transition={{ duration: 0.38, ease: "easeOut" }}
+                  className="w-full"
+                >
                 {enableBattleEffects ? (
                   <div className="tp-matchs-battle-atmosphere" aria-hidden="true">
                     <span className="tp-matchs-battle-smoke tp-matchs-battle-smoke-left" />
@@ -356,6 +380,38 @@ export default function MatchesArena({
 
                 <div className="tp-matchs-battle-label">{featuredMatch.status === "LIVE" ? "Affrontement en cours" : featuredMatch.status === "FINISHED" ? "Victoire validee" : "Duel programme"}</div>
 
+                {isCompactViewport ? (
+                  <div className="tp-matchs-battle-mobile-card">
+                    <div className="tp-matchs-battle-mobile-stage">
+                      <div className="tp-matchs-battle-mobile-player tp-matchs-battle-mobile-player-top">
+                        <div className="tp-matchs-emblem-frame tp-matchs-emblem-frame-left tp-matchs-battle-mobile-frame">
+                          <Image src={featuredMatch.player1.logoUrl} alt={featuredMatch.player1.pseudo} width={184} height={184} className="tp-matchs-emblem-logo tp-matchs-emblem-logo-left" />
+                        </div>
+                        <div className="tp-matchs-battle-mobile-name">
+                          <CountryFlag countryCode={featuredMatch.player1.countryCode} className="tp-matchs-emblem-flag" />
+                          <span>{featuredMatch.player1.pseudo}</span>
+                        </div>
+                        <div className="tp-matchs-battle-mobile-id">{featuredMatch.player1.freefireId}</div>
+                      </div>
+
+                      <div className="tp-matchs-battle-mobile-center">
+                        <div className="tp-matchs-versus tp-matchs-versus-mobile">{isHistoryView ? "WIN" : "VS"}</div>
+                        <Image src="/pp1-removebg-preview (1).png" alt="KING League" width={54} height={54} className="tp-matchs-battle-mobile-brand" />
+                      </div>
+
+                      <div className="tp-matchs-battle-mobile-player tp-matchs-battle-mobile-player-bottom">
+                        <div className="tp-matchs-emblem-frame tp-matchs-emblem-frame-right tp-matchs-battle-mobile-frame">
+                          <Image src={featuredMatch.player2.logoUrl} alt={featuredMatch.player2.pseudo} width={184} height={184} className="tp-matchs-emblem-logo tp-matchs-emblem-logo-right" />
+                        </div>
+                        <div className="tp-matchs-battle-mobile-name">
+                          <CountryFlag countryCode={featuredMatch.player2.countryCode} className="tp-matchs-emblem-flag" />
+                          <span>{featuredMatch.player2.pseudo}</span>
+                        </div>
+                        <div className="tp-matchs-battle-mobile-id">{featuredMatch.player2.freefireId}</div>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
                 <div className="tp-matchs-battle-stage">
                   {enableBattleEffects ? <div className="tp-matchs-battle-aura tp-matchs-battle-aura-left" /> : null}
                   {enableBattleEffects ? <div className="tp-matchs-battle-aura tp-matchs-battle-aura-right" /> : null}
@@ -464,18 +520,21 @@ export default function MatchesArena({
                     </div>
                   </motion.div>
                 </div>
+                )}
 
-                <div className="tp-matchs-battle-teams">
-                  <div className="tp-matchs-emblem-name">
-                    <CountryFlag countryCode={featuredMatch.player1.countryCode} className="tp-matchs-emblem-flag" />
-                    <span>{featuredMatch.player1.pseudo}</span>
+                {!isCompactViewport ? (
+                  <div className="tp-matchs-battle-teams">
+                    <div className="tp-matchs-emblem-name">
+                      <CountryFlag countryCode={featuredMatch.player1.countryCode} className="tp-matchs-emblem-flag" />
+                      <span>{featuredMatch.player1.pseudo}</span>
+                    </div>
+                    <div className="tp-matchs-battle-team-separator">vs</div>
+                    <div className="tp-matchs-emblem-name">
+                      <CountryFlag countryCode={featuredMatch.player2.countryCode} className="tp-matchs-emblem-flag" />
+                      <span>{featuredMatch.player2.pseudo}</span>
+                    </div>
                   </div>
-                  <div className="tp-matchs-battle-team-separator">vs</div>
-                  <div className="tp-matchs-emblem-name">
-                    <CountryFlag countryCode={featuredMatch.player2.countryCode} className="tp-matchs-emblem-flag" />
-                    <span>{featuredMatch.player2.pseudo}</span>
-                  </div>
-                </div>
+                ) : null}
 
                 <div className="tp-matchs-battle-countdown">
                   {featuredMatch.status === "PENDING"
@@ -493,7 +552,21 @@ export default function MatchesArena({
                   <Swords className="h-4 w-4" />
                   {featuredMatch.status === "LIVE" ? "Suivre l'arene" : featuredMatch.status === "FINISHED" ? "Relire le duel" : "Se tenir pret"}
                 </motion.button>
-              </>
+                {filteredMatches.length > 1 ? (
+                  <div className="tp-matchs-battle-dots" aria-label="Autres affiches disponibles">
+                    {filteredMatches.map((match) => (
+                      <button
+                        key={match.id}
+                        type="button"
+                        onClick={() => setSelectedMatchId(match.id)}
+                        className={`tp-matchs-battle-dot ${match.id === featuredMatch.id ? "tp-matchs-battle-dot-active" : ""}`}
+                        aria-label={`Afficher ${match.player1.pseudo} contre ${match.player2.pseudo}`}
+                      />
+                    ))}
+                  </div>
+                ) : null}
+                </motion.div>
+              </AnimatePresence>
             ) : (
               <div className="tp-matchs-empty">Aucun affrontement disponible pour le moment.</div>
             )}

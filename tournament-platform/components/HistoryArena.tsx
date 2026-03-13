@@ -67,6 +67,31 @@ function getLoser(match: MatchPublic) {
   return winner.id === match.player1.id ? match.player2 : match.player1;
 }
 
+function getPendingLabel(match: MatchPublic, now: number) {
+  if (match.sourceType === "CHALLENGE") {
+    return match.challengeStatus === "ACCEPTED" ? "A venir" : "A venir";
+  }
+
+  void now;
+  return "A venir";
+}
+
+function getFighterStatus(match: MatchPublic, fighterId: string, now: number) {
+  if (match.status === "PENDING") {
+    return { label: getPendingLabel(match, now), className: "tp-history-pill-pending" };
+  }
+
+  if (match.status === "LIVE") {
+    return { label: "En cours", className: "tp-history-pill-live" };
+  }
+
+  if (match.winnerId === fighterId) {
+    return { label: "Victoire", className: "tp-history-pill-winner" };
+  }
+
+  return { label: "Defaite", className: "tp-history-pill-loser" };
+}
+
 export default function HistoryArena({ matches }: { matches: MatchPublic[] }) {
   const [activeTab, setActiveTab] = useState<HistoryTab>("FINISHED");
   const [currentPage, setCurrentPage] = useState(1);
@@ -160,10 +185,9 @@ export default function HistoryArena({ matches }: { matches: MatchPublic[] }) {
             {paginatedMatches.length ? (
               paginatedMatches.map((match, index) => {
                 const winner = getWinner(match);
-                const loser = getLoser(match);
                 const isSelected = selectedMatch?.id === match.id;
-                const isFinished = match.status === "FINISHED";
-                const countdown = formatCountdown(new Date(match.date).getTime() - now);
+                const player1Status = getFighterStatus(match, match.player1.id, now);
+                const player2Status = getFighterStatus(match, match.player2.id, now);
 
                 return (
                   <motion.article
@@ -185,9 +209,7 @@ export default function HistoryArena({ matches }: { matches: MatchPublic[] }) {
                             <span className="tp-history-name" title={match.player1.pseudo}>{match.player1.pseudo}</span>
                           </div>
                           <div className="tp-history-id">ID. {match.player1.freefireId}</div>
-                          {isFinished && winner?.id === match.player1.id ? <span className="tp-history-pill tp-history-pill-winner">Victoire</span> : null}
-                          {isFinished && loser?.id === match.player1.id ? <span className="tp-history-pill tp-history-pill-loser">Eliminé</span> : null}
-                          {match.status === "LIVE" && selectedMatch?.id === match.id && winner === null ? <span className="tp-history-pill tp-history-pill-live">En direct</span> : null}
+                          <span className={`tp-history-pill ${player1Status.className}`}>{player1Status.label}</span>
                         </div>
                       </div>
 
@@ -204,9 +226,7 @@ export default function HistoryArena({ matches }: { matches: MatchPublic[] }) {
                             <span className="tp-history-name" title={match.player2.pseudo}>{match.player2.pseudo}</span>
                           </div>
                           <div className="tp-history-id">ID. {match.player2.freefireId}</div>
-                          {isFinished && winner?.id === match.player2.id ? <span className="tp-history-pill tp-history-pill-winner">Victoire</span> : null}
-                          {isFinished && loser?.id === match.player2.id ? <span className="tp-history-pill tp-history-pill-loser">Eliminé</span> : null}
-                          {match.status === "PENDING" ? <span className="tp-history-pill tp-history-pill-pending">Dans {countdown}</span> : null}
+                          <span className={`tp-history-pill ${player2Status.className}`}>{player2Status.label}</span>
                         </div>
                       </div>
                     </div>
@@ -234,13 +254,29 @@ export default function HistoryArena({ matches }: { matches: MatchPublic[] }) {
               <>
                 <div className="tp-history-detail-head">
                   <div>
-                    <div className="tp-history-detail-kicker">Lecture officielle du duel</div>
+                    <div className="tp-history-detail-kicker">{selectedMatch.sourceType === "CHALLENGE" ? "Lecture officielle du defi" : "Lecture officielle du duel"}</div>
                     <div className="tp-history-detail-status">
-                      {selectedMatch.status === "FINISHED" ? "Résultat validé" : selectedMatch.status === "LIVE" ? "Affrontement en direct" : "Match programmé"}
+                      {selectedMatch.sourceType === "CHALLENGE"
+                        ? selectedMatch.challengeStatus === "ACCEPTED"
+                          ? "Defi accepte en attente de duel"
+                          : "Defi depose en attente de confirmation"
+                        : selectedMatch.status === "FINISHED"
+                          ? "Résultat validé"
+                          : selectedMatch.status === "LIVE"
+                            ? "Affrontement en direct"
+                            : "Match programmé"}
                     </div>
                   </div>
                   <span className={`tp-history-state-chip tp-history-state-chip-${selectedMatch.status.toLowerCase()}`}>
-                    {selectedMatch.status === "FINISHED" ? "Archive validee" : selectedMatch.status === "LIVE" ? "En cours" : "Programme"}
+                    {selectedMatch.sourceType === "CHALLENGE"
+                      ? selectedMatch.challengeStatus === "ACCEPTED"
+                        ? "Defi confirme"
+                        : "Defi en attente"
+                      : selectedMatch.status === "FINISHED"
+                        ? "Archive validee"
+                        : selectedMatch.status === "LIVE"
+                          ? "En cours"
+                          : "Programme"}
                   </span>
                 </div>
 
@@ -270,20 +306,26 @@ export default function HistoryArena({ matches }: { matches: MatchPublic[] }) {
                   <div className="tp-history-detail-block">
                     <div className="tp-history-detail-label">Verdict</div>
                     <div className="tp-history-detail-value">
-                      {selectedMatch.status === "FINISHED"
-                        ? `${getWinner(selectedMatch)?.pseudo ?? "Aucun"} a impose sa loi dans le duel`
-                        : selectedMatch.status === "LIVE"
-                          ? "Le duel est en cours de validation en direct"
-                          : `Début dans ${formatCountdown(new Date(selectedMatch.date).getTime() - now)}`}
+                      {selectedMatch.sourceType === "CHALLENGE"
+                        ? selectedMatch.challengeStatus === "ACCEPTED"
+                          ? "Le defi a ete accepte. Il attend maintenant la creation ou la validation du duel officiel."
+                          : "Le defi a ete depose et reste en attente de traitement ou de confirmation."
+                        : selectedMatch.status === "FINISHED"
+                          ? `${getWinner(selectedMatch)?.pseudo ?? "Aucun"} a impose sa loi dans le duel`
+                          : selectedMatch.status === "LIVE"
+                            ? "Le duel est en cours de validation en direct"
+                            : `Début dans ${formatCountdown(new Date(selectedMatch.date).getTime() - now)}`}
                     </div>
                   </div>
 
                   <div className="tp-history-detail-block">
                     <div className="tp-history-detail-label">Impact</div>
                     <div className="tp-history-detail-value">
-                      {selectedMatch.status === "FINISHED"
-                        ? "Le classement et les crédits ont été mis à jour automatiquement."
-                        : "Dès validation, le classement et les credits seront recalcules automatiquement."}
+                      {selectedMatch.sourceType === "CHALLENGE"
+                        ? "Aucun score n'est encore applique. Les effets classement et credits arriveront seulement apres creation puis validation du match."
+                        : selectedMatch.status === "FINISHED"
+                          ? "Le classement et les crédits ont été mis à jour automatiquement."
+                          : "Dès validation, le classement et les credits seront recalcules automatiquement."}
                     </div>
                   </div>
                 </div>
@@ -292,7 +334,15 @@ export default function HistoryArena({ matches }: { matches: MatchPublic[] }) {
                   <span className="tp-history-detail-hint"><CircleDot className="h-4 w-4" /> Archive officielle 1v1 KING League</span>
                   <button type="button" className="tp-history-detail-cta">
                     <Swords className="h-4 w-4" />
-                    {selectedMatch.status === "FINISHED" ? "Relire le duel" : selectedMatch.status === "LIVE" ? "Suivre l'affrontement" : "Entrer en veille"}
+                    {selectedMatch.sourceType === "CHALLENGE"
+                      ? selectedMatch.challengeStatus === "ACCEPTED"
+                        ? "Surveiller la programmation"
+                        : "Attendre la reponse"
+                      : selectedMatch.status === "FINISHED"
+                        ? "Relire le duel"
+                        : selectedMatch.status === "LIVE"
+                          ? "Suivre l'affrontement"
+                          : "Entrer en veille"}
                   </button>
                 </div>
               </>

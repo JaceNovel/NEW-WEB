@@ -3,6 +3,8 @@ export type MatchPublic = {
   status: "PENDING" | "LIVE" | "FINISHED";
   date: string;
   winnerId: string | null;
+  sourceType?: "MATCH" | "CHALLENGE";
+  challengeStatus?: "PENDING" | "ACCEPTED" | "REJECTED" | "FINISHED";
   player1: {
     id: string;
     pseudo: string;

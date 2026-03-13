@@ -186,12 +186,12 @@ export default async function ProfilePage() {
         </div>
       </section>
 
-      <section className="mt-6 rounded-[28px] border border-fuchsia-300/18 bg-[linear-gradient(180deg,rgba(28,14,49,0.80),rgba(7,8,18,0.78))] p-4 shadow-[0_0_44px_rgba(158,82,255,0.12)] sm:mt-8 sm:rounded-[34px] sm:p-5">
-        <div className="flex flex-col gap-3 border-b border-white/8 pb-4 sm:flex-row sm:items-end sm:justify-between">
+      <section className="mt-6 rounded-[28px] border border-fuchsia-300/18 bg-[linear-gradient(180deg,rgba(18,10,34,0.92),rgba(10,10,22,0.88))] p-4 shadow-[0_0_44px_rgba(158,82,255,0.12)] backdrop-blur-xl sm:mt-8 sm:rounded-[34px] sm:p-6">
+        <div className="flex flex-col gap-3 border-b border-white/8 pb-5 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <div className="text-[0.72rem] font-black uppercase tracking-[0.26em] text-fuchsia-200/72">Journal de combat</div>
             <h2 className="mt-2 text-2xl font-black text-white sm:text-3xl">Matchs et défis récents</h2>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-white/58">Retrouve tes derniers affrontements, l’état de tes défis et une lecture plus propre de ton activité compétitive.</p>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-white/58">Un résumé net de ton activité récente, sans blocs brouillons ni cartes mal hiérarchisées.</p>
           </div>
           <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-bold uppercase tracking-[0.18em] text-white/65">
             <ShieldCheck className="h-3.5 w-3.5 text-emerald-300" />
@@ -199,11 +199,11 @@ export default async function ProfilePage() {
           </div>
         </div>
 
-        <div className="mt-5 grid gap-5 lg:grid-cols-[1.3fr_0.8fr]">
-          <div className="rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,rgba(10,10,24,0.28),rgba(255,255,255,0.02))] p-4 sm:p-5">
+        <div className="mt-6 grid gap-5 lg:grid-cols-[1.35fr_0.8fr]">
+          <div className="rounded-[26px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.015))] p-4 sm:p-5">
             <div className="flex items-center justify-between gap-3">
               <div className="text-sm font-black uppercase tracking-[0.22em] text-white">Matchs</div>
-              <div className="text-xs font-bold uppercase tracking-[0.18em] text-white/45">Historique récent</div>
+              <div className="text-xs font-bold uppercase tracking-[0.18em] text-white/45">Vue premium</div>
             </div>
 
             <div className="mt-4 space-y-3">
@@ -216,61 +216,73 @@ export default async function ProfilePage() {
                   return (
                     <article
                       key={match.id}
-                      className="grid gap-4 rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.015))] p-4 shadow-[inset_0_0_26px_rgba(255,255,255,0.02)] xl:grid-cols-[64px_minmax(0,1.5fr)_minmax(190px,0.9fr)_150px_132px] xl:items-center"
+                      className="tp-profile-activity-item"
+                    >
+                      <div className="grid gap-4 rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,rgba(17,16,37,0.96),rgba(31,18,56,0.78))] p-4 shadow-[inset_0_0_26px_rgba(255,255,255,0.02)] sm:grid-cols-[68px_minmax(0,1fr)] xl:grid-cols-[68px_minmax(0,1fr)_auto]"
                     >
                       <div className="flex h-14 w-14 items-center justify-center rounded-[18px] border border-amber-300/18 bg-amber-300/10 text-3xl font-black text-amber-100">
                         {index + 1}
                       </div>
 
-                      <div className="flex min-w-0 items-center gap-3">
-                        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[20px] border border-white/10 bg-black/25 p-2">
-                          <img src={opponent.logoUrl} alt={opponent.pseudo} className="h-full w-full object-contain" />
-                        </div>
-                        <div className="min-w-0">
-                          <div className="text-[0.68rem] font-black uppercase tracking-[0.22em] text-white/42">Adversaire</div>
-                          <div className="mt-1 truncate text-xl font-black text-white">
-                            {player.pseudo} <span className="bg-[linear-gradient(180deg,#ffbe73,#ff76dd)] bg-clip-text text-transparent">VS</span> {opponent.pseudo}
+                      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.15fr)_minmax(220px,0.95fr)] xl:items-center">
+                        <div className="flex min-w-0 items-center gap-3">
+                          <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-[20px] border border-white/10 bg-black/25 p-2">
+                            <img src={opponent.logoUrl} alt={opponent.pseudo} className="h-full w-full object-contain" />
                           </div>
-                          <div className="mt-1 text-sm text-white/52">ID {opponent.freefireId}</div>
+                          <div className="min-w-0">
+                            <div className="text-[0.68rem] font-black uppercase tracking-[0.22em] text-white/42">Adversaire</div>
+                            <div className="mt-1 truncate text-xl font-black text-white">
+                              {opponent.pseudo}
+                            </div>
+                            <div className="mt-1 text-sm text-white/52">ID {opponent.freefireId}</div>
+                            <div className="mt-2 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[0.7rem] font-bold uppercase tracking-[0.14em] text-white/70">
+                              <span>{player.pseudo}</span>
+                              <span className="bg-[linear-gradient(180deg,#ffbe73,#ff76dd)] bg-clip-text text-transparent">VS</span>
+                              <span>{opponent.pseudo}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="grid gap-3 sm:grid-cols-2">
+                          <div className="rounded-[18px] border border-white/8 bg-black/15 px-4 py-3">
+                            <div className="inline-flex items-center gap-2 text-[0.68rem] font-black uppercase tracking-[0.18em] text-white/42">
+                              <CalendarDays className="h-3.5 w-3.5 text-cyan-300" />
+                              Date du duel
+                            </div>
+                            <div className="mt-2 text-sm font-semibold leading-6 text-white/80">
+                              {new Intl.DateTimeFormat("fr-FR", { dateStyle: "long", timeStyle: "short" }).format(match.date)}
+                            </div>
+                          </div>
+
+                          <div className="rounded-[18px] border border-white/8 bg-black/15 px-4 py-3">
+                            <div className="text-[0.68rem] font-black uppercase tracking-[0.18em] text-white/42">Résultat</div>
+                            <div className="mt-2 text-lg font-black text-white">
+                              {victory === null ? "En attente" : victory ? "Victoire" : "Défaite"}
+                            </div>
+                            <div className="mt-1 text-sm text-amber-100/80">{victory === null ? "Aucun gain validé" : victory ? "+1 crédit confirmé" : "Défaite enregistrée"}</div>
+                          </div>
                         </div>
                       </div>
 
-                      <div className="space-y-1 rounded-[18px] border border-white/8 bg-black/15 px-4 py-3">
-                        <div className="inline-flex items-center gap-2 text-[0.68rem] font-black uppercase tracking-[0.18em] text-white/42">
-                          <CalendarDays className="h-3.5 w-3.5 text-cyan-300" />
-                          Date du duel
-                        </div>
-                        <div className="text-sm font-semibold leading-6 text-white/80">
-                          {new Intl.DateTimeFormat("fr-FR", { dateStyle: "long", timeStyle: "short" }).format(match.date)}
-                        </div>
-                      </div>
-
-                      <div>
-                        <div className="text-[0.68rem] font-black uppercase tracking-[0.18em] text-white/42">Résultat</div>
-                        <div className="mt-1 text-lg font-black text-white">
-                          {victory === null ? "En attente" : victory ? "Victoire" : "Défaite"}
-                        </div>
-                        <div className="mt-1 text-sm text-amber-100/80">{victory === null ? "Aucun gain validé" : victory ? "+1 crédit confirmé" : "Défaite enregistrée"}</div>
-                      </div>
-
-                      <div>
-                        <span className="inline-flex w-full items-center justify-center rounded-[14px] border border-violet-300/20 bg-violet-300/10 px-4 py-3 text-center text-sm font-bold uppercase tracking-[0.18em] text-white">
+                      <div className="flex items-start xl:items-center">
+                        <span className="inline-flex w-full items-center justify-center rounded-[14px] border border-violet-300/20 bg-violet-300/10 px-4 py-3 text-center text-sm font-bold uppercase tracking-[0.18em] text-white xl:min-w-[140px]">
                           {victory === null ? statusLabel : victory ? "Victoire" : "Défaite"}
                         </span>
+                      </div>
                       </div>
                     </article>
                   );
                 })
               ) : (
-                <div className="rounded-[22px] border border-white/10 bg-white/5 px-4 py-10 text-center text-sm text-white/50">Aucun match récent.</div>
+                <div className="rounded-[22px] border border-white/10 bg-black/20 px-4 py-10 text-center text-sm text-white/50">Aucun match récent.</div>
               )}
             </div>
           </div>
 
-          <div className="rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,rgba(10,10,24,0.28),rgba(255,255,255,0.02))] p-4 sm:p-5">
+          <div className="rounded-[26px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.015))] p-4 sm:p-5">
             <div className="flex items-center justify-between gap-3">
               <div className="text-sm font-black uppercase tracking-[0.22em] text-white">Défis</div>
-              <div className="text-xs font-bold uppercase tracking-[0.18em] text-white/45">Flux compact</div>
+              <div className="text-xs font-bold uppercase tracking-[0.18em] text-white/45">Lecture rapide</div>
             </div>
 
             <div className="mt-4 space-y-3">
@@ -279,8 +291,8 @@ export default async function ProfilePage() {
                   const opponent = challenge.challengerId === id ? challenge.defender : challenge.challenger;
 
                   return (
-                    <article key={challenge.id} className="rounded-[22px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.015))] p-4 shadow-[inset_0_0_18px_rgba(255,255,255,0.02)]">
-                      <div className="flex items-start gap-3">
+                    <article key={challenge.id} className="tp-profile-activity-item rounded-[22px] border border-white/10 bg-[linear-gradient(180deg,rgba(17,16,37,0.96),rgba(31,18,56,0.78))] p-4 shadow-[inset_0_0_18px_rgba(255,255,255,0.02)]">
+                      <div className="flex items-center gap-3">
                         <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[18px] border border-white/10 bg-black/25 p-1.5">
                           <img src={opponent.logoUrl} alt={opponent.pseudo} className="h-full w-full object-contain" />
                         </div>
@@ -297,7 +309,7 @@ export default async function ProfilePage() {
                   );
                 })
               ) : (
-                <div className="rounded-[22px] border border-white/10 bg-white/5 px-4 py-10 text-center text-sm text-white/50">Aucun défi récent.</div>
+                <div className="rounded-[22px] border border-white/10 bg-black/20 px-4 py-10 text-center text-sm text-white/50">Aucun défi récent.</div>
               )}
             </div>
           </div>

@@ -4,6 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { recalculateTournamentState } from "@/lib/tournament";
 import { apiError, applyRateLimit } from "@/app/api/_utils";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   try {
     applyRateLimit("player-list");
@@ -43,7 +45,16 @@ export async function GET() {
       },
     });
 
-    return NextResponse.json({ ok: true, players });
+    return NextResponse.json(
+      { ok: true, players },
+      {
+        headers: {
+          "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+          Pragma: "no-cache",
+          Expires: "0",
+        },
+      },
+    );
   } catch (error) {
     return apiError(error);
   }

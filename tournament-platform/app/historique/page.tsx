@@ -15,17 +15,48 @@ export const metadata: Metadata = buildPageMetadata({
 export default async function HistoriquePage() {
   const hasDb = Boolean(process.env.DATABASE_URL);
 
-  const matches = hasDb
-    ? await prisma.match.findMany({
-        where: { status: "FINISHED", winnerId: { not: null } },
-        orderBy: [{ date: "desc" }],
-        take: 15,
-        include: {
-          player1: { select: { id: true, pseudo: true, freefireId: true, countryCode: true, logoUrl: true } },
-          player2: { select: { id: true, pseudo: true, freefireId: true, countryCode: true, logoUrl: true } },
-        },
-      })
-    : [];
+  const [matches, challenges] = hasDb
+    ? await Promise.all([
+        prisma.match.findMany({
+          orderBy: [{ date: "desc" }],
+          take: 24,
+          include: {
+            player1: { select: { id: true, pseudo: true, freefireId: true, countryCode: true, logoUrl: true } },
+            player2: { select: { id: true, pseudo: true, freefireId: true, countryCode: true, logoUrl: true } },
+          },
+        }),
+        prisma.challenge.findMany({
+          where: { status: { in: ["PENDING", "ACCEPTED"] } },
+          orderBy: [{ updatedAt: "desc" }],
+          take: 24,
+          include: {
+            challenger: { select: { id: true, pseudo: true, freefireId: true, countryCode: true, logoUrl: true } },
+            defender: { select: { id: true, pseudo: true, freefireId: true, countryCode: true, logoUrl: true } },
+          },
+        }),
+      ])
+    : [[], []];
 
-  return <HistoryArena matches={safeJson(matches)} />;
+  const scheduledMatchPairs = new Set(
+    matches
+      .filter((match) => match.status !== "FINISHED")
+      .map((match) => [match.player1Id, match.player2Id].sort().join(":")),
+  );
+
+  const challengeItems = challenges
+    .filter((challenge) => !scheduledMatchPairs.has([challenge.challengerId, challenge.defenderId].sort().join(":")))
+    .map((challenge) => ({
+      id: `challenge-${challenge.id}`,
+      status: "PENDING" as const,
+      date: challenge.updatedAt.toISOString(),
+      winnerId: null,
+      sourceType: "CHALLENGE" as const,
+      challengeStatus: challenge.status,
+      player1: challenge.challenger,
+      player2: challenge.defender,
+    }));
+
+  const historyItems = [...matches.map((match) => ({ ...match, sourceType: "MATCH" as const })), ...challengeItems];
+
+  return <HistoryArena matches={safeJson(historyItems)} />;
 }

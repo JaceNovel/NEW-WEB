@@ -92,8 +92,12 @@ export default function AdminPlayersManager() {
 
   async function remove(playerId: string) {
     if (!confirm("Supprimer ce joueur ?")) return;
+
+    const previousPlayers = players;
+    setPlayers((current) => current.filter((player) => player.id !== playerId));
     setBusyId(playerId);
     setError(null);
+
     try {
       const res = await fetch("/api/player/delete", {
         method: "POST",
@@ -101,9 +105,15 @@ export default function AdminPlayersManager() {
         body: JSON.stringify({ playerId }),
       });
       const json = await res.json();
-      if (!res.ok) throw new Error(json?.error ?? "Erreur");
-      setPlayers((current) => current.filter((player) => player.id !== playerId));
+      if (!res.ok && res.status !== 404) {
+        throw new Error(json?.error ?? "Erreur");
+      }
+      if (res.status === 404) {
+        setError("Ce joueur etait deja supprime. La liste a ete synchronisee.");
+      }
+      await load();
     } catch (e) {
+      setPlayers(previousPlayers);
       setError(e instanceof Error ? e.message : "Erreur");
     } finally {
       setBusyId(null);
