@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 export const siteName = "KING League";
 export const siteUrl = "https://kingleague.space";
 export const logoPath = "/pp1-removebg-preview%20(1).png";
+export const appIconPath = "/app-icon.png";
 export const siteDescription = "KING League est la plateforme 1v1 Free Fire premium ou commence l'ascension du ROI, avec duels officiels, classement dynamique, credits instantanes et scene competitive haut de gamme.";
 export const defaultKeywords = [
   "KING League",

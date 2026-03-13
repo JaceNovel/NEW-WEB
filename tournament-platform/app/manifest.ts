@@ -17,16 +17,16 @@ export default function manifest(): MetadataRoute.Manifest {
     prefer_related_applications: false,
     icons: [
       {
-        src: "/pp1-removebg-preview%20(1).png",
-        sizes: "312x259",
-        type: "image/png",
-        purpose: "maskable",
-      },
-      {
-        src: "/Design%20sans%20titre%20(1).png",
+        src: "/app-icon.png",
         sizes: "800x800",
         type: "image/png",
         purpose: "any",
+      },
+      {
+        src: "/app-icon.png",
+        sizes: "800x800",
+        type: "image/png",
+        purpose: "maskable",
       },
     ],
     screenshots: [

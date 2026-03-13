@@ -12,7 +12,7 @@ import SponsorFooter from "@/components/SponsorFooter";
 import { Providers } from "@/components/Providers";
 import SponsorTicker from "@/components/SponsorTicker";
 import { authOptions } from "@/lib/auth";
-import { defaultKeywords, logoPath, siteDescription, siteName, siteUrl } from "@/lib/seo";
+import { appIconPath, defaultKeywords, logoPath, siteDescription, siteName, siteUrl } from "@/lib/seo";
 
 const inter = Inter({
   variable: "--font-sans",
@@ -47,10 +47,10 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: logoPath, type: "image/png" },
+      { url: appIconPath, type: "image/png" },
     ],
-    shortcut: [logoPath],
-    apple: [logoPath],
+    shortcut: [appIconPath],
+    apple: [appIconPath],
   },
   openGraph: {
     title: siteName,
