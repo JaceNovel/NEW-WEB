@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { prisma } from "@/lib/prisma";
 import { getRecruitmentCost } from "@/lib/economy";
+import { sendAllianceDecisionEmail } from "@/lib/email-notifications";
 import { getTournamentRanking, recalculateTournamentState } from "@/lib/tournament";
 import { apiError, applyRateLimit, requireSession } from "@/app/api/_utils";
 
@@ -21,9 +22,19 @@ export async function POST(req: Request) {
       where: { id: playerId },
       select: {
         id: true,
+        pseudo: true,
+        email: true,
         gameMode: true,
         purchasedById: true,
+        purchasedAt: true,
         alliancePending: true,
+        purchasedBy: {
+          select: {
+            id: true,
+            pseudo: true,
+            email: true,
+          },
+        },
       },
     });
 
@@ -48,6 +59,17 @@ export async function POST(req: Request) {
           alliancePending: false,
         },
       });
+
+      if (player.purchasedBy && player.purchasedAt) {
+        void sendAllianceDecisionEmail({
+          eventKey: `alliance-accepted:${player.purchasedBy.id}:${player.id}:${player.purchasedAt.toISOString()}`,
+          accepted: true,
+          buyer: player.purchasedBy,
+          target: player,
+        }).catch((error) => {
+          console.error("[alliance-respond] accept email failed", error);
+        });
+      }
 
       return NextResponse.json({ ok: true, status: "ACCEPTED" });
     }
@@ -83,6 +105,17 @@ export async function POST(req: Request) {
 
       await recalculateTournamentState(tx);
     });
+
+    if (player.purchasedBy && player.purchasedAt) {
+      void sendAllianceDecisionEmail({
+        eventKey: `alliance-refused:${player.purchasedBy.id}:${player.id}:${player.purchasedAt.toISOString()}`,
+        accepted: false,
+        buyer: player.purchasedBy,
+        target: player,
+      }).catch((error) => {
+        console.error("[alliance-respond] refusal email failed", error);
+      });
+    }
 
     return NextResponse.json({ ok: true, status: "REFUSED" });
   } catch (error) {

@@ -5,7 +5,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getCreditPack } from "@/lib/economy";
 import { createHostedCreditTransaction, ensureFedaPayConfigured, getPublicSiteUrl } from "@/lib/fedapay";
-import { apiError, applyRateLimit, requireSession } from "@/app/api/_utils";
+import { apiError, applyRateLimit, getApiErrorInfo, requireSession } from "@/app/api/_utils";
 
 const BodySchema = z.object({
   packKey: z.string().min(1),
@@ -137,7 +137,9 @@ export async function POST(req: Request) {
       checkoutUrl: remotePayment.checkoutUrl,
     });
   } catch (error) {
-    if (merchantReference && error instanceof Error) {
+    const errorInfo = getApiErrorInfo(error);
+
+    if (merchantReference) {
       await prisma.creditPayment.updateMany({
         where: {
           merchantReference,
@@ -145,10 +147,17 @@ export async function POST(req: Request) {
         },
         data: {
           status: "INIT_FAILED",
-          failureReason: error.message,
+          failureReason: errorInfo.message,
         },
       });
     }
+
+    console.error("[api/credit/purchase] payment init failed", {
+      merchantReference,
+      status: errorInfo.status,
+      message: errorInfo.message,
+      details: errorInfo.details,
+    });
 
     return apiError(error);
   }

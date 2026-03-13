@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { authOptions } from "@/lib/auth";
+import { sendRoiApprovedEmail, sendRoiReplacementEmails } from "@/lib/email-notifications";
 import { prisma } from "@/lib/prisma";
 import { getTournamentConfig, recalculateTournamentState } from "@/lib/tournament";
 
@@ -78,19 +79,22 @@ export default async function AdminTournamentManager({ compact = false }: { comp
     const activeRoiId = String(formData.get("activeRoiId") ?? "").trim();
     if (!activeRoiId) return;
 
+    const previousConfig = await getTournamentConfig();
+    const startedAt = new Date();
+
     await prisma.$transaction(async (tx) => {
       await tx.tournamentConfig.upsert({
         where: { id: "main" },
         update: {
           stage: TournamentStage.ACTIVE,
           activeRoiId,
-          startedAt: new Date(),
+          startedAt,
         },
         create: {
           id: "main",
           stage: TournamentStage.ACTIVE,
           activeRoiId,
-          startedAt: new Date(),
+          startedAt,
         },
       });
       await tx.player.update({
@@ -99,6 +103,44 @@ export default async function AdminTournamentManager({ compact = false }: { comp
       });
       await recalculateTournamentState(tx);
     });
+
+    if (previousConfig.activeRoiId !== activeRoiId) {
+      const roiPlayers = await prisma.player.findMany({
+        where: {
+          id: {
+            in: [activeRoiId, previousConfig.activeRoiId].filter(Boolean) as string[],
+          },
+        },
+        select: {
+          id: true,
+          pseudo: true,
+          email: true,
+        },
+      });
+
+      const nextRoi = roiPlayers.find((player) => player.id === activeRoiId) ?? null;
+      const previousRoi = previousConfig.activeRoiId
+        ? roiPlayers.find((player) => player.id === previousConfig.activeRoiId) ?? null
+        : null;
+
+      if (nextRoi) {
+        const stamp = startedAt.toISOString();
+        void (previousRoi
+          ? sendRoiReplacementEmails({
+              dethroned: previousRoi,
+              nextRoi,
+              dethronedEventKey: `roi-dethroned:${previousRoi.id}:${nextRoi.id}:${stamp}`,
+              announcementEventKey: `roi-replaced:${previousRoi.id}:${nextRoi.id}:${stamp}`,
+            })
+          : sendRoiApprovedEmail({
+              eventKey: `roi-approved:${nextRoi.id}:${stamp}`,
+              roi: nextRoi,
+            })
+        ).catch((error) => {
+          console.error("[admin-tournament] ROI email failed", error);
+        });
+      }
+    }
 
     await revalidateTournamentPages();
   }
@@ -140,6 +182,8 @@ export default async function AdminTournamentManager({ compact = false }: { comp
     "use server";
     await ensureAdmin();
 
+    const previousConfig = await getTournamentConfig();
+
     const entries = Array.from(formData.entries()).filter(([key]) => key.startsWith("rank-"));
     const rankAssignments = entries
       .map(([key, value]) => ({
@@ -153,7 +197,10 @@ export default async function AdminTournamentManager({ compact = false }: { comp
       throw new Error("Attribue un rang unique de 1 a 20 a chaque joueur du top 20.");
     }
 
+    const roiRank = rankAssignments.find((entry) => entry.rank === 1)?.playerId ?? null;
+
     await prisma.$transaction(async (tx) => {
+      const finalizedAt = new Date();
       for (const assignment of rankAssignments) {
         await tx.player.update({
           where: { id: assignment.playerId },
@@ -161,23 +208,60 @@ export default async function AdminTournamentManager({ compact = false }: { comp
         });
       }
 
-      const roiRank = rankAssignments.find((entry) => entry.rank === 1)?.playerId ?? null;
       await tx.tournamentConfig.upsert({
         where: { id: "main" },
         update: {
           stage: TournamentStage.FINALIZED,
-          finalizedAt: new Date(),
+          finalizedAt,
           activeRoiId: roiRank,
         },
         create: {
           id: "main",
           stage: TournamentStage.FINALIZED,
-          finalizedAt: new Date(),
+          finalizedAt,
           activeRoiId: roiRank,
         },
       });
       await recalculateTournamentState(tx);
     });
+
+    if (roiRank && previousConfig.activeRoiId !== roiRank) {
+      const roiPlayers = await prisma.player.findMany({
+        where: {
+          id: {
+            in: [roiRank, previousConfig.activeRoiId].filter(Boolean) as string[],
+          },
+        },
+        select: {
+          id: true,
+          pseudo: true,
+          email: true,
+        },
+      });
+
+      const nextRoi = roiPlayers.find((player) => player.id === roiRank) ?? null;
+      const previousRoi = previousConfig.activeRoiId
+        ? roiPlayers.find((player) => player.id === previousConfig.activeRoiId) ?? null
+        : null;
+
+      if (nextRoi) {
+        const stamp = new Date().toISOString();
+        void (previousRoi
+          ? sendRoiReplacementEmails({
+              dethroned: previousRoi,
+              nextRoi,
+              dethronedEventKey: `roi-dethroned:final:${previousRoi.id}:${nextRoi.id}:${stamp}`,
+              announcementEventKey: `roi-replaced:final:${previousRoi.id}:${nextRoi.id}:${stamp}`,
+            })
+          : sendRoiApprovedEmail({
+              eventKey: `roi-approved:final:${nextRoi.id}:${stamp}`,
+              roi: nextRoi,
+            })
+        ).catch((error) => {
+          console.error("[admin-tournament] final ROI email failed", error);
+        });
+      }
+    }
 
     await revalidateTournamentPages();
   }

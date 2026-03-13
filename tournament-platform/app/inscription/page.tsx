@@ -25,6 +25,7 @@ async function uploadLogo(file: File) {
 export default function InscriptionPage() {
   const router = useRouter();
   const [pseudo, setPseudo] = useState("");
+  const [email, setEmail] = useState("");
   const [freefireId, setFreefireId] = useState("");
   const [countryCode, setCountryCode] = useState("FR");
   const [gameMode, setGameMode] = useState<"SPAM" | "ONETAP">("SPAM");
@@ -59,7 +60,7 @@ export default function InscriptionPage() {
       const res = await fetch("/api/player/create", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ pseudo, freefireId, countryCode, gameMode, password, logoUrl }),
+        body: JSON.stringify({ pseudo, email, freefireId, countryCode, gameMode, password, logoUrl }),
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json?.error ?? "Inscription impossible");
@@ -163,12 +164,16 @@ export default function InscriptionPage() {
                   <input value={pseudo} onChange={(e) => setPseudo(e.target.value)} className="tp-input tp-auth-input" placeholder="Ton blaze" required />
                 </div>
                 <div>
-                  <label className="tp-auth-label">ID Free Fire</label>
-                  <input value={freefireId} onChange={(e) => setFreefireId(e.target.value)} className="tp-input tp-auth-input" placeholder="ID officiel" required />
+                  <label className="tp-auth-label">Email</label>
+                  <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="tp-input tp-auth-input" placeholder="ton@email.com" required />
                 </div>
               </div>
 
               <div className="grid gap-4 md:grid-cols-2">
+                <div>
+                  <label className="tp-auth-label">ID Free Fire</label>
+                  <input value={freefireId} onChange={(e) => setFreefireId(e.target.value)} className="tp-input tp-auth-input" placeholder="ID officiel" required />
+                </div>
                 <div>
                   <label className="tp-auth-label">Pays</label>
                   <select value={countryCode} onChange={(e) => setCountryCode(e.target.value)} className="tp-input tp-auth-input" required>
@@ -179,6 +184,9 @@ export default function InscriptionPage() {
                     ))}
                   </select>
                 </div>
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-2">
                 <div>
                   <label className="tp-auth-label">Mot de passe</label>
                   <input

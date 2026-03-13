@@ -107,7 +107,12 @@ export default function LoginPage() {
               </div>
 
               <div>
-                <label className="tp-auth-label">Mot de passe</label>
+                <div className="mb-2 flex items-center justify-between gap-3">
+                  <label className="tp-auth-label !mb-0">Mot de passe</label>
+                  <Link href="/forgot-password" className="text-xs font-bold uppercase tracking-[0.18em] text-cyan-200/80 transition hover:text-cyan-100">
+                    Mot de passe oublié ?
+                  </Link>
+                </div>
                 <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="tp-input tp-auth-input" placeholder="Mot de passe" required />
               </div>
 

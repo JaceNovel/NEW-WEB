@@ -1,10 +1,7 @@
 const { app, BrowserWindow, nativeImage, shell } = require("electron");
 const path = require("path");
-const { pathToFileURL } = require("url");
-
 const appUrl = process.env.KING_LEAGUE_APP_URL || process.env.NEXT_PUBLIC_SITE_URL || "https://kingleague.space";
 const iconPath = path.join(__dirname, "..", "public", "pp1-removebg-preview (1).png");
-const splashPath = path.join(__dirname, "..", "public", "Design sans titre (1).png");
 
 app.disableHardwareAcceleration();
 app.commandLine.appendSwitch("disable-gpu");
@@ -14,8 +11,6 @@ let mainWindow = null;
 let splashWindow = null;
 
 function buildSplashMarkup() {
-  const splashUrl = pathToFileURL(splashPath).href;
-
   return `<!doctype html>
   <html lang="fr">
     <head>
@@ -77,46 +72,17 @@ function buildSplashMarkup() {
           text-transform: uppercase;
           color: rgba(255, 237, 214, 0.96);
         }
-        .art {
-          margin-top: 16px;
-          border-radius: 24px;
-          overflow: hidden;
-          border: 1px solid rgba(255, 255, 255, 0.08);
-          background: rgba(255, 255, 255, 0.03);
-        }
-        .art img {
-          display: block;
-          width: 100%;
-          height: auto;
-          object-fit: cover;
-        }
-        .loader {
-          width: 52px;
-          height: 52px;
-          margin: 18px auto 0;
-          border-radius: 999px;
-          border: 3px solid rgba(255, 255, 255, 0.12);
-          border-top-color: #ffcb7b;
-          border-right-color: #84d9ff;
-          animation: spin 0.9s linear infinite;
-          box-shadow: 0 0 24px rgba(255, 203, 123, 0.18);
-        }
-        h1 {
-          margin: 18px 0 0;
-          font-size: 30px;
+        .welcome-word {
+          margin: 30px 0 6px;
+          font-size: 54px;
           line-height: 1;
-          letter-spacing: -0.05em;
-        }
-        p {
-          margin: 10px 0 0;
-          color: rgba(236, 241, 255, 0.72);
-          font-size: 14px;
-          line-height: 1.6;
-        }
-        @keyframes spin {
-          to {
-            transform: rotate(360deg);
-          }
+          font-weight: 900;
+          letter-spacing: -0.08em;
+          text-transform: lowercase;
+          color: #fff7eb;
+          text-shadow:
+            0 0 22px rgba(255, 203, 123, 0.22),
+            0 0 38px rgba(132, 217, 255, 0.12);
         }
       </style>
     </head>
@@ -124,10 +90,7 @@ function buildSplashMarkup() {
       <main class="wrap">
         <section class="card">
           <div class="kicker">KING League official app</div>
-          <div class="art"><img src="${splashUrl}" alt="KING League splash" /></div>
-          <div class="loader" aria-hidden="true"></div>
-          <h1>KING League</h1>
-          <p>Chargement de l'app officielle mobile et desktop.</p>
+          <div class="welcome-word">welcom</div>
         </section>
       </main>
     </body>

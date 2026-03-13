@@ -5,6 +5,51 @@ import { NextResponse } from "next/server";
 import { authOptions } from "@/lib/auth";
 import { rateLimitOrThrow } from "@/lib/rateLimit";
 
+type ErrorWithMetadata = {
+  status?: number;
+  httpStatus?: number | null;
+  message?: string;
+  errorMessage?: string;
+  errors?: unknown;
+};
+
+function formatErrorDetails(value: unknown) {
+  if (!value) return null;
+  if (typeof value === "string") return value;
+
+  try {
+    return JSON.stringify(value);
+  } catch {
+    return String(value);
+  }
+}
+
+export function getApiErrorInfo(error: unknown) {
+  const candidate = (typeof error === "object" && error ? error : null) as ErrorWithMetadata | null;
+  const status = typeof candidate?.status === "number"
+    ? candidate.status
+    : typeof candidate?.httpStatus === "number"
+      ? candidate.httpStatus
+      : 400;
+
+  const baseMessage =
+    typeof candidate?.errorMessage === "string" && candidate.errorMessage.trim()
+      ? candidate.errorMessage.trim()
+      : error instanceof Error
+        ? error.message
+        : typeof candidate?.message === "string" && candidate.message.trim()
+          ? candidate.message.trim()
+          : "Invalid request";
+
+  const detailMessage = formatErrorDetails(candidate?.errors);
+
+  return {
+    status,
+    message: detailMessage ? `${baseMessage} (${detailMessage})` : baseMessage,
+    details: candidate?.errors ?? null,
+  };
+}
+
 export function getClientIp() {
   const h = headers();
   const forwardedFor = h.get("x-forwarded-for");
@@ -13,8 +58,7 @@ export function getClientIp() {
 }
 
 export function apiError(error: unknown) {
-  const status = typeof error === "object" && error && "status" in error ? (error as any).status : 400;
-  const message = error instanceof Error ? error.message : "Invalid request";
+  const { status, message } = getApiErrorInfo(error);
   return NextResponse.json({ ok: false, error: message }, { status });
 }
 

@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { prisma } from "@/lib/prisma";
 import { getAllianceLabel, getRecruitmentCost, hasRecruitmentAccess } from "@/lib/economy";
+import { sendAllianceRequestEmail } from "@/lib/email-notifications";
 import { getTournamentRanking, recalculateTournamentState } from "@/lib/tournament";
 import { apiError, applyRateLimit, requireSession } from "@/app/api/_utils";
 
@@ -28,6 +29,7 @@ export async function POST(req: Request) {
           select: {
             id: true,
             pseudo: true,
+            email: true,
             credits: true,
             gameMode: true,
             purchasedById: true,
@@ -39,6 +41,7 @@ export async function POST(req: Request) {
           select: {
             id: true,
             pseudo: true,
+            email: true,
             gameMode: true,
             purchasedById: true,
             recruitedPlayers: { select: { id: true } },
@@ -90,6 +93,7 @@ export async function POST(req: Request) {
         select: {
           id: true,
           pseudo: true,
+          email: true,
           credits: true,
           recruitedPlayers: {
             select: {
@@ -112,8 +116,10 @@ export async function POST(req: Request) {
         select: {
           id: true,
           pseudo: true,
+          email: true,
           logoUrl: true,
           freefireId: true,
+          purchasedAt: true,
         },
       });
 
@@ -128,6 +134,16 @@ export async function POST(req: Request) {
         cost,
       };
     });
+
+    if (payload.target.purchasedAt) {
+      void sendAllianceRequestEmail({
+        eventKey: `alliance-request:${payload.buyer.id}:${payload.target.id}:${payload.target.purchasedAt.toISOString()}`,
+        buyer: payload.buyer,
+        target: payload.target,
+      }).catch((error) => {
+        console.error("[player-buy] alliance request email failed", error);
+      });
+    }
 
     return NextResponse.json({ ok: true, payload });
   } catch (error) {

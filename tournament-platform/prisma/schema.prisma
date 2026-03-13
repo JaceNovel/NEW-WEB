@@ -47,6 +47,7 @@ enum TournamentStage {
 model Player {
   id           String       @id @default(cuid())
   pseudo       String       @unique
+  email        String?      @unique
   freefireId   String       @unique
   countryCode  String       @default("FR")
   gameMode     GameMode
@@ -79,6 +80,7 @@ model Player {
   recruitedPlayers   Player[]     @relation("PlayerAlliance")
   creditPurchases    CreditPurchase[]
   creditPayments     CreditPayment[]
+  passwordResetTokens PasswordResetToken[]
 }
 
 model TournamentConfig {
@@ -181,4 +183,31 @@ model CreditPayment {
 
   @@index([playerId, status, createdAt])
   @@index([packKey, createdAt])
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  playerId   String
+  tokenHash String   @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  player Player @relation(fields: [playerId], references: [id])
+
+  @@index([playerId, expiresAt])
+}
+
+model NotificationDispatch {
+  id        String   @id @default(cuid())
+  eventKey  String   @unique
+  type      String
+  status    String   @default("PENDING")
+  payload   Json?
+  lastError String?
+  sentAt    DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([type, status, createdAt])
 }

@@ -12,6 +12,7 @@ const countryCodes = COUNTRY_OPTIONS.map((country) => country.code) as [string, 
 
 const BodySchema = z.object({
   pseudo: z.string().min(2).max(24),
+  email: z.string().email().max(160),
   freefireId: z.string().min(3).max(32),
   countryCode: z.enum(countryCodes),
   gameMode: z.nativeEnum(GameMode),
@@ -36,10 +37,24 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: false, error: "Cet ID Free Fire est déjà inscrit." }, { status: 409 });
     }
 
+    const existingByEmail = await prisma.player.findFirst({
+      where: {
+        email: {
+          equals: body.email.trim().toLowerCase(),
+          mode: "insensitive",
+        },
+      },
+      select: { id: true },
+    });
+    if (existingByEmail) {
+      return NextResponse.json({ ok: false, error: "Cette adresse email est déjà utilisée." }, { status: 409 });
+    }
+
     const created = await prisma.$transaction(async (tx) => {
       const player = await tx.player.create({
         data: {
           pseudo: body.pseudo.trim(),
+          email: body.email.trim().toLowerCase(),
           freefireId: body.freefireId.trim(),
           countryCode: body.countryCode.trim().toUpperCase(),
           gameMode: body.gameMode,

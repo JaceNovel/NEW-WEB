@@ -10,6 +10,7 @@ Copier `.env.example` vers `.env` et remplir :
 - `NEXTAUTH_URL`, `NEXTAUTH_SECRET`
 - `CLOUDINARY_*`
 - `FEDAPAY_ENVIRONMENT`, `FEDAPAY_SECRET_KEY`, `FEDAPAY_WEBHOOK_SECRET`
+- `BREVO_API_KEY`, `BREVO_SENDER_EMAIL`, `BREVO_SENDER_NAME`
 - Optionnel: `NEXT_PUBLIC_SITE_URL` si l'URL publique differe de `NEXTAUTH_URL`
 
 ### 2) Base de données (Prisma)
@@ -69,6 +70,38 @@ Dans le dashboard FedaPay, configure le webhook vers:
 - `https://kingleague.space/api/fedapay/webhook`
 
 Le systeme est idempotent: si FedaPay reenvoie le meme evenement, les credits ne sont pas recrédités.
+
+## Emails transactionnels Brevo
+
+Brevo est utilise pour les emails transactionnels de la plateforme:
+
+- lien de reinitialisation du mot de passe oublie
+- notification de demande d'association apres achat de joueur
+- notification d'acceptation ou de refus d'association
+- annonces ROI: nouveau ROI, ROI dechu, remplacement du ROI
+
+Variables a configurer:
+
+- `BREVO_API_KEY`
+- `BREVO_SENDER_EMAIL`
+- `BREVO_SENDER_NAME`
+
+Routes ajoutees:
+
+- `POST /api/auth/forgot-password`
+- `POST /api/auth/reset-password`
+
+Pages ajoutees:
+
+- `/forgot-password`
+- `/reset-password?token=...`
+
+Apres les changements Prisma, synchronise le schema puis regenere le client:
+
+```bash
+npx prisma db push
+npx prisma generate
+```
 
 ## App Mobile Et Desktop
 
