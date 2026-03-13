@@ -410,14 +410,23 @@ export default async function AdminTournamentManager({ compact = false }: { comp
             <p className="mt-2 text-sm text-white/60">
               Tant que ce choix n&apos;est pas fait, personne n&apos;apparait dans le classement public.
             </p>
-            <select name="activeRoiId" defaultValue={config.activeRoiId ?? ""} className="mt-5 w-full rounded-2xl border border-white/10 bg-[#101010] px-4 py-3 text-sm font-medium text-white outline-none">
-              <option value="">Selectionner un joueur du top 20</option>
-              {lockedPlayers.map((player) => (
-                <option key={player.id} value={player.id}>
-                  {player.pseudo} • {player.gameMode} • {player.freefireId}
-                </option>
-              ))}
-            </select>
+            <div className="mt-5 overflow-hidden rounded-[24px] border border-white/10 bg-[#101010]">
+              <div className="max-h-[250px] space-y-2 overflow-y-auto p-3 pr-2">
+                {lockedPlayers.map((player) => {
+                  const isActive = config.activeRoiId === player.id;
+
+                  return (
+                    <label key={player.id} className={`flex cursor-pointer items-center gap-3 rounded-2xl border px-4 py-3 text-sm transition ${isActive ? "border-amber-300/24 bg-amber-300/10 text-white" : "border-white/10 bg-black/20 text-white/88"}`}>
+                      <input type="radio" name="activeRoiId" value={player.id} defaultChecked={isActive} className="h-4 w-4 accent-orange-400" />
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate font-semibold">{player.pseudo}</span>
+                        <span className="mt-1 block text-xs uppercase tracking-[0.16em] text-white/45">{player.gameMode} • {player.freefireId}</span>
+                      </span>
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
             <div className="mt-5 flex justify-end">
               <button className="tp-button-primary" type="submit">
                 Lancer le tournoi
@@ -430,19 +439,22 @@ export default async function AdminTournamentManager({ compact = false }: { comp
             <p className="mt-2 text-sm text-white/60">
               Choisis les {requiredTop10Count} joueurs prioritaires du top 20 actuel. Le ROI doit faire partie de cette liste.
             </p>
-            <div className="mt-5 grid gap-3 md:grid-cols-2">
-              {lockedPlayers.map((player) => (
-                <label key={player.id} className="flex items-center gap-3 rounded-2xl border border-white/10 bg-[#101010] px-4 py-3 text-sm text-white/88">
-                  <input type="checkbox" name="top10" value={player.id} defaultChecked={player.isSeededTop10} className="h-4 w-4 accent-orange-400" />
-                  <span>
-                    {player.pseudo} • {player.gameMode}
-                  </span>
-                </label>
-              ))}
+            <div className="mt-5 overflow-hidden rounded-[24px] border border-white/10 bg-[#101010]">
+              <div className="max-h-[250px] space-y-2 overflow-y-auto p-3 pr-2">
+                {lockedPlayers.map((player) => (
+                  <label key={player.id} className="flex items-center gap-3 rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-white/88 transition hover:border-white/20 hover:bg-white/[0.03]">
+                    <input type="checkbox" name="top10" value={player.id} defaultChecked={player.isSeededTop10} className="h-4 w-4 accent-orange-400" />
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate font-semibold">{player.pseudo}</span>
+                      <span className="mt-1 block text-xs uppercase tracking-[0.16em] text-white/45">{player.gameMode} • {player.freefireId}</span>
+                    </span>
+                  </label>
+                ))}
+              </div>
             </div>
             <div className="mt-5 flex justify-end">
               <button className="tp-button-primary" type="submit">
-                Sauver le top 10
+                Sauver le top prioritaire
               </button>
             </div>
           </form>
@@ -452,9 +464,10 @@ export default async function AdminTournamentManager({ compact = false }: { comp
             <p className="mt-2 text-sm text-white/60">
               Attribue à chacun un rang final unique de 1 à {lockedPlayers.length}. Les inscrits après la clôture seront automatiquement classés à partir du rang suivant.
             </p>
-            <div className="mt-5 grid gap-3 md:grid-cols-2">
+            <div className="mt-5 overflow-hidden rounded-[24px] border border-white/10 bg-[#101010]">
+              <div className="max-h-[340px] space-y-3 overflow-y-auto p-3 pr-2">
               {lockedPlayers.map((player) => (
-                <label key={player.id} className="rounded-2xl border border-white/10 bg-[#101010] px-4 py-3 text-sm text-white/88">
+                <label key={player.id} className="block rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-white/88">
                   <span className="block font-semibold text-white">{player.pseudo}</span>
                   <span className="mt-1 block text-xs uppercase tracking-[0.18em] text-slate-400">
                     {player.gameMode} • {player.freefireId}
@@ -470,6 +483,7 @@ export default async function AdminTournamentManager({ compact = false }: { comp
                   />
                 </label>
               ))}
+              </div>
             </div>
             <div className="mt-5 flex justify-end">
               <button className="tp-button-primary" type="submit">
@@ -481,25 +495,52 @@ export default async function AdminTournamentManager({ compact = false }: { comp
 
         <div className="space-y-4">
           <div className="rounded-[28px] border border-slate-950 bg-[#050505] p-6 shadow-sm">
+            <div className="text-lg font-bold text-white">Top 20 hors top prioritaire</div>
+            <p className="mt-2 text-sm text-white/60">
+              Les joueurs retenus dans le top 20 mais non coches comme prioritaires restent ici en lecture rapide.
+            </p>
+            <div className="mt-4 overflow-hidden rounded-[24px] border border-white/10 bg-[#101010]">
+              <div className="max-h-[250px] space-y-2 overflow-y-auto p-3 pr-2">
+              {lockedPlayers.filter((player) => !player.isSeededTop10).length ? (
+                lockedPlayers
+                  .filter((player) => !player.isSeededTop10)
+                  .map((player) => (
+                    <div key={player.id} className="flex items-center justify-between rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-white/72">
+                      <span className="font-semibold text-white/88">{player.pseudo}</span>
+                      <span>{player.gameMode}</span>
+                    </div>
+                  ))
+              ) : (
+                <div className="rounded-2xl border border-white/10 bg-black/20 px-4 py-4 text-sm text-white/58">
+                  Tous les joueurs du top 20 actuel sont deja dans le top prioritaire.
+                </div>
+              )}
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-[28px] border border-slate-950 bg-[#050505] p-6 shadow-sm">
             <div className="text-lg font-bold text-white">Joueurs hors top 20</div>
             <p className="mt-2 text-sm text-white/60">
               Ces joueurs seront classés automatiquement à partir du rang suivant, selon l&apos;ordre d&apos;inscription.
             </p>
-            <div className="mt-4 space-y-2">
+            <div className="mt-4 overflow-hidden rounded-[24px] border border-white/10 bg-[#101010]">
+              <div className="max-h-[250px] space-y-2 overflow-y-auto p-3 pr-2">
               {laterPlayers.length ? (
                 laterPlayers.map((player, index) => (
-                  <div key={player.id} className="flex items-center justify-between rounded-2xl border border-white/10 bg-[#101010] px-4 py-3 text-sm text-white/72">
-                    <span>{player.pseudo}</span>
+                  <div key={player.id} className="flex items-center justify-between rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-white/72">
+                    <span className="font-semibold text-white/88">{player.pseudo}</span>
                     <span>Rang provisoire #{lockedPlayers.length + index + 1}</span>
                   </div>
                 ))
               ) : (
-                <div className="rounded-2xl border border-white/10 bg-[#101010] px-4 py-4 text-sm text-white/58">
+                <div className="rounded-2xl border border-white/10 bg-black/20 px-4 py-4 text-sm text-white/58">
                   {players.length < config.registrationLimit
                     ? "Aucun joueur n'est hors top 20 pour l'instant. Les inscrits actuels composent encore le top 20 provisoire."
                     : "Aucun inscrit apres la cloture du top 20."}
                 </div>
               )}
+              </div>
             </div>
           </div>
 
