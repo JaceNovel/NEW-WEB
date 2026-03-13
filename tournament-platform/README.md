@@ -11,6 +11,7 @@ Copier `.env.example` vers `.env` et remplir :
 - `CLOUDINARY_*`
 - `FEDAPAY_ENVIRONMENT`, `FEDAPAY_SECRET_KEY`, `FEDAPAY_WEBHOOK_SECRET`
 - `BREVO_API_KEY`, `BREVO_SENDER_EMAIL`, `BREVO_SENDER_NAME`
+- Optionnel: `MATCH_REST_DAY_UTC` pour choisir le jour sans duel en UTC (`0` a `6`, ou `dimanche`, `lundi`, etc.)
 - Optionnel: `NEXT_PUBLIC_SITE_URL` si l'URL publique differe de `NEXTAUTH_URL`
 
 ### 2) Base de données (Prisma)
@@ -86,6 +87,10 @@ Brevo est utilise pour les emails transactionnels de la plateforme:
 - notification de demande d'association apres achat de joueur
 - notification d'acceptation ou de refus d'association
 - annonces ROI: nouveau ROI, ROI dechu, remplacement du ROI
+- confirmation de defi pour le challenger
+- notification de defi pour le joueur cible
+- confirmation de match programme par KING League
+- notification d'annulation ou de report de match
 
 Variables a configurer:
 

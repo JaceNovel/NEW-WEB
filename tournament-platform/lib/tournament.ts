@@ -176,6 +176,31 @@ type RankingPlayer = {
   recruitedPlayersCount: number;
 };
 
+type TournamentPoolPlayer = {
+  id: string;
+  createdAt: Date;
+  seededTop20At: Date | null;
+};
+
+export function splitTournamentPools<T extends TournamentPoolPlayer>(players: T[], registrationLimit: number) {
+  const orderedByCreatedAt = [...players].sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+  const explicitTop20 = orderedByCreatedAt.filter((player) => Boolean(player.seededTop20At));
+
+  if (explicitTop20.length > 0) {
+    const explicitIds = new Set(explicitTop20.map((player) => player.id));
+
+    return {
+      top20Pool: explicitTop20,
+      laterPlayers: orderedByCreatedAt.filter((player) => !explicitIds.has(player.id)),
+    };
+  }
+
+  return {
+    top20Pool: orderedByCreatedAt.slice(0, registrationLimit),
+    laterPlayers: orderedByCreatedAt.slice(registrationLimit),
+  };
+}
+
 function withPositions(players: RankingPlayer[]) {
   return players.map((player, index) => ({
     ...player,
@@ -183,13 +208,12 @@ function withPositions(players: RankingPlayer[]) {
   }));
 }
 
-export function orderTournamentRanking(config: { stage: TournamentStage; activeRoiId: string | null }, players: RankingPlayer[]) {
+export function orderTournamentRanking(config: { stage: TournamentStage; activeRoiId: string | null; registrationLimit: number }, players: RankingPlayer[]) {
   if (config.stage === TournamentStage.REGISTRATION || config.stage === TournamentStage.LOCKED || !config.activeRoiId && config.stage !== TournamentStage.FINALIZED) {
     return [] as Array<RankingPlayer & { rankingPosition: number }>;
   }
 
-  const top20Pool = players.filter((player) => Boolean(player.seededTop20At));
-  const laterPlayers = players.filter((player) => !player.seededTop20At).sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+  const { top20Pool, laterPlayers } = splitTournamentPools(players, config.registrationLimit);
 
   if (config.stage === TournamentStage.FINALIZED) {
     const finalizedTop20 = top20Pool

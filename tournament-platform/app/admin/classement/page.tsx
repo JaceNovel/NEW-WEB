@@ -54,8 +54,8 @@ export default async function AdminClassementPage() {
   return (
     <main className="space-y-6">
       <div className="mb-2">
-        <h1 className="text-2xl font-extrabold text-white">Classement</h1>
-        <p className="mt-2 text-sm text-white/60">Classement en direct du tournoi et acces a la gestion du ROI, du top 10 et du top 20 final.</p>
+        <h1 className="text-2xl font-extrabold text-slate-950">Classement</h1>
+        <p className="mt-2 text-sm text-slate-500">Classement en direct du tournoi et accès à la gestion du ROI, du top 10 et du top 20 final.</p>
       </div>
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">

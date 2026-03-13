@@ -1,7 +1,10 @@
 import { ChallengeStatus, PlayerStatus, TournamentStage } from "@prisma/client";
+import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
+import { sendChallengeCreatedEmails } from "@/lib/email-notifications";
+import { computeNextMatchSlot } from "@/lib/match-scheduling";
 import { prisma } from "@/lib/prisma";
 import { getTournamentConfig, recalculateTournamentState } from "@/lib/tournament";
 import { apiError, applyRateLimit, requireSession } from "@/app/api/_utils";
@@ -60,18 +63,56 @@ export async function POST(req: Request) {
       });
       if (existing) throw new Error("Challenge already exists");
 
+      const scheduledMatches = await tx.match.findMany({
+        where: {
+          status: { in: ["PENDING", "LIVE"] },
+          date: { gte: new Date() },
+        },
+        select: { date: true },
+      });
+
+      const scheduledAt = computeNextMatchSlot({ existingDates: scheduledMatches.map((match) => match.date) });
+
       const challenge = await tx.challenge.create({
         data: { challengerId, defenderId: body.defenderId },
+        include: {
+          challenger: { select: { id: true, pseudo: true, email: true } },
+          defender: { select: { id: true, pseudo: true, email: true } },
+        },
       });
+
+      const match = await tx.match.create({
+        data: {
+          player1Id: challengerId,
+          player2Id: body.defenderId,
+          date: scheduledAt,
+        },
+        select: { id: true, date: true },
+      });
+
       await tx.player.update({
         where: { id: challengerId },
         data: { credits: { decrement: 1 } },
       });
       await recalculateTournamentState(tx);
-      return challenge;
+      return { challenge, match };
     });
 
-    return NextResponse.json({ ok: true, challenge: created });
+    void sendChallengeCreatedEmails({
+      eventKey: `challenge-created:${created.challenge.id}:${created.match.date.toISOString()}`,
+      challenger: created.challenge.challenger,
+      defender: created.challenge.defender,
+      scheduledAt: created.match.date,
+    }).catch((error) => {
+      console.error("[challenge-create] challenge emails failed", error);
+    });
+
+    revalidatePath("/historique");
+    revalidatePath("/matchs");
+    revalidatePath("/admin/matchs");
+    revalidatePath("/profile");
+
+    return NextResponse.json({ ok: true, challenge: created.challenge, match: created.match });
   } catch (error) {
     return apiError(error);
   }

@@ -2,6 +2,7 @@ import { Prisma } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
 import { getAppBaseUrl, getBrevoConfigurationStatus, isBrevoConfigured, sendBrevoBroadcastEmail, sendBrevoEmail, type BrevoRecipient } from "@/lib/brevo";
+import { formatScheduledMatchDate, getScheduledMatchTimezoneLabel } from "@/lib/match-scheduling";
 
 type PlayerRecipient = {
   id: string;
@@ -421,4 +422,209 @@ export async function sendRoiReplacementEmails(params: {
       tags: ["roi-replaced"],
     }),
   );
+}
+
+export async function sendChallengeCreatedEmails(params: {
+  eventKey: string;
+  challenger: PlayerRecipient;
+  defender: PlayerRecipient;
+  scheduledAt: Date;
+}) {
+  const challengerRecipient = toRecipient(params.challenger);
+  const defenderRecipient = toRecipient(params.defender);
+  const profileUrl = `${getAppBaseUrl()}/profile`;
+  const whenLabel = `${formatScheduledMatchDate(params.scheduledAt)} ${getScheduledMatchTimezoneLabel()}`;
+
+  const tasks: Array<Promise<boolean>> = [];
+
+  if (challengerRecipient) {
+    tasks.push(
+      runNotificationOnce(
+        `${params.eventKey}:challenger`,
+        "CHALLENGE_CREATED_CHALLENGER",
+        { challengerId: params.challenger.id, defenderId: params.defender.id, scheduledAt: params.scheduledAt.toISOString() },
+        () => sendBrevoEmail({
+          to: [challengerRecipient],
+          subject: `Défi confirmé contre ${params.defender.pseudo}`,
+          htmlContent: emailFrame(
+            "Ton défi est confirmé",
+            `Ton défi contre ${params.defender.pseudo} a bien été enregistré par KING League.`,
+            `<p>Le duel est planifié pour le <strong>${escapeHtml(whenLabel)}</strong>.</p>
+             <p>Tous les duels ont lieu entre 21h00 et 22h30 GMT, sur des créneaux de 15 minutes.</p>
+             <p>Retrouve ce rendez-vous dans ton profil et prépare-toi pour l'affrontement.</p>`,
+            "Voir mon profil",
+            profileUrl,
+          ),
+          textContent: `Ton défi contre ${params.defender.pseudo} est confirmé. Date: ${whenLabel}. Profil: ${profileUrl}`,
+          tags: ["challenge-created", "challenger-confirmation"],
+        }),
+      ),
+    );
+  }
+
+  if (defenderRecipient) {
+    tasks.push(
+      runNotificationOnce(
+        `${params.eventKey}:defender`,
+        "CHALLENGE_CREATED_DEFENDER",
+        { challengerId: params.challenger.id, defenderId: params.defender.id, scheduledAt: params.scheduledAt.toISOString() },
+        () => sendBrevoEmail({
+          to: [defenderRecipient],
+          subject: `${params.challenger.pseudo} t'a lancé un défi`,
+          htmlContent: emailFrame(
+            "Nouveau défi reçu",
+            `${params.challenger.pseudo} t'a officiellement défié sur KING League.`,
+            `<p>Le duel est déjà positionné au <strong>${escapeHtml(whenLabel)}</strong>.</p>
+             <p>Tous les duels ont lieu entre 21h00 et 22h30 GMT, sur des créneaux de 15 minutes.</p>
+             <p>Consulte ton profil pour suivre l'évolution du défi.</p>`,
+            "Voir mon profil",
+            profileUrl,
+          ),
+          textContent: `${params.challenger.pseudo} t'a défié. Date du duel: ${whenLabel}. Profil: ${profileUrl}`,
+          tags: ["challenge-created", "defender-notification"],
+        }),
+      ),
+    );
+  }
+
+  if (!tasks.length) return false;
+  await Promise.all(tasks);
+  return true;
+}
+
+export async function sendScheduledMatchEmails(params: {
+  eventKey: string;
+  player1: PlayerRecipient;
+  player2: PlayerRecipient;
+  scheduledAt: Date;
+}) {
+  const player1Recipient = toRecipient(params.player1);
+  const player2Recipient = toRecipient(params.player2);
+  const historyUrl = `${getAppBaseUrl()}/historique`;
+  const whenLabel = `${formatScheduledMatchDate(params.scheduledAt)} ${getScheduledMatchTimezoneLabel()}`;
+
+  const recipients = [
+    { recipient: player1Recipient, opponent: params.player2, player: params.player1, suffix: "player1" },
+    { recipient: player2Recipient, opponent: params.player1, player: params.player2, suffix: "player2" },
+  ].filter((entry) => Boolean(entry.recipient));
+
+  if (!recipients.length) return false;
+
+  await Promise.all(
+    recipients.map((entry) =>
+      runNotificationOnce(
+        `${params.eventKey}:${entry.suffix}`,
+        "MATCH_SCHEDULED",
+        { playerId: entry.player.id, opponentId: entry.opponent.id, scheduledAt: params.scheduledAt.toISOString() },
+        () => sendBrevoEmail({
+          to: [entry.recipient as BrevoRecipient],
+          subject: `Match programmé contre ${entry.opponent.pseudo}`,
+          htmlContent: emailFrame(
+            "Match officiel programmé",
+            `KING League a programmé ton duel contre ${entry.opponent.pseudo}.`,
+            `<p>Le match commencera le <strong>${escapeHtml(whenLabel)}</strong>.</p>
+             <p>Les programmations officielles KING League respectent les créneaux 21h00 à 22h30 GMT avec des manches de 15 minutes.</p>
+             <p>Retrouve cette affiche dans l'historique et prépare ton entrée dans l'arène.</p>`,
+            "Voir l'historique",
+            historyUrl,
+          ),
+          textContent: `KING League a programmé ton match contre ${entry.opponent.pseudo}. Date: ${whenLabel}. Historique: ${historyUrl}`,
+          tags: ["match-scheduled", "king-league"],
+        }),
+      ),
+    ),
+  );
+
+  return true;
+}
+
+export async function sendMatchCanceledEmails(params: {
+  eventKey: string;
+  player1: PlayerRecipient;
+  player2: PlayerRecipient;
+  scheduledAt: Date;
+}) {
+  const recipients = [params.player1, params.player2]
+    .map((player, index) => ({ player, recipient: toRecipient(player), suffix: index === 0 ? "player1" : "player2" }))
+    .filter((entry) => Boolean(entry.recipient));
+
+  if (!recipients.length) return false;
+
+  const historyUrl = `${getAppBaseUrl()}/historique`;
+  const whenLabel = `${formatScheduledMatchDate(params.scheduledAt)} ${getScheduledMatchTimezoneLabel()}`;
+
+  await Promise.all(
+    recipients.map((entry) =>
+      runNotificationOnce(
+        `${params.eventKey}:${entry.suffix}`,
+        "MATCH_CANCELED",
+        { playerId: entry.player.id, scheduledAt: params.scheduledAt.toISOString() },
+        () => sendBrevoEmail({
+          to: [entry.recipient as BrevoRecipient],
+          subject: "Match annulé par KING League",
+          htmlContent: emailFrame(
+            "Match annulé",
+            `Le match officiel prévu le ${whenLabel} a été annulé par l'administration KING League.`,
+            `<p>Cette programmation n'est plus active.</p>
+             <p>Surveille l'historique pour connaître la prochaine affiche officielle.</p>`,
+            "Voir l'historique",
+            historyUrl,
+          ),
+          textContent: `Ton match prévu le ${whenLabel} a été annulé par KING League. Historique: ${historyUrl}`,
+          tags: ["match-canceled"],
+        }),
+      ),
+    ),
+  );
+
+  return true;
+}
+
+export async function sendMatchRescheduledEmails(params: {
+  eventKey: string;
+  player1: PlayerRecipient;
+  player2: PlayerRecipient;
+  previousDate: Date;
+  nextDate: Date;
+}) {
+  const recipients = [params.player1, params.player2]
+    .map((player, index) => ({ player, recipient: toRecipient(player), suffix: index === 0 ? "player1" : "player2" }))
+    .filter((entry) => Boolean(entry.recipient));
+
+  if (!recipients.length) return false;
+
+  const historyUrl = `${getAppBaseUrl()}/historique`;
+  const previousLabel = `${formatScheduledMatchDate(params.previousDate)} ${getScheduledMatchTimezoneLabel()}`;
+  const nextLabel = `${formatScheduledMatchDate(params.nextDate)} ${getScheduledMatchTimezoneLabel()}`;
+
+  await Promise.all(
+    recipients.map((entry) =>
+      runNotificationOnce(
+        `${params.eventKey}:${entry.suffix}`,
+        "MATCH_RESCHEDULED",
+        {
+          playerId: entry.player.id,
+          previousDate: params.previousDate.toISOString(),
+          nextDate: params.nextDate.toISOString(),
+        },
+        () => sendBrevoEmail({
+          to: [entry.recipient as BrevoRecipient],
+          subject: "Match reporté par KING League",
+          htmlContent: emailFrame(
+            "Match reporté",
+            `Le match KING League a été déplacé vers un nouveau créneau.`,
+            `<p>Ancien horaire: <strong>${escapeHtml(previousLabel)}</strong></p>
+             <p>Nouveau horaire: <strong>${escapeHtml(nextLabel)}</strong></p>
+             <p>Consulte l'historique pour suivre la programmation officielle mise à jour.</p>`,
+            "Voir l'historique",
+            historyUrl,
+          ),
+          textContent: `Ton match a été reporté. Ancien horaire: ${previousLabel}. Nouveau horaire: ${nextLabel}. Historique: ${historyUrl}`,
+          tags: ["match-rescheduled"],
+        }),
+      ),
+    ),
+  );
+
+  return true;
 }

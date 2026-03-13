@@ -1,7 +1,9 @@
 import { ChallengeStatus, MatchStatus } from "@prisma/client";
+import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
+import { sendMatchCanceledEmails } from "@/lib/email-notifications";
 import { prisma } from "@/lib/prisma";
 import { recalculateTournamentState } from "@/lib/tournament";
 import { apiError, applyRateLimit, requireAdmin } from "@/app/api/_utils";
@@ -16,14 +18,17 @@ export async function POST(req: Request) {
     await requireAdmin();
     const body = BodySchema.parse(await req.json());
 
-    await prisma.$transaction(async (tx) => {
+    const canceled = await prisma.$transaction(async (tx) => {
       const match = await tx.match.findUnique({
         where: { id: body.matchId },
         select: {
           id: true,
           status: true,
+          date: true,
           player1Id: true,
           player2Id: true,
+          player1: { select: { id: true, pseudo: true, email: true } },
+          player2: { select: { id: true, pseudo: true, email: true } },
         },
       });
 
@@ -49,7 +54,23 @@ export async function POST(req: Request) {
       });
 
       await recalculateTournamentState(tx);
+
+      return match;
     });
+
+    void sendMatchCanceledEmails({
+      eventKey: `match-canceled:${canceled.id}:${new Date().toISOString()}`,
+      player1: canceled.player1,
+      player2: canceled.player2,
+      scheduledAt: canceled.date,
+    }).catch((error) => {
+      console.error("[match-cancel] cancel emails failed", error);
+    });
+
+    revalidatePath("/historique");
+    revalidatePath("/matchs");
+    revalidatePath("/admin/matchs");
+    revalidatePath("/profile");
 
     return NextResponse.json({ ok: true });
   } catch (error) {

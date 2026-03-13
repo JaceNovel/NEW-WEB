@@ -84,67 +84,67 @@ export default function AdminCreditsManager({
 
   return (
     <div className="space-y-6">
-      <section className="rounded-[28px] border border-fuchsia-300/16 bg-[linear-gradient(180deg,rgba(27,11,47,0.82),rgba(8,8,20,0.82))] p-5">
+      <section className="rounded-[28px] border border-slate-200 bg-[linear-gradient(135deg,#4c3b66,#2d2a3b)] p-5 shadow-sm">
         <div>
           <h1 className="text-2xl font-black text-white">Gestion crédits</h1>
-          <p className="mt-2 text-sm text-white/55">Suivi des associations actives et gestion des produits crédits affichés dans la boutique publique.</p>
+          <p className="mt-2 text-sm text-white/70">Suivi des associations actives et gestion des produits crédits affichés dans la boutique publique.</p>
         </div>
       </section>
 
-      {error ? <div className="rounded-2xl border border-red-400/20 bg-red-500/10 px-4 py-3 text-sm text-red-100">{error}</div> : null}
+      {error ? <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div> : null}
 
       <section className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
-        <div className="rounded-[28px] border border-cyan-300/16 bg-black/20 p-5">
-          <div className="text-lg font-black text-white">Associations actives</div>
-          <div className="mt-1 text-sm text-white/55">Tous les joueurs qui ont consolidé leur position avec un renfort.</div>
+        <div className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="text-lg font-black text-slate-950">Associations actives</div>
+          <div className="mt-1 text-sm text-slate-500">Tous les joueurs qui ont consolidé leur position avec un renfort.</div>
 
           <div className="mt-5 space-y-3">
             {alliances.length ? alliances.map((player) => (
-              <div key={player.id} className="rounded-[22px] border border-white/10 bg-white/[0.04] p-4">
+              <div key={player.id} className="rounded-[22px] border border-slate-200 bg-slate-50 p-4">
                 <div className="flex items-center justify-between gap-4">
                   <div>
-                    <div className="text-lg font-black text-white">{player.pseudo} X {player.recruitedPlayers[0]?.pseudo}</div>
-                    <div className="mt-1 text-sm text-white/55">{player.freefireId} • {player.credits} crédits</div>
+                    <div className="text-lg font-black text-slate-950">{player.pseudo} X {player.recruitedPlayers[0]?.pseudo}</div>
+                    <div className="mt-1 text-sm text-slate-500">{player.freefireId} • {player.credits} crédits</div>
                   </div>
-                  <div className="text-right text-sm text-white/60">
+                  <div className="text-right text-sm text-slate-500">
                     <div>Renfort</div>
-                    <div className="font-bold text-white">{player.recruitedPlayers[0]?.freefireId}</div>
+                    <div className="font-bold text-slate-950">{player.recruitedPlayers[0]?.freefireId}</div>
                   </div>
                 </div>
               </div>
-            )) : <div className="rounded-[22px] border border-white/10 bg-white/5 px-4 py-8 text-center text-sm text-white/50">Aucune association active pour le moment.</div>}
+            )) : <div className="rounded-[22px] border border-slate-200 bg-slate-50 px-4 py-8 text-center text-sm text-slate-500">Aucune association active pour le moment.</div>}
           </div>
         </div>
 
         <div className="space-y-5">
-          <div className="rounded-[28px] border border-amber-300/16 bg-black/20 p-5">
-            <div className="text-lg font-black text-white">Ajouter un produit crédit</div>
+          <div className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm">
+            <div className="text-lg font-black text-slate-950">Ajouter un produit crédit</div>
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
-              <input value={form.key} onChange={(e) => setForm((prev) => ({ ...prev, key: e.target.value }))} placeholder="Clé produit" className="tp-input" />
-              <input value={form.label} onChange={(e) => setForm((prev) => ({ ...prev, label: e.target.value }))} placeholder="Nom affiché" className="tp-input" />
-              <input value={form.credits} onChange={(e) => setForm((prev) => ({ ...prev, credits: e.target.value }))} placeholder="Nombre de crédits" className="tp-input" />
-              <input value={form.priceFcfa} onChange={(e) => setForm((prev) => ({ ...prev, priceFcfa: e.target.value }))} placeholder="Prix FCFA" className="tp-input" />
-              <input value={form.maxPurchasesPerPlayer} onChange={(e) => setForm((prev) => ({ ...prev, maxPurchasesPerPlayer: e.target.value }))} placeholder="Limite par joueur (optionnel)" className="tp-input sm:col-span-2" />
-              <textarea value={form.description} onChange={(e) => setForm((prev) => ({ ...prev, description: e.target.value }))} placeholder="Description produit" className="tp-input min-h-[120px] sm:col-span-2" />
+              <input value={form.key} onChange={(e) => setForm((prev) => ({ ...prev, key: e.target.value }))} placeholder="Clé produit" className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none placeholder:text-slate-400" />
+              <input value={form.label} onChange={(e) => setForm((prev) => ({ ...prev, label: e.target.value }))} placeholder="Nom affiché" className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none placeholder:text-slate-400" />
+              <input value={form.credits} onChange={(e) => setForm((prev) => ({ ...prev, credits: e.target.value }))} placeholder="Nombre de crédits" className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none placeholder:text-slate-400" />
+              <input value={form.priceFcfa} onChange={(e) => setForm((prev) => ({ ...prev, priceFcfa: e.target.value }))} placeholder="Prix FCFA" className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none placeholder:text-slate-400" />
+              <input value={form.maxPurchasesPerPlayer} onChange={(e) => setForm((prev) => ({ ...prev, maxPurchasesPerPlayer: e.target.value }))} placeholder="Limite par joueur (optionnel)" className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none placeholder:text-slate-400 sm:col-span-2" />
+              <textarea value={form.description} onChange={(e) => setForm((prev) => ({ ...prev, description: e.target.value }))} placeholder="Description produit" className="min-h-[120px] rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none placeholder:text-slate-400 sm:col-span-2" />
             </div>
-            <button type="button" disabled={busy} onClick={() => void createProduct()} className="tp-button-ghost mt-4 disabled:opacity-60">
+            <button type="button" disabled={busy} onClick={() => void createProduct()} className="mt-4 inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-slate-900 px-4 py-3 text-sm font-bold text-white transition hover:bg-slate-800 disabled:opacity-60">
               {busy ? "Création..." : "Ajouter le produit"}
             </button>
           </div>
 
-          <div className="rounded-[28px] border border-white/10 bg-black/20 p-5">
-            <div className="text-lg font-black text-white">Produits disponibles</div>
+          <div className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm">
+            <div className="text-lg font-black text-slate-950">Produits disponibles</div>
             <div className="mt-4 space-y-3">
               {products.map((product) => (
-                <div key={product.id} className="rounded-[20px] border border-white/10 bg-white/[0.04] p-4">
+                <div key={product.id} className="rounded-[20px] border border-slate-200 bg-slate-50 p-4">
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <div className="text-base font-black text-white">{product.label}</div>
-                      <div className="mt-1 text-sm text-white/55">{product.description}</div>
+                      <div className="text-base font-black text-slate-950">{product.label}</div>
+                      <div className="mt-1 text-sm text-slate-500">{product.description}</div>
                     </div>
-                    <div className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-white/70">{product.isActive ? "Actif" : "Inactif"}</div>
+                    <div className="rounded-full border border-slate-200 bg-white px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-slate-600">{product.isActive ? "Actif" : "Inactif"}</div>
                   </div>
-                  <div className="mt-3 flex flex-wrap gap-3 text-sm text-white/68">
+                  <div className="mt-3 flex flex-wrap gap-3 text-sm text-slate-600">
                     <span>{product.credits} crédits</span>
                     <span>{new Intl.NumberFormat("fr-FR").format(product.priceFcfa)} FCFA</span>
                     <span>{product.maxPurchasesPerPlayer ? `Limite ${product.maxPurchasesPerPlayer}` : "Illimité"}</span>

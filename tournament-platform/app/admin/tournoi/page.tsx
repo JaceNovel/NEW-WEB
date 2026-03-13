@@ -29,8 +29,8 @@ export default async function AdminTournoiPage() {
   return (
     <main>
       <div className="mb-6">
-        <h1 className="text-2xl font-extrabold text-white">Tournoi</h1>
-        <p className="mt-2 text-sm text-white/60">Pilotage du top 20, du ROI et du classement final.</p>
+        <h1 className="text-2xl font-extrabold text-slate-950">Tournoi</h1>
+        <p className="mt-2 text-sm text-slate-500">Pilotage du top 20, du ROI et du classement final.</p>
       </div>
 
       <AdminTournamentManager />
