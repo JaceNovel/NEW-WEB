@@ -266,42 +266,44 @@ export default async function ProfilePage() {
                         </div>
                       </div>
 
-                      <div className="hidden rounded-[26px] border border-white/10 bg-[linear-gradient(180deg,rgba(14,13,30,0.98),rgba(31,18,56,0.82))] p-5 shadow-[inset_0_0_26px_rgba(255,255,255,0.02)] lg:grid lg:grid-cols-[72px_minmax(0,1.2fr)_minmax(280px,0.95fr)_160px] lg:items-center lg:gap-5">
+                      <div className="hidden rounded-[26px] border border-white/10 bg-[linear-gradient(180deg,rgba(14,13,30,0.98),rgba(31,18,56,0.82))] p-5 shadow-[inset_0_0_26px_rgba(255,255,255,0.02)] lg:grid lg:grid-cols-[72px_minmax(0,1fr)_160px] lg:items-center lg:gap-5">
                         <div className="flex h-16 w-16 items-center justify-center rounded-[20px] border border-amber-300/18 bg-amber-300/10 text-4xl font-black text-amber-100">
                           {index + 1}
                         </div>
 
-                        <div className="flex min-w-0 items-center gap-4">
-                          <div className="flex h-[78px] w-[78px] shrink-0 items-center justify-center rounded-[22px] border border-white/10 bg-black/25 p-3 shadow-[0_0_24px_rgba(0,0,0,0.22)]">
-                            <img src={opponent.logoUrl} alt={opponent.pseudo} className="h-full w-full object-contain" />
-                          </div>
-                          <div className="min-w-0">
-                            <div className="text-[0.68rem] font-black uppercase tracking-[0.24em] text-white/42">Adversaire</div>
-                            <div className="mt-2 truncate text-[1.55rem] font-black leading-none text-white">{opponent.pseudo}</div>
-                            <div className="mt-2 text-sm font-medium text-white/50">ID {opponent.freefireId}</div>
-                            <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[0.68rem] font-bold uppercase tracking-[0.16em] text-white/68">
-                              <span>{player.pseudo}</span>
-                              <span className="bg-[linear-gradient(180deg,#ffbe73,#ff76dd)] bg-clip-text text-transparent">VS</span>
-                              <span>{opponent.pseudo}</span>
+                        <div className="min-w-0 space-y-4">
+                          <div className="flex min-w-0 items-center gap-4">
+                            <div className="flex h-[78px] w-[78px] shrink-0 items-center justify-center rounded-[22px] border border-white/10 bg-black/25 p-3 shadow-[0_0_24px_rgba(0,0,0,0.22)]">
+                              <img src={opponent.logoUrl} alt={opponent.pseudo} className="h-full w-full object-contain" />
                             </div>
-                          </div>
-                        </div>
-
-                        <div className="grid gap-3 xl:grid-cols-2">
-                          <div className="rounded-[18px] border border-white/8 bg-black/20 px-4 py-4">
-                            <div className="inline-flex items-center gap-2 text-[0.68rem] font-black uppercase tracking-[0.18em] text-white/42">
-                              <CalendarDays className="h-3.5 w-3.5 text-cyan-300" />
-                              Date du duel
-                            </div>
-                            <div className="mt-2 text-base font-bold leading-6 text-white/84">
-                              {new Intl.DateTimeFormat("fr-FR", { dateStyle: "long", timeStyle: "short" }).format(match.date)}
+                            <div className="min-w-0">
+                              <div className="text-[0.68rem] font-black uppercase tracking-[0.24em] text-white/42">Adversaire</div>
+                              <div className="mt-2 truncate text-[1.45rem] font-black leading-none text-white">{opponent.pseudo}</div>
+                              <div className="mt-2 text-sm font-medium text-white/50">ID {opponent.freefireId}</div>
+                              <div className="mt-3 inline-flex max-w-full items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[0.68rem] font-bold uppercase tracking-[0.16em] text-white/68">
+                                <span className="truncate">{player.pseudo}</span>
+                                <span className="bg-[linear-gradient(180deg,#ffbe73,#ff76dd)] bg-clip-text text-transparent">VS</span>
+                                <span className="truncate">{opponent.pseudo}</span>
+                              </div>
                             </div>
                           </div>
 
-                          <div className="rounded-[18px] border border-white/8 bg-black/20 px-4 py-4">
-                            <div className="text-[0.68rem] font-black uppercase tracking-[0.18em] text-white/42">Résultat</div>
-                            <div className="mt-2 text-xl font-black text-white">{victory === null ? "En attente" : victory ? "Victoire" : "Défaite"}</div>
-                            <div className="mt-1 text-sm leading-6 text-amber-100/78">{victory === null ? "Aucun gain validé" : victory ? "+1 crédit confirmé" : "Défaite enregistrée"}</div>
+                          <div className="grid gap-3 xl:grid-cols-2">
+                            <div className="rounded-[18px] border border-white/8 bg-black/20 px-4 py-4">
+                              <div className="inline-flex items-center gap-2 text-[0.68rem] font-black uppercase tracking-[0.18em] text-white/42">
+                                <CalendarDays className="h-3.5 w-3.5 text-cyan-300" />
+                                Date du duel
+                              </div>
+                              <div className="mt-2 text-base font-bold leading-6 text-white/84">
+                                {new Intl.DateTimeFormat("fr-FR", { dateStyle: "long", timeStyle: "short" }).format(match.date)}
+                              </div>
+                            </div>
+
+                            <div className="rounded-[18px] border border-white/8 bg-black/20 px-4 py-4">
+                              <div className="text-[0.68rem] font-black uppercase tracking-[0.18em] text-white/42">Résultat</div>
+                              <div className="mt-2 text-xl font-black text-white">{victory === null ? "En attente" : victory ? "Victoire" : "Défaite"}</div>
+                              <div className="mt-1 text-sm leading-6 text-amber-100/78">{victory === null ? "Aucun gain validé" : victory ? "+1 crédit confirmé" : "Défaite enregistrée"}</div>
+                            </div>
                           </div>
                         </div>
 
