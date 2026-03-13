@@ -2260,15 +2260,60 @@ select.tp-input option {
 }
 
 .tp-matchs-emblem-stack {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 0.75rem;
 }
 
+.tp-matchs-emblem-frame {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: clamp(132px, 16vw, 220px);
+  height: clamp(132px, 16vw, 220px);
+  overflow: hidden;
+  border-radius: clamp(28px, 3vw, 36px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background:
+    radial-gradient(circle at 50% 30%, rgba(255, 255, 255, 0.12), transparent 62%),
+    linear-gradient(180deg, rgba(11, 9, 31, 0.94), rgba(33, 17, 67, 0.82));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.10),
+    inset 0 0 38px rgba(255, 255, 255, 0.025),
+    0 18px 42px rgba(6, 5, 26, 0.34);
+}
+
+.tp-matchs-emblem-frame::after {
+  content: "";
+  position: absolute;
+  inset: 12px;
+  border-radius: inherit;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  pointer-events: none;
+}
+
+.tp-matchs-emblem-frame-left {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.10),
+    inset 0 0 38px rgba(255, 255, 255, 0.025),
+    0 18px 42px rgba(6, 5, 26, 0.34),
+    0 0 34px rgba(255, 144, 76, 0.16);
+}
+
+.tp-matchs-emblem-frame-right {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.10),
+    inset 0 0 38px rgba(255, 255, 255, 0.025),
+    0 18px 42px rgba(6, 5, 26, 0.34),
+    0 0 34px rgba(92, 162, 255, 0.16);
+}
+
 .tp-matchs-emblem-logo {
-  height: clamp(96px, 12vw, 160px);
-  width: clamp(96px, 12vw, 160px);
+  height: clamp(88px, 11vw, 150px);
+  width: clamp(88px, 11vw, 150px);
   object-fit: contain;
   filter:
     drop-shadow(0 0 22px rgba(255, 188, 112, 0.16))
@@ -3233,8 +3278,8 @@ select.tp-input option {
   }
 
   .tp-matchs-battle-stage {
-    grid-template-columns: 1fr;
-    gap: 1rem;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    gap: 0.65rem;
   }
 
   .tp-matchs-battle {
@@ -3276,6 +3321,12 @@ select.tp-input option {
     opacity: 0.8;
   }
 
+  .tp-matchs-emblem-frame {
+    width: clamp(96px, 26vw, 132px);
+    height: clamp(96px, 26vw, 132px);
+    border-radius: 24px;
+  }
+
   .tp-matchs-battle-clash-ring-outer,
   .tp-matchs-battle-clash-burst {
     opacity: 0.35;
@@ -3284,6 +3335,10 @@ select.tp-input option {
   .tp-matchs-emblem::before {
     opacity: 0.42;
     filter: blur(12px);
+  }
+
+  .tp-matchs-emblem-stack {
+    gap: 0.4rem;
   }
 
   .tp-matchs-emblem-logo-left,
@@ -3532,9 +3587,15 @@ select.tp-input option {
     margin-top: 0.75rem;
   }
 
+  .tp-matchs-emblem-frame {
+    width: 96px;
+    height: 96px;
+    border-radius: 22px;
+  }
+
   .tp-matchs-emblem-logo {
-    height: 74px;
-    width: 74px;
+    height: 68px;
+    width: 68px;
   }
 
   .tp-matchs-battle-label {
@@ -3542,6 +3603,28 @@ select.tp-input option {
     margin-bottom: 0.1rem;
     font-size: 1rem;
     text-align: center;
+  }
+
+  .tp-matchs-versus-wrap {
+    align-self: center;
+  }
+
+  .tp-matchs-versus {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 70px;
+    min-height: 70px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 190, 108, 0.26);
+    background:
+      radial-gradient(circle at 50% 38%, rgba(255, 241, 209, 0.18), rgba(255, 255, 255, 0.02)),
+      linear-gradient(180deg, rgba(255, 166, 84, 0.18), rgba(73, 31, 118, 0.20));
+    box-shadow:
+      inset 0 0 14px rgba(255, 226, 174, 0.08),
+      0 0 22px rgba(255, 166, 84, 0.10);
+    font-size: 1.55rem;
+    letter-spacing: -0.04em;
   }
 
   .tp-matchs-battle-history {

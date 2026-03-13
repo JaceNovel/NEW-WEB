@@ -389,12 +389,16 @@ export default function MatchesArena({
                     transition={enableBattleEffects ? { duration: isHistoryView ? 2.8 : 1.55, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" } : undefined}
                     className={`tp-matchs-emblem tp-matchs-emblem-left ${leftWinner ? "tp-matchs-emblem-winner" : ""} ${isHistoryView && !leftWinner ? "tp-matchs-emblem-loser" : ""}`}
                   >
-                    {leftWinner ? (
-                      <span className="tp-matchs-winner-crown tp-matchs-winner-crown-left">
-                        <Crown className="h-5 w-5" />
-                      </span>
-                    ) : null}
-                    <Image src={featuredMatch.player1.logoUrl} alt={featuredMatch.player1.pseudo} width={184} height={184} className="tp-matchs-emblem-logo tp-matchs-emblem-logo-left" />
+                    <div className="tp-matchs-emblem-stack">
+                      {leftWinner ? (
+                        <span className="tp-matchs-winner-crown tp-matchs-winner-crown-left">
+                          <Crown className="h-5 w-5" />
+                        </span>
+                      ) : null}
+                      <div className="tp-matchs-emblem-frame tp-matchs-emblem-frame-left">
+                        <Image src={featuredMatch.player1.logoUrl} alt={featuredMatch.player1.pseudo} width={184} height={184} className="tp-matchs-emblem-logo tp-matchs-emblem-logo-left" />
+                      </div>
+                    </div>
                   </motion.div>
 
                   <div className="tp-matchs-versus-wrap">
@@ -448,12 +452,16 @@ export default function MatchesArena({
                     transition={enableBattleEffects ? { duration: isHistoryView ? 2.8 : 1.55, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut", delay: isHistoryView ? 0 : 0.06 } : undefined}
                     className={`tp-matchs-emblem tp-matchs-emblem-right ${rightWinner ? "tp-matchs-emblem-winner" : ""} ${isHistoryView && !rightWinner ? "tp-matchs-emblem-loser" : ""}`}
                   >
-                    {rightWinner ? (
-                      <span className="tp-matchs-winner-crown tp-matchs-winner-crown-right">
-                        <Crown className="h-5 w-5" />
-                      </span>
-                    ) : null}
-                    <Image src={featuredMatch.player2.logoUrl} alt={featuredMatch.player2.pseudo} width={184} height={184} className="tp-matchs-emblem-logo tp-matchs-emblem-logo-right" />
+                    <div className="tp-matchs-emblem-stack">
+                      {rightWinner ? (
+                        <span className="tp-matchs-winner-crown tp-matchs-winner-crown-right">
+                          <Crown className="h-5 w-5" />
+                        </span>
+                      ) : null}
+                      <div className="tp-matchs-emblem-frame tp-matchs-emblem-frame-right">
+                        <Image src={featuredMatch.player2.logoUrl} alt={featuredMatch.player2.pseudo} width={184} height={184} className="tp-matchs-emblem-logo tp-matchs-emblem-logo-right" />
+                      </div>
+                    </div>
                   </motion.div>
                 </div>
 

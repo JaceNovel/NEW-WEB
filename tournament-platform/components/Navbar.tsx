@@ -100,7 +100,13 @@ export default function Navbar() {
           ) : (
             <div className="tp-nav-mobile-auth">
               <Link href="/profile" className={`tp-nav-mobile-profile ${pathname === "/profile" ? "tp-nav-mobile-profile-active" : ""}`} aria-label="Mon profil">
-                <span className="text-[10px] font-black uppercase tracking-[0.18em]">WELCOME</span>
+                <img
+                  src="https://img.icons8.com/?size=100&id=492ILERveW8G&format=png&color=000000"
+                  alt="Profil"
+                  width="22"
+                  height="22"
+                  className="h-[20px] w-[20px] object-contain brightness-[2.3] contrast-[1.15]"
+                />
               </Link>
               <button onClick={() => signOut()} className="tp-nav-mobile-profile tp-nav-mobile-profile-logout" aria-label="Se deconnecter">
                 <LogOut className="h-[18px] w-[18px]" />

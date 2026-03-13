@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
-import { Crown, FlameKindling, Ghost, Swords, Trophy } from "lucide-react";
+import { CalendarDays, Crown, FlameKindling, Ghost, ShieldCheck, Swords, Trophy } from "lucide-react";
 
 import { authOptions } from "@/lib/auth";
 import { getAllianceLabel } from "@/lib/economy";
@@ -17,6 +17,34 @@ export const metadata: Metadata = buildPageMetadata({
   path: "/profile",
   noIndex: true,
 });
+
+function getMatchStatusLabel(status: "PENDING" | "LIVE" | "FINISHED") {
+  switch (status) {
+    case "PENDING":
+      return "Programmé";
+    case "LIVE":
+      return "En direct";
+    case "FINISHED":
+      return "Validé";
+    default:
+      return status;
+  }
+}
+
+function getChallengeStatusLabel(status: string) {
+  switch (status) {
+    case "PENDING":
+      return "En attente";
+    case "ACCEPTED":
+      return "Accepté";
+    case "REJECTED":
+      return "Refusé";
+    case "FINISHED":
+      return "Terminé";
+    default:
+      return status;
+  }
+}
 
 export default async function ProfilePage() {
   if (!process.env.DATABASE_URL) {
@@ -128,7 +156,7 @@ export default async function ProfilePage() {
                 </div>
                 <div className="mt-5 inline-flex items-center gap-2 rounded-[12px] border border-violet-300/24 bg-[linear-gradient(180deg,rgba(137,74,255,0.26),rgba(34,23,74,0.32))] px-4 py-3 text-sm font-black uppercase tracking-[0.18em] text-white shadow-[0_0_26px_rgba(142,83,255,0.18)]">
                   <Crown className="h-4 w-4 text-amber-300" />
-                  {rank ? `Rang #${rank}` : "Welcome sur ton profil"}
+                  {rank ? `Rang #${rank}` : "Classement en attente"}
                 </div>
                 {player.recruitedPlayers[0] ? <div className="mt-3 text-sm font-bold uppercase tracking-[0.18em] text-cyan-200/75">Position renforcée avec {player.recruitedPlayers[0].pseudo}</div> : null}
                 {player.purchasedBy && !player.alliancePending ? (
@@ -158,69 +186,118 @@ export default async function ProfilePage() {
         </div>
       </section>
 
-      <section className="mt-6 rounded-[24px] border border-fuchsia-300/18 bg-[linear-gradient(180deg,rgba(28,14,49,0.74),rgba(7,8,18,0.72))] p-3 shadow-[0_0_40px_rgba(158,82,255,0.1)] sm:mt-8 sm:rounded-[30px] sm:p-4">
-        <div className="grid gap-3 sm:grid-cols-2">
-          <div className="rounded-[18px] border border-white/10 bg-black/20 px-4 py-3 text-sm font-bold uppercase tracking-[0.22em] text-white">Matchs</div>
-          <div className="rounded-[18px] border border-white/10 bg-black/20 px-4 py-3 text-sm font-bold uppercase tracking-[0.22em] text-white/55">Défis</div>
+      <section className="mt-6 rounded-[28px] border border-fuchsia-300/18 bg-[linear-gradient(180deg,rgba(28,14,49,0.80),rgba(7,8,18,0.78))] p-4 shadow-[0_0_44px_rgba(158,82,255,0.12)] sm:mt-8 sm:rounded-[34px] sm:p-5">
+        <div className="flex flex-col gap-3 border-b border-white/8 pb-4 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <div className="text-[0.72rem] font-black uppercase tracking-[0.26em] text-fuchsia-200/72">Journal de combat</div>
+            <h2 className="mt-2 text-2xl font-black text-white sm:text-3xl">Matchs et défis récents</h2>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-white/58">Retrouve tes derniers affrontements, l’état de tes défis et une lecture plus propre de ton activité compétitive.</p>
+          </div>
+          <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-bold uppercase tracking-[0.18em] text-white/65">
+            <ShieldCheck className="h-3.5 w-3.5 text-emerald-300" />
+            {matches.length} matchs • {challenges.length} défis
+          </div>
         </div>
 
-        <div className="mt-4 grid gap-5 lg:grid-cols-[1.2fr_0.8fr]">
-          <div className="rounded-[20px] border border-white/10 bg-black/20 p-3 sm:rounded-[24px] sm:p-4">
-            <div className="space-y-3">
+        <div className="mt-5 grid gap-5 lg:grid-cols-[1.3fr_0.8fr]">
+          <div className="rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,rgba(10,10,24,0.28),rgba(255,255,255,0.02))] p-4 sm:p-5">
+            <div className="flex items-center justify-between gap-3">
+              <div className="text-sm font-black uppercase tracking-[0.22em] text-white">Matchs</div>
+              <div className="text-xs font-bold uppercase tracking-[0.18em] text-white/45">Historique récent</div>
+            </div>
+
+            <div className="mt-4 space-y-3">
               {matches.length ? (
                 matches.map((match, index) => {
                   const opponent = match.player1.id === id ? match.player2 : match.player1;
                   const victory = match.winnerId ? match.winnerId === id : null;
+                  const statusLabel = getMatchStatusLabel(match.status);
 
                   return (
-                    <div key={match.id} className="grid gap-4 rounded-[20px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.01))] px-4 py-4 xl:grid-cols-[56px_1.4fr_1fr_0.9fr_150px] xl:items-center">
-                      <div className="text-3xl font-black text-amber-200 sm:text-4xl">{index + 1}</div>
-                      <div className="flex items-center gap-3">
-                        <img src={opponent.logoUrl} alt={opponent.pseudo} className="h-12 w-12 rounded-[18px] border border-white/10 bg-black/20 object-contain p-1.5" />
-                        <div>
-                          <div className="text-lg font-black text-white sm:text-xl">{player.pseudo} <span className="bg-[linear-gradient(180deg,#ffbe73,#ff76dd)] bg-clip-text text-transparent">VS</span> {opponent.pseudo}</div>
-                          <div className="mt-1 text-sm text-white/55">{opponent.freefireId}</div>
+                    <article
+                      key={match.id}
+                      className="grid gap-4 rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.015))] p-4 shadow-[inset_0_0_26px_rgba(255,255,255,0.02)] xl:grid-cols-[64px_minmax(0,1.5fr)_minmax(190px,0.9fr)_150px_132px] xl:items-center"
+                    >
+                      <div className="flex h-14 w-14 items-center justify-center rounded-[18px] border border-amber-300/18 bg-amber-300/10 text-3xl font-black text-amber-100">
+                        {index + 1}
+                      </div>
+
+                      <div className="flex min-w-0 items-center gap-3">
+                        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[20px] border border-white/10 bg-black/25 p-2">
+                          <img src={opponent.logoUrl} alt={opponent.pseudo} className="h-full w-full object-contain" />
+                        </div>
+                        <div className="min-w-0">
+                          <div className="text-[0.68rem] font-black uppercase tracking-[0.22em] text-white/42">Adversaire</div>
+                          <div className="mt-1 truncate text-xl font-black text-white">
+                            {player.pseudo} <span className="bg-[linear-gradient(180deg,#ffbe73,#ff76dd)] bg-clip-text text-transparent">VS</span> {opponent.pseudo}
+                          </div>
+                          <div className="mt-1 text-sm text-white/52">ID {opponent.freefireId}</div>
                         </div>
                       </div>
-                      <div className="text-sm text-white/68">
-                        {new Intl.DateTimeFormat("fr-FR", { dateStyle: "long", timeStyle: "short" }).format(match.date)}
+
+                      <div className="space-y-1 rounded-[18px] border border-white/8 bg-black/15 px-4 py-3">
+                        <div className="inline-flex items-center gap-2 text-[0.68rem] font-black uppercase tracking-[0.18em] text-white/42">
+                          <CalendarDays className="h-3.5 w-3.5 text-cyan-300" />
+                          Date du duel
+                        </div>
+                        <div className="text-sm font-semibold leading-6 text-white/80">
+                          {new Intl.DateTimeFormat("fr-FR", { dateStyle: "long", timeStyle: "short" }).format(match.date)}
+                        </div>
                       </div>
-                      <div className="text-lg font-black text-amber-100 sm:text-xl">{victory === null ? "En attente" : victory ? "+1 Crédit" : "-"}</div>
+
                       <div>
-                        <span className="inline-flex rounded-[12px] border border-violet-300/20 bg-violet-300/10 px-4 py-2 text-sm font-bold uppercase tracking-[0.18em] text-white">
-                          {victory === null ? match.status : victory ? "Victoire" : "Défaite"}
+                        <div className="text-[0.68rem] font-black uppercase tracking-[0.18em] text-white/42">Résultat</div>
+                        <div className="mt-1 text-lg font-black text-white">
+                          {victory === null ? "En attente" : victory ? "Victoire" : "Défaite"}
+                        </div>
+                        <div className="mt-1 text-sm text-amber-100/80">{victory === null ? "Aucun gain validé" : victory ? "+1 crédit confirmé" : "Défaite enregistrée"}</div>
+                      </div>
+
+                      <div>
+                        <span className="inline-flex w-full items-center justify-center rounded-[14px] border border-violet-300/20 bg-violet-300/10 px-4 py-3 text-center text-sm font-bold uppercase tracking-[0.18em] text-white">
+                          {victory === null ? statusLabel : victory ? "Victoire" : "Défaite"}
                         </span>
                       </div>
-                    </div>
+                    </article>
                   );
                 })
               ) : (
-                <div className="rounded-[20px] border border-white/10 bg-white/5 px-4 py-8 text-center text-sm text-white/50">Aucun match récent.</div>
+                <div className="rounded-[22px] border border-white/10 bg-white/5 px-4 py-10 text-center text-sm text-white/50">Aucun match récent.</div>
               )}
             </div>
           </div>
 
-          <div className="rounded-[24px] border border-white/10 bg-black/20 p-4">
-            <div className="text-sm font-bold uppercase tracking-[0.22em] text-white/72">Défis récents</div>
+          <div className="rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,rgba(10,10,24,0.28),rgba(255,255,255,0.02))] p-4 sm:p-5">
+            <div className="flex items-center justify-between gap-3">
+              <div className="text-sm font-black uppercase tracking-[0.22em] text-white">Défis</div>
+              <div className="text-xs font-bold uppercase tracking-[0.18em] text-white/45">Flux compact</div>
+            </div>
+
             <div className="mt-4 space-y-3">
               {challenges.length ? (
                 challenges.map((challenge) => {
                   const opponent = challenge.challengerId === id ? challenge.defender : challenge.challenger;
 
                   return (
-                    <div key={challenge.id} className="rounded-[18px] border border-white/10 bg-white/5 px-4 py-4">
-                      <div className="flex items-center gap-3">
-                        <img src={opponent.logoUrl} alt={opponent.pseudo} className="h-10 w-10 rounded-[16px] border border-white/10 bg-black/20 object-contain p-1.5" />
-                        <div>
-                          <div className="font-bold text-white">{opponent.pseudo}</div>
-                          <div className="text-xs uppercase tracking-[0.18em] text-white/45">{challenge.status}</div>
+                    <article key={challenge.id} className="rounded-[22px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.015))] p-4 shadow-[inset_0_0_18px_rgba(255,255,255,0.02)]">
+                      <div className="flex items-start gap-3">
+                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[18px] border border-white/10 bg-black/25 p-1.5">
+                          <img src={opponent.logoUrl} alt={opponent.pseudo} className="h-full w-full object-contain" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="text-[0.68rem] font-black uppercase tracking-[0.2em] text-white/42">Défi joueur</div>
+                          <div className="mt-1 truncate text-lg font-black text-white">{opponent.pseudo}</div>
+                          <div className="mt-2 inline-flex items-center gap-2 rounded-full border border-cyan-300/14 bg-cyan-300/8 px-3 py-1 text-[0.68rem] font-bold uppercase tracking-[0.16em] text-cyan-100/85">
+                            <Swords className="h-3.5 w-3.5" />
+                            {getChallengeStatusLabel(challenge.status)}
+                          </div>
                         </div>
                       </div>
-                    </div>
+                    </article>
                   );
                 })
               ) : (
-                <div className="rounded-[18px] border border-white/10 bg-white/5 px-4 py-6 text-sm text-white/50">Aucun défi récent.</div>
+                <div className="rounded-[22px] border border-white/10 bg-white/5 px-4 py-10 text-center text-sm text-white/50">Aucun défi récent.</div>
               )}
             </div>
           </div>

@@ -1,3 +1,4 @@
+import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
@@ -74,6 +75,13 @@ export async function POST(req: Request) {
     if (!deleted) {
       return NextResponse.json({ ok: false, error: "Ce joueur a déjà été supprimé ou n'existe plus." }, { status: 404 });
     }
+
+    revalidatePath("/credits");
+    revalidatePath("/profile");
+    revalidatePath("/classement");
+    revalidatePath("/historique");
+    revalidatePath("/admin/joueurs");
+    revalidatePath("/admin/credits");
 
     return NextResponse.json({ ok: true });
   } catch (error) {
