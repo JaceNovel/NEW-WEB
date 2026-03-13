@@ -6,6 +6,32 @@ import { prisma } from "@/lib/prisma";
 
 let supportsWeeklyCreditsGrantedAt: boolean | null = null;
 
+async function verifyConfiguredAdminPassword(password: string): Promise<boolean> {
+  const adminPasswordHash = (process.env.ADMIN_PASSWORD_HASH ?? "").trim();
+  if (adminPasswordHash) {
+    return bcrypt.compare(password, adminPasswordHash);
+  }
+
+  const adminPassword = process.env.ADMIN_PASSWORD ?? "";
+  if (!adminPassword) {
+    return false;
+  }
+
+  return password === adminPassword;
+}
+
+function matchesConfiguredAdminIdentifier(identifier: string): boolean {
+  const normalizedIdentifier = identifier.trim().toLowerCase();
+  if (!normalizedIdentifier) {
+    return false;
+  }
+
+  const adminEmail = (process.env.ADMIN_EMAIL ?? "").trim().toLowerCase();
+  const adminPseudo = (process.env.ADMIN_PSEUDO ?? "").trim().toLowerCase();
+
+  return normalizedIdentifier === adminEmail || normalizedIdentifier === adminPseudo;
+}
+
 function isMissingWeeklyCreditsGrantedAtColumn(error: unknown): boolean {
   if (!error) return false;
   const message = String((error as any)?.message ?? error);
@@ -30,11 +56,8 @@ export const authOptions: NextAuthOptions = {
 
         if (!pseudo || !password) return null;
 
-        const envAdminEmail = (process.env.ADMIN_EMAIL ?? "").trim();
-        const envAdminPasswordHash = (process.env.ADMIN_PASSWORD_HASH ?? "").trim();
-
-        if (envAdminEmail && envAdminPasswordHash && pseudo.toLowerCase() === envAdminEmail.toLowerCase()) {
-          const ok = await bcrypt.compare(password, envAdminPasswordHash);
+        if (matchesConfiguredAdminIdentifier(pseudo)) {
+          const ok = await verifyConfiguredAdminPassword(password);
           if (!ok) return null;
 
           return {

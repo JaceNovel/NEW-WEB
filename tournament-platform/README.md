@@ -39,6 +39,13 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 Pour créer un admin, mets `role=ADMIN` sur le joueur concerné (via Prisma Studio `npx prisma studio` ou SQL).
 
+Le projet accepte aussi un admin via variables d'environnement, sans lecture DB, avec l'une de ces deux conventions:
+
+- `ADMIN_PSEUDO` + `ADMIN_PASSWORD`
+- `ADMIN_EMAIL` + `ADMIN_PASSWORD_HASH` (hash bcrypt)
+
+Sur l'ecran de connexion, le champ `Pseudo` accepte donc aussi l'identifiant admin configure.
+
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
 Stack: Next.js 14 (App Router), TypeScript, TailwindCSS, Prisma + PostgreSQL, NextAuth (Credentials), Cloudinary.
