@@ -1,6 +1,19 @@
 const BREVO_BASE_URL = "https://api.brevo.com/v3";
 const DEFAULT_SENDER_NAME = "KING League";
 
+function firstNonEmpty(...values: Array<string | null | undefined>) {
+  for (const value of values) {
+    const normalized = value?.trim();
+    if (normalized) return normalized;
+  }
+  return "";
+}
+
+function looksLikeBrevoApiKey(value: string) {
+  const normalized = value.trim().toLowerCase();
+  return normalized.startsWith("xkeysib-") || normalized.startsWith("xkeysib_");
+}
+
 export type BrevoRecipient = {
   email: string;
   name?: string | null;
@@ -32,25 +45,28 @@ export function getAppBaseUrl() {
 }
 
 export function isBrevoConfigured() {
-  return Boolean(process.env.BREVO_API_KEY?.trim() && process.env.BREVO_SENDER_EMAIL?.trim());
+  const senderEmail = firstNonEmpty(process.env.BREVO_SENDER_EMAIL, process.env.MAIL_FROM_ADDRESS);
+  const apiKeyCandidate = firstNonEmpty(process.env.BREVO_API_KEY, process.env.MAIL_PASSWORD, process.env.MAIL_USERNAME);
+
+  return Boolean(senderEmail && looksLikeBrevoApiKey(apiKeyCandidate));
 }
 
 export function getBrevoSender() {
-  const email = process.env.BREVO_SENDER_EMAIL?.trim();
+  const email = firstNonEmpty(process.env.BREVO_SENDER_EMAIL, process.env.MAIL_FROM_ADDRESS);
   if (!email) {
-    throw new Error("Configuration Brevo incomplète: BREVO_SENDER_EMAIL manquant.");
+    throw new Error("Configuration Brevo incomplète: BREVO_SENDER_EMAIL ou MAIL_FROM_ADDRESS manquant.");
   }
 
   return {
     email,
-    name: process.env.BREVO_SENDER_NAME?.trim() || DEFAULT_SENDER_NAME,
+    name: firstNonEmpty(process.env.BREVO_SENDER_NAME, process.env.MAIL_FROM_NAME) || DEFAULT_SENDER_NAME,
   };
 }
 
 function getBrevoApiKey() {
-  const apiKey = process.env.BREVO_API_KEY?.trim();
-  if (!apiKey) {
-    throw new Error("Configuration Brevo incomplète: BREVO_API_KEY manquant.");
+  const apiKey = firstNonEmpty(process.env.BREVO_API_KEY, process.env.MAIL_PASSWORD, process.env.MAIL_USERNAME);
+  if (!apiKey || !looksLikeBrevoApiKey(apiKey)) {
+    throw new Error("Configuration Brevo incomplète: BREVO_API_KEY manquant ou MAIL_PASSWORD / MAIL_USERNAME invalide pour l'API Brevo.");
   }
 
   return apiKey;

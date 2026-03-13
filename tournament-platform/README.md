@@ -86,6 +86,12 @@ Variables a configurer:
 - `BREVO_SENDER_EMAIL`
 - `BREVO_SENDER_NAME`
 
+Alias acceptes par le code si tu utilises deja une convention `MAIL_*`:
+
+- `MAIL_FROM_ADDRESS` a la place de `BREVO_SENDER_EMAIL`
+- `MAIL_FROM_NAME` a la place de `BREVO_SENDER_NAME`
+- `MAIL_PASSWORD` ou `MAIL_USERNAME` seulement si la valeur est une vraie cle API Brevo du type `xkeysib-...`
+
 Routes ajoutees:
 
 - `POST /api/auth/forgot-password`
