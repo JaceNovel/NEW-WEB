@@ -147,6 +147,8 @@ export default function CreditsHub({
       return;
     }
 
+    const pendingRecruitId = pendingRecruit.id;
+
     async function validatePendingRecruit() {
       try {
         const res = await fetch("/api/player/list", { cache: "no-store" });
@@ -159,11 +161,11 @@ export default function CreditsHub({
 
         const stillExists = json.players.some(
           (player: { id: string; purchasedById?: string | null; alliancePending?: boolean }) =>
-            player.id === pendingRecruit.id && player.purchasedById === currentPlayer.id && player.alliancePending === true,
+            player.id === pendingRecruitId && player.purchasedById === currentPlayer.id && player.alliancePending === true,
         );
 
         if (!cancelled) {
-          setValidatedPendingRecruitId(stillExists ? pendingRecruit.id : null);
+          setValidatedPendingRecruitId(stillExists ? pendingRecruitId : null);
         }
       } catch {
         if (!cancelled) setValidatedPendingRecruitId(null);

@@ -218,24 +218,68 @@ export default async function ProfilePage() {
                       key={match.id}
                       className="tp-profile-activity-item"
                     >
-                      <div className="grid gap-4 rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,rgba(17,16,37,0.96),rgba(31,18,56,0.78))] p-4 shadow-[inset_0_0_26px_rgba(255,255,255,0.02)] sm:grid-cols-[68px_minmax(0,1fr)] xl:grid-cols-[68px_minmax(0,1fr)_auto]"
-                    >
-                      <div className="flex h-14 w-14 items-center justify-center rounded-[18px] border border-amber-300/18 bg-amber-300/10 text-3xl font-black text-amber-100">
-                        {index + 1}
+                      <div className="rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,rgba(17,16,37,0.96),rgba(31,18,56,0.78))] p-4 shadow-[inset_0_0_26px_rgba(255,255,255,0.02)] lg:hidden">
+                        <div className="grid gap-4 sm:grid-cols-[68px_minmax(0,1fr)]">
+                          <div className="flex h-14 w-14 items-center justify-center rounded-[18px] border border-amber-300/18 bg-amber-300/10 text-3xl font-black text-amber-100">
+                            {index + 1}
+                          </div>
+
+                          <div className="grid gap-4">
+                            <div className="flex min-w-0 items-center gap-3">
+                              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-[20px] border border-white/10 bg-black/25 p-2">
+                                <img src={opponent.logoUrl} alt={opponent.pseudo} className="h-full w-full object-contain" />
+                              </div>
+                              <div className="min-w-0">
+                                <div className="text-[0.68rem] font-black uppercase tracking-[0.22em] text-white/42">Adversaire</div>
+                                <div className="mt-1 truncate text-xl font-black text-white">{opponent.pseudo}</div>
+                                <div className="mt-1 text-sm text-white/52">ID {opponent.freefireId}</div>
+                                <div className="mt-2 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[0.7rem] font-bold uppercase tracking-[0.14em] text-white/70">
+                                  <span>{player.pseudo}</span>
+                                  <span className="bg-[linear-gradient(180deg,#ffbe73,#ff76dd)] bg-clip-text text-transparent">VS</span>
+                                  <span>{opponent.pseudo}</span>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="grid gap-3 sm:grid-cols-2">
+                              <div className="rounded-[18px] border border-white/8 bg-black/15 px-4 py-3">
+                                <div className="inline-flex items-center gap-2 text-[0.68rem] font-black uppercase tracking-[0.18em] text-white/42">
+                                  <CalendarDays className="h-3.5 w-3.5 text-cyan-300" />
+                                  Date du duel
+                                </div>
+                                <div className="mt-2 text-sm font-semibold leading-6 text-white/80">
+                                  {new Intl.DateTimeFormat("fr-FR", { dateStyle: "long", timeStyle: "short" }).format(match.date)}
+                                </div>
+                              </div>
+
+                              <div className="rounded-[18px] border border-white/8 bg-black/15 px-4 py-3">
+                                <div className="text-[0.68rem] font-black uppercase tracking-[0.18em] text-white/42">Résultat</div>
+                                <div className="mt-2 text-lg font-black text-white">{victory === null ? "En attente" : victory ? "Victoire" : "Défaite"}</div>
+                                <div className="mt-1 text-sm text-amber-100/80">{victory === null ? "Aucun gain validé" : victory ? "+1 crédit confirmé" : "Défaite enregistrée"}</div>
+                              </div>
+                            </div>
+
+                            <span className="inline-flex w-full items-center justify-center rounded-[14px] border border-violet-300/20 bg-violet-300/10 px-4 py-3 text-center text-sm font-bold uppercase tracking-[0.18em] text-white">
+                              {victory === null ? statusLabel : victory ? "Victoire" : "Défaite"}
+                            </span>
+                          </div>
+                        </div>
                       </div>
 
-                      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.15fr)_minmax(220px,0.95fr)] xl:items-center">
-                        <div className="flex min-w-0 items-center gap-3">
-                          <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-[20px] border border-white/10 bg-black/25 p-2">
+                      <div className="hidden rounded-[26px] border border-white/10 bg-[linear-gradient(180deg,rgba(14,13,30,0.98),rgba(31,18,56,0.82))] p-5 shadow-[inset_0_0_26px_rgba(255,255,255,0.02)] lg:grid lg:grid-cols-[72px_minmax(0,1.2fr)_minmax(280px,0.95fr)_160px] lg:items-center lg:gap-5">
+                        <div className="flex h-16 w-16 items-center justify-center rounded-[20px] border border-amber-300/18 bg-amber-300/10 text-4xl font-black text-amber-100">
+                          {index + 1}
+                        </div>
+
+                        <div className="flex min-w-0 items-center gap-4">
+                          <div className="flex h-[78px] w-[78px] shrink-0 items-center justify-center rounded-[22px] border border-white/10 bg-black/25 p-3 shadow-[0_0_24px_rgba(0,0,0,0.22)]">
                             <img src={opponent.logoUrl} alt={opponent.pseudo} className="h-full w-full object-contain" />
                           </div>
                           <div className="min-w-0">
-                            <div className="text-[0.68rem] font-black uppercase tracking-[0.22em] text-white/42">Adversaire</div>
-                            <div className="mt-1 truncate text-xl font-black text-white">
-                              {opponent.pseudo}
-                            </div>
-                            <div className="mt-1 text-sm text-white/52">ID {opponent.freefireId}</div>
-                            <div className="mt-2 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[0.7rem] font-bold uppercase tracking-[0.14em] text-white/70">
+                            <div className="text-[0.68rem] font-black uppercase tracking-[0.24em] text-white/42">Adversaire</div>
+                            <div className="mt-2 truncate text-[1.55rem] font-black leading-none text-white">{opponent.pseudo}</div>
+                            <div className="mt-2 text-sm font-medium text-white/50">ID {opponent.freefireId}</div>
+                            <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[0.68rem] font-bold uppercase tracking-[0.16em] text-white/68">
                               <span>{player.pseudo}</span>
                               <span className="bg-[linear-gradient(180deg,#ffbe73,#ff76dd)] bg-clip-text text-transparent">VS</span>
                               <span>{opponent.pseudo}</span>
@@ -243,32 +287,29 @@ export default async function ProfilePage() {
                           </div>
                         </div>
 
-                        <div className="grid gap-3 sm:grid-cols-2">
-                          <div className="rounded-[18px] border border-white/8 bg-black/15 px-4 py-3">
+                        <div className="grid gap-3 xl:grid-cols-2">
+                          <div className="rounded-[18px] border border-white/8 bg-black/20 px-4 py-4">
                             <div className="inline-flex items-center gap-2 text-[0.68rem] font-black uppercase tracking-[0.18em] text-white/42">
                               <CalendarDays className="h-3.5 w-3.5 text-cyan-300" />
                               Date du duel
                             </div>
-                            <div className="mt-2 text-sm font-semibold leading-6 text-white/80">
+                            <div className="mt-2 text-base font-bold leading-6 text-white/84">
                               {new Intl.DateTimeFormat("fr-FR", { dateStyle: "long", timeStyle: "short" }).format(match.date)}
                             </div>
                           </div>
 
-                          <div className="rounded-[18px] border border-white/8 bg-black/15 px-4 py-3">
+                          <div className="rounded-[18px] border border-white/8 bg-black/20 px-4 py-4">
                             <div className="text-[0.68rem] font-black uppercase tracking-[0.18em] text-white/42">Résultat</div>
-                            <div className="mt-2 text-lg font-black text-white">
-                              {victory === null ? "En attente" : victory ? "Victoire" : "Défaite"}
-                            </div>
-                            <div className="mt-1 text-sm text-amber-100/80">{victory === null ? "Aucun gain validé" : victory ? "+1 crédit confirmé" : "Défaite enregistrée"}</div>
+                            <div className="mt-2 text-xl font-black text-white">{victory === null ? "En attente" : victory ? "Victoire" : "Défaite"}</div>
+                            <div className="mt-1 text-sm leading-6 text-amber-100/78">{victory === null ? "Aucun gain validé" : victory ? "+1 crédit confirmé" : "Défaite enregistrée"}</div>
                           </div>
                         </div>
-                      </div>
 
-                      <div className="flex items-start xl:items-center">
-                        <span className="inline-flex w-full items-center justify-center rounded-[14px] border border-violet-300/20 bg-violet-300/10 px-4 py-3 text-center text-sm font-bold uppercase tracking-[0.18em] text-white xl:min-w-[140px]">
-                          {victory === null ? statusLabel : victory ? "Victoire" : "Défaite"}
-                        </span>
-                      </div>
+                        <div className="flex justify-end">
+                          <span className="inline-flex min-h-[54px] min-w-[148px] items-center justify-center rounded-[16px] border border-violet-300/20 bg-violet-300/10 px-5 py-3 text-center text-sm font-black uppercase tracking-[0.2em] text-white shadow-[0_0_22px_rgba(166,96,255,0.08)]">
+                            {victory === null ? statusLabel : victory ? "Victoire" : "Défaite"}
+                          </span>
+                        </div>
                       </div>
                     </article>
                   );
@@ -292,7 +333,7 @@ export default async function ProfilePage() {
 
                   return (
                     <article key={challenge.id} className="tp-profile-activity-item rounded-[22px] border border-white/10 bg-[linear-gradient(180deg,rgba(17,16,37,0.96),rgba(31,18,56,0.78))] p-4 shadow-[inset_0_0_18px_rgba(255,255,255,0.02)]">
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-3 lg:hidden">
                         <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[18px] border border-white/10 bg-black/25 p-1.5">
                           <img src={opponent.logoUrl} alt={opponent.pseudo} className="h-full w-full object-contain" />
                         </div>
@@ -303,6 +344,21 @@ export default async function ProfilePage() {
                             <Swords className="h-3.5 w-3.5" />
                             {getChallengeStatusLabel(challenge.status)}
                           </div>
+                        </div>
+                      </div>
+
+                      <div className="hidden items-center gap-4 lg:flex">
+                        <div className="flex h-[62px] w-[62px] shrink-0 items-center justify-center rounded-[20px] border border-white/10 bg-black/25 p-2.5 shadow-[0_0_24px_rgba(0,0,0,0.22)]">
+                          <img src={opponent.logoUrl} alt={opponent.pseudo} className="h-full w-full object-contain" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="text-[0.68rem] font-black uppercase tracking-[0.2em] text-white/42">Défi joueur</div>
+                          <div className="mt-2 truncate text-[1.2rem] font-black text-white">{opponent.pseudo}</div>
+                          <div className="mt-1 text-sm text-white/50">Interaction récente dans l'arène KING League</div>
+                        </div>
+                        <div className="inline-flex min-h-[44px] items-center gap-2 rounded-full border border-cyan-300/14 bg-cyan-300/8 px-4 py-2 text-[0.72rem] font-black uppercase tracking-[0.16em] text-cyan-100/85">
+                          <Swords className="h-3.5 w-3.5" />
+                          {getChallengeStatusLabel(challenge.status)}
                         </div>
                       </div>
                     </article>
