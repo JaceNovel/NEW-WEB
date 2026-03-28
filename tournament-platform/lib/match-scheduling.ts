@@ -89,6 +89,16 @@ export function formatScheduledMatchDate(date: Date | string) {
   }).format(value);
 }
 
+export function getTournamentDisplayDate(date: Date | string) {
+  const value = typeof date === "string" ? new Date(date) : new Date(date);
+
+  if (value.getUTCHours() >= MATCH_START_HOUR_UTC) {
+    return value;
+  }
+
+  return new Date(value.getTime() - 24 * 60 * 60 * 1000);
+}
+
 export function getScheduledMatchTimezoneLabel() {
   return "GMT";
 }

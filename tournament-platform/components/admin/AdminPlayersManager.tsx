@@ -242,28 +242,19 @@ export default function AdminPlayersManager() {
         {error ? <div className="mt-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div> : null}
 
         <div className="mt-5 overflow-x-auto rounded-[26px] border border-slate-200">
-          <table className="min-w-[1100px] w-full text-left text-sm">
+          <table className="min-w-[760px] w-full text-left text-sm">
             <thead className="bg-slate-50 text-xs uppercase tracking-[0.16em] text-slate-500">
             <tr>
-              <th className="px-4 py-3">Logo</th>
               <th className="px-4 py-3">Pseudo</th>
               <th className="px-4 py-3">Email</th>
-              <th className="px-4 py-3">ID</th>
-              <th className="px-4 py-3">Pays</th>
               <th className="px-4 py-3">Mode</th>
-              <th className="px-4 py-3">Crédits</th>
               <th className="px-4 py-3">Bilan</th>
-              <th className="px-4 py-3">Statut</th>
-              <th className="px-4 py-3">Inscription</th>
               <th className="px-4 py-3">Actions</th>
             </tr>
           </thead>
             <tbody className="divide-y divide-slate-100 bg-white">
             {filteredPlayers.map((p) => (
               <tr key={p.id} className="transition hover:bg-slate-50/80">
-                <td className="px-4 py-3">
-                  <img src={p.logoUrl} alt={p.pseudo} className="h-12 w-12 rounded-2xl border border-slate-200 bg-slate-50 object-contain p-1" />
-                </td>
                 <td className="px-4 py-3 text-slate-900">
                   <div className="font-bold">{p.pseudo}</div>
                   <div className="text-xs text-slate-400">Compte joueur</div>
@@ -282,19 +273,10 @@ export default function AdminPlayersManager() {
                     </button>
                   </div>
                 </td>
-                <td className="px-4 py-3 font-medium text-slate-600">{p.freefireId}</td>
-                <td className="px-4 py-3 text-slate-500">{p.countryCode}</td>
                 <td className="px-4 py-3 text-slate-600">{p.gameMode}</td>
-                <td className="px-4 py-3 font-bold text-slate-900">{p.credits}</td>
                 <td className="px-4 py-3 text-slate-600">
                   {p.wins}V / {p.losses}D
                 </td>
-                <td className="px-4 py-3 text-slate-600">
-                  <div className="inline-flex rounded-full bg-slate-100 px-2.5 py-1 text-xs font-bold uppercase tracking-[0.14em] text-slate-700">{p.status}</div>
-                  {p.isSeededTop10 ? <div className="mt-1 text-xs font-semibold text-amber-700">Top 10 protégé</div> : null}
-                  {p.finalRank ? <div className="mt-1 text-xs font-semibold text-sky-700">Rang final #{p.finalRank}</div> : null}
-                </td>
-                <td className="px-4 py-3 text-slate-500">{new Date(p.createdAt).toLocaleDateString("fr-FR")}</td>
                 <td className="px-4 py-3">
                   <div className="flex flex-wrap gap-2">
                     <button disabled={busyId === p.id} onClick={() => void updateCredits(p.id, +1)} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 transition hover:bg-slate-50 disabled:opacity-60">

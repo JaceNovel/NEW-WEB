@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { CalendarDays, ChevronLeft, ChevronRight, CircleDot, Crown, Eye, Swords } from "lucide-react";
 
 import { getCountryOption } from "@/lib/countries";
+import { getTournamentDisplayDate } from "@/lib/match-scheduling";
 import type { MatchPublic } from "@/types/match";
 
 type HistoryTab = "PENDING" | "LIVE" | "FINISHED";
@@ -19,11 +20,13 @@ const tabMeta: Array<{ key: HistoryTab; label: string }> = [
 const ITEMS_PER_PAGE = 4;
 
 function formatHistoryDate(dateValue: string) {
+  const displayDate = getTournamentDisplayDate(dateValue);
+
   return new Intl.DateTimeFormat("fr-FR", {
     day: "numeric",
     month: "long",
     year: "numeric",
-  }).format(new Date(dateValue));
+  }).format(displayDate);
 }
 
 function formatHistoryTime(dateValue: string) {

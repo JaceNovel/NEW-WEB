@@ -3,6 +3,8 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
+import { getTournamentDisplayDate } from "@/lib/match-scheduling";
+
 type PlayerOpt = { id: string; pseudo: string; freefireId: string; gameMode?: string; logoUrl?: string };
 type ChallengeRow = {
   id: string;
@@ -21,6 +23,19 @@ type MatchRow = {
   player2: PlayerOpt;
   winnerId: string | null;
 };
+
+function formatAdminMatchDate(dateValue: string) {
+  const date = new Date(dateValue);
+  const displayDate = getTournamentDisplayDate(date);
+
+  return new Intl.DateTimeFormat("fr-FR", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date(displayDate.getFullYear(), displayDate.getMonth(), displayDate.getDate(), date.getHours(), date.getMinutes(), 0, 0));
+}
 
 export default function AdminMatchManager({
   players,
@@ -329,7 +344,7 @@ export default function AdminMatchManager({
                 <select value={quickMatchId} onChange={(e) => setQuickMatchId(e.target.value)} className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-700 outline-none">
                   {activeMatches.map((match) => (
                     <option key={match.id} value={match.id}>
-                      {match.player1.pseudo} vs {match.player2.pseudo} ({new Date(match.date).toLocaleString("fr-FR")})
+                      {match.player1.pseudo} vs {match.player2.pseudo} ({formatAdminMatchDate(match.date)})
                     </option>
                   ))}
                 </select>
@@ -361,7 +376,7 @@ export default function AdminMatchManager({
 
             {quickMatch ? (
               <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
-                Match sélectionné: <span className="font-bold text-slate-950">{quickMatch.player1.pseudo} vs {quickMatch.player2.pseudo}</span> le {new Date(quickMatch.date).toLocaleString("fr-FR")}
+                Match sélectionné: <span className="font-bold text-slate-950">{quickMatch.player1.pseudo} vs {quickMatch.player2.pseudo}</span> le {formatAdminMatchDate(quickMatch.date)}
               </div>
             ) : null}
 
@@ -392,7 +407,7 @@ export default function AdminMatchManager({
                       <span className="ml-2 text-xs text-slate-500">({m.status})</span>
                     </div>
                     <div className="mt-1 text-xs text-slate-500">
-                      Date: {new Date(m.date).toLocaleString("fr-FR")} — Gagnant actuel: {m.winnerId === m.player1.id ? m.player1.pseudo : m.winnerId === m.player2.id ? m.player2.pseudo : "—"}
+                      Date: {formatAdminMatchDate(m.date)} — Gagnant actuel: {m.winnerId === m.player1.id ? m.player1.pseudo : m.winnerId === m.player2.id ? m.player2.pseudo : "—"}
                     </div>
                   </div>
                   <div className="flex flex-wrap gap-2">

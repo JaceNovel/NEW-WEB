@@ -7,6 +7,7 @@ import { Bolt, Crown, Flame, Shield, Sparkles, Swords, Trophy } from "lucide-rea
 import { useSession } from "next-auth/react";
 
 import { getCountryOption } from "@/lib/countries";
+import { getTournamentDisplayDate } from "@/lib/match-scheduling";
 import type { MatchPublic } from "@/types/match";
 
 type RankingEntry = {
@@ -39,12 +40,15 @@ function formatCountdown(ms: number) {
 }
 
 function formatDateLabel(dateValue: string) {
+  const date = new Date(dateValue);
+  const displayDate = getTournamentDisplayDate(date);
+
   return new Intl.DateTimeFormat("fr-FR", {
     day: "2-digit",
     month: "short",
     hour: "2-digit",
     minute: "2-digit",
-  }).format(new Date(dateValue));
+  }).format(new Date(displayDate.getFullYear(), displayDate.getMonth(), displayDate.getDate(), date.getHours(), date.getMinutes(), 0, 0));
 }
 
 function CountryFlag({ countryCode, className = "" }: { countryCode?: string; className?: string }) {
