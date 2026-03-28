@@ -1617,7 +1617,7 @@ select.tp-input option {
   display: grid;
   gap: clamp(0.9rem, 1.4vw, 1.3rem);
   grid-template-columns: minmax(240px, 23vw) minmax(0, 1.45fr) minmax(250px, 22vw);
-  align-items: stretch;
+  align-items: start;
 }
 
 .tp-matchs-bottom-grid {
@@ -1841,7 +1841,9 @@ select.tp-input option {
 }
 
 .tp-matchs-battle {
+  align-self: start;
   min-height: clamp(420px, 54vw, 620px);
+  height: clamp(420px, 54vw, 620px);
   display: flex;
   flex-direction: column;
   align-items: center;
