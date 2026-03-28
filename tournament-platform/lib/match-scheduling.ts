@@ -1,4 +1,6 @@
-const MATCH_SLOT_MINUTES = [0, 15, 30, 45, 60, 75] as const;
+const MATCH_SLOT_INTERVAL_MINUTES = 15;
+const MATCH_START_HOUR_UTC = 21;
+const MATCH_LOOKAHEAD_DAYS = 60;
 
 const DAY_NAME_MAP: Record<string, number> = {
   sunday: 0,
@@ -44,7 +46,33 @@ function isRestDay(date: Date) {
 }
 
 function buildSlotDate(day: Date, minuteOffset: number) {
-  return new Date(Date.UTC(day.getUTCFullYear(), day.getUTCMonth(), day.getUTCDate(), 21, minuteOffset, 0, 0));
+  return new Date(Date.UTC(day.getUTCFullYear(), day.getUTCMonth(), day.getUTCDate(), MATCH_START_HOUR_UTC, minuteOffset, 0, 0));
+}
+
+function ceilToSlotInterval(date: Date) {
+  const intervalMs = MATCH_SLOT_INTERVAL_MINUTES * 60 * 1000;
+  return new Date(Math.ceil(date.getTime() / intervalMs) * intervalMs);
+}
+
+function getNextSchedulingStart(from: Date) {
+  const today = startOfUtcDay(from);
+  const todayStart = buildSlotDate(today, 0);
+
+  if (!isRestDay(today) && from.getTime() < todayStart.getTime()) {
+    return todayStart;
+  }
+
+  for (let offset = 1; offset < MATCH_LOOKAHEAD_DAYS; offset += 1) {
+    const currentDay = new Date(today.getTime() + offset * 24 * 60 * 60 * 1000);
+
+    if (isRestDay(currentDay)) {
+      continue;
+    }
+
+    return buildSlotDate(currentDay, 0);
+  }
+
+  throw new Error("Aucun début de programmation disponible n'a pu être calculé.");
 }
 
 export function formatScheduledMatchDate(date: Date | string) {
@@ -71,28 +99,21 @@ export function computeNextMatchSlot(params: { existingDates?: Array<Date | stri
     (params.existingDates ?? []).map((value) => new Date(value).getTime()).filter((value) => Number.isFinite(value)),
   );
 
-  let day = startOfUtcDay(now);
+  const today = startOfUtcDay(now);
+  const todayStart = buildSlotDate(today, 0);
 
-  for (let offset = 0; offset < 60; offset += 1) {
-    const currentDay = new Date(day.getTime() + offset * 24 * 60 * 60 * 1000);
+  let candidate = !isRestDay(today) && now.getTime() >= todayStart.getTime()
+    ? ceilToSlotInterval(now)
+    : getNextSchedulingStart(now);
 
-    if (isRestDay(currentDay)) {
-      continue;
+  const maxIterations = MATCH_LOOKAHEAD_DAYS * 24 * (60 / MATCH_SLOT_INTERVAL_MINUTES);
+
+  for (let index = 0; index < maxIterations; index += 1) {
+    if (candidate.getTime() > now.getTime() && !occupiedSlots.has(candidate.getTime())) {
+      return candidate;
     }
 
-    for (const minuteOffset of MATCH_SLOT_MINUTES) {
-      const slot = buildSlotDate(currentDay, minuteOffset);
-
-      if (slot.getTime() <= now.getTime()) {
-        continue;
-      }
-
-      if (occupiedSlots.has(slot.getTime())) {
-        continue;
-      }
-
-      return slot;
-    }
+    candidate = new Date(candidate.getTime() + MATCH_SLOT_INTERVAL_MINUTES * 60 * 1000);
   }
 
   throw new Error("Aucun créneau disponible n'a pu être calculé pour les 60 prochains jours.");

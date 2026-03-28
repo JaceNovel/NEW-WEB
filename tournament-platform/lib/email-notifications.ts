@@ -450,7 +450,7 @@ export async function sendChallengeCreatedEmails(params: {
             "Ton défi est confirmé",
             `Ton défi contre ${params.defender.pseudo} a bien été enregistré par KING League.`,
             `<p>Le duel est planifié pour le <strong>${escapeHtml(whenLabel)}</strong>.</p>
-             <p>Tous les duels ont lieu entre 21h00 et 22h30 GMT, sur des créneaux de 15 minutes.</p>
+             <p>Tous les duels démarrent à partir de 21h00 GMT et s'enchaînent par créneaux de 15 minutes jusqu'à ce que tous les joueurs soient passés.</p>
              <p>Retrouve ce rendez-vous dans ton profil et prépare-toi pour l'affrontement.</p>`,
             "Voir mon profil",
             profileUrl,
@@ -475,7 +475,7 @@ export async function sendChallengeCreatedEmails(params: {
             "Nouveau défi reçu",
             `${params.challenger.pseudo} t'a officiellement défié sur KING League.`,
             `<p>Le duel est déjà positionné au <strong>${escapeHtml(whenLabel)}</strong>.</p>
-             <p>Tous les duels ont lieu entre 21h00 et 22h30 GMT, sur des créneaux de 15 minutes.</p>
+             <p>Tous les duels démarrent à partir de 21h00 GMT et s'enchaînent par créneaux de 15 minutes jusqu'à ce que tous les joueurs soient passés.</p>
              <p>Consulte ton profil pour suivre l'évolution du défi.</p>`,
             "Voir mon profil",
             profileUrl,
@@ -523,7 +523,7 @@ export async function sendScheduledMatchEmails(params: {
             "Match officiel programmé",
             `KING League a programmé ton duel contre ${entry.opponent.pseudo}.`,
             `<p>Le match commencera le <strong>${escapeHtml(whenLabel)}</strong>.</p>
-             <p>Les programmations officielles KING League respectent les créneaux 21h00 à 22h30 GMT avec des manches de 15 minutes.</p>
+             <p>Les programmations officielles KING League démarrent à partir de 21h00 GMT et continuent par créneaux de 15 minutes jusqu'à ce que tous les joueurs puissent jouer.</p>
              <p>Retrouve cette affiche dans l'historique et prépare ton entrée dans l'arène.</p>`,
             "Voir l'historique",
             historyUrl,

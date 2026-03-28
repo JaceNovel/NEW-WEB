@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Coins, RefreshCw, Search, ShieldAlert, Trash2, Trophy, Users } from "lucide-react";
+import { Coins, Copy, RefreshCw, Search, ShieldAlert, Trash2, Trophy, Users } from "lucide-react";
 
 type PlayerRow = {
   id: string;
   pseudo: string;
+  email: string | null;
   freefireId: string;
   countryCode: string;
   gameMode: string;
@@ -22,6 +23,7 @@ type PlayerRow = {
 export default function AdminPlayersManager() {
   const [players, setPlayers] = useState<PlayerRow[]>([]);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
@@ -45,7 +47,7 @@ export default function AdminPlayersManager() {
   const modes = [...new Set(players.map((player) => player.gameMode).filter(Boolean))].sort((left, right) => left.localeCompare(right));
 
   const filteredPlayers = players.filter((player) => {
-    const target = `${player.pseudo} ${player.freefireId} ${player.gameMode} ${player.countryCode}`.toLowerCase();
+    const target = `${player.pseudo} ${player.email ?? ""} ${player.freefireId} ${player.gameMode} ${player.countryCode}`.toLowerCase();
     const matchesQuery = target.includes(query.toLowerCase());
     const matchesStatus = statusFilter === "ALL" ? true : player.status === statusFilter;
     const matchesMode = modeFilter === "ALL" ? true : player.gameMode === modeFilter;
@@ -117,6 +119,24 @@ export default function AdminPlayersManager() {
       setError(e instanceof Error ? e.message : "Erreur");
     } finally {
       setBusyId(null);
+    }
+  }
+
+  async function copyEmail(playerId: string, email: string | null) {
+    if (!email) {
+      setError("Aucun email disponible pour ce joueur.");
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(email);
+      setCopiedId(playerId);
+      setError(null);
+      window.setTimeout(() => {
+        setCopiedId((current) => (current === playerId ? null : current));
+      }, 1800);
+    } catch {
+      setError("Impossible de copier l'email.");
     }
   }
 
@@ -227,6 +247,7 @@ export default function AdminPlayersManager() {
             <tr>
               <th className="px-4 py-3">Logo</th>
               <th className="px-4 py-3">Pseudo</th>
+              <th className="px-4 py-3">Email</th>
               <th className="px-4 py-3">ID</th>
               <th className="px-4 py-3">Pays</th>
               <th className="px-4 py-3">Mode</th>
@@ -246,6 +267,20 @@ export default function AdminPlayersManager() {
                 <td className="px-4 py-3 text-slate-900">
                   <div className="font-bold">{p.pseudo}</div>
                   <div className="text-xs text-slate-400">Compte joueur</div>
+                </td>
+                <td className="px-4 py-3 text-slate-600">
+                  <div className="flex items-center gap-2">
+                    <div className="max-w-[240px] break-all">{p.email ?? "-"}</div>
+                    <button
+                      type="button"
+                      disabled={!p.email}
+                      onClick={() => void copyEmail(p.id, p.email)}
+                      className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs font-semibold text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <Copy className="h-3.5 w-3.5" />
+                      {copiedId === p.id ? "Copié" : "Copier"}
+                    </button>
+                  </div>
                 </td>
                 <td className="px-4 py-3 font-medium text-slate-600">{p.freefireId}</td>
                 <td className="px-4 py-3 text-slate-500">{p.countryCode}</td>

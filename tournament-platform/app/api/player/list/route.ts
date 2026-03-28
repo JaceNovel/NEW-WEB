@@ -19,6 +19,7 @@ export async function GET() {
       select: {
         id: true,
         pseudo: true,
+        email: true,
         freefireId: true,
         countryCode: true,
         gameMode: true,
